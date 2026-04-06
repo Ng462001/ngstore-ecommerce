@@ -30,4 +30,10 @@ app.use("/api/return-exchange", require("./routes/returnExchangeRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// ✅ Start server ONLY after DB connects
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+});
