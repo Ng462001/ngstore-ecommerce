@@ -6,9 +6,6 @@ const path = require("path");
 const app = express();
 const connectDB = require("./config/db");
 
-// Connect to database
-connectDB();
-
 // Middleware
 app.use(cors({
     origin: ["http://localhost:5173", "https://ngstore-ecommerce.vercel.app"],

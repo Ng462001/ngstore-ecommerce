@@ -6,11 +6,13 @@ const Signup = () => {
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
 
     const handleSubmit = async (event) => {
         event.preventDefault()
+        setLoading(true)
         try {
             // Remove formatting from phone number before sending
             const phoneDigits = phone.replace(/\D/g, '')
@@ -25,6 +27,7 @@ const Signup = () => {
 
             const data = await response.json()
 
+            setLoading(false)
             if (response.ok) {
                 alert(data.message || 'Registration successful. Please check your email to verify your account.')
                 navigate('/login')
@@ -129,10 +132,11 @@ const Signup = () => {
 
                     <div>
                         <button
+                            disabled={loading}
                             type="submit"
                             className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
-                            Sign Up
+                            {loading ? 'Signing Up...' : 'Sign Up'}
                         </button>
                     </div>
                 </form>
