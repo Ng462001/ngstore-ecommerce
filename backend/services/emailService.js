@@ -193,7 +193,7 @@ class EmailService {
                                 
                                 <div class="footer">
                                     <p>Best regards,<br><strong>NGTech Support Team</strong></p>
-                                    <p>Email: support@ngtech.com | Phone: +1 (234) 567-890</p>
+                                    <p>Email: ngtech2026@gmail.com</p>
                                 </div>
                             </div>
                         </div>
