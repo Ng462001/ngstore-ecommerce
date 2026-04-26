@@ -163,7 +163,7 @@ const registerUser = async (req, res) => {
                 .verify-button {
                     display: inline-block;
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
+                    color: white !important;
                     text-decoration: none;
                     padding: 16px 32px;
                     border-radius: 50px;
@@ -336,21 +336,16 @@ const registerUser = async (req, res) => {
                         Need help?
                     </p>
                     <p>
-                        Contact us at <a href="mailto:support@yourapp.com" style="color: #667eea; text-decoration: none;">support@yourapp.com</a>
+                        Contact us at <a href="mailto:ngtech2026@gmail.com" style="color: #667eea; text-decoration: none;">ngtech2026@gmail.com</a>
                     </p>
                     
-                    <div class="social-links">
-                        <a href="#" class="social-link">Twitter</a>
-                        <a href="#" class="social-link">LinkedIn</a>
-                        <a href="#" class="social-link">GitHub</a>
-                    </div>
-                    
+                
                     <p style="margin-top: 20px;">
-                        © ${new Date().getFullYear()} Your Company Name. All rights reserved.
+                        © ${new Date().getFullYear()} NGSTORE. All rights reserved.
                     </p>
                     <p style="font-size: 12px; color: #4a5568;">
-                        123 Business Street, Suite 100<br>
-                        San Francisco, CA 94105
+                        VIPL IT Park, No. 43, Parsodi, Gayatri Nagar, Trimurtee Nagar,
+                        Nagpur, Maharashtra 440022, India 
                     </p>
                 </div>
             </div>
