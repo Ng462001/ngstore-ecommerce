@@ -8,14 +8,11 @@ import {
     Typography,
     Button,
     Grid,
-    Card,
-    CardContent,
     RadioGroup,
     FormControlLabel,
     Radio,
     FormControl,
     FormLabel,
-    TextField,
     Alert,
     CircularProgress,
     Divider
@@ -25,13 +22,6 @@ import { CreditCard, Lock, Payment as PaymentIcon } from '@mui/icons-material';
 export default function Payment({ onBack, selectedAddress, checkoutData }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('card');
-    const [cardData, setCardData] = useState({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        nameOnCard: ''
-    });
-    const [errors, setErrors] = useState({});
 
     const cartItems = useSelector(state => state.productReducer?.cartItems || []);
     const userInfo = useSelector(state => state.productReducer?.userInfo);
@@ -47,45 +37,6 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
     const tax = subtotal * 0.08;
     const total = subtotal + shipping + tax;
 
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (paymentMethod === 'card') {
-            if (!cardData.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
-            if (!cardData.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
-            if (!cardData.cvv.trim()) newErrors.cvv = 'CVV is required';
-            if (!cardData.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
-
-            // Basic card validation
-            if (cardData.cardNumber && !/^\d{16}$/.test(cardData.cardNumber.replace(/\s/g, ''))) {
-                newErrors.cardNumber = 'Please enter a valid 16-digit card number';
-            }
-            if (cardData.cvv && !/^\d{3,4}$/.test(cardData.cvv)) {
-                newErrors.cvv = 'Please enter a valid CVV';
-            }
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleCardInputChange = (e) => {
-        const { name, value } = e.target;
-
-        // Format card number with spaces
-        if (name === 'cardNumber') {
-            const formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-            setCardData(prev => ({ ...prev, [name]: formattedValue }));
-        } else {
-            setCardData(prev => ({ ...prev, [name]: value }));
-        }
-
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
-        }
-    };
-
     const handlePaymentSubmit = async (e) => {
         e.preventDefault();
 
@@ -97,10 +48,6 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
 
         if (!selectedAddress) {
             alert('Please select a shipping address.');
-            return;
-        }
-
-        if (paymentMethod === 'card' && !validateForm()) {
             return;
         }
 
@@ -122,9 +69,41 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                 itemsPrice: subtotal,
                 taxPrice: tax,
                 shippingPrice: shipping,
-                totalPrice: total
+                totalPrice: total,
+                isPaid: paymentMethod === 'card',
+                paidAt: paymentMethod === 'card' ? new Date() : undefined,
             };
 
+            if (paymentMethod === 'card') {
+                // Save pending order to be processed after Stripe redirects back
+                localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+
+                const piResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${userInfo.token}`
+                    },
+                    body: JSON.stringify({ 
+                        items: cartItems.map(item => ({
+                            name: item.name,
+                            image: item.image || item.images?.[0]?.src,
+                            price: parseFloat(item.discountedPrice || item.price),
+                            quantity: item.quantity
+                        })), 
+                        email: userInfo.email 
+                    })
+                });
+
+                const piData = await piResponse.json();
+                if (!piResponse.ok) throw new Error(piData.message || 'Payment initiation failed');
+
+                // Redirect to Stripe Checkout page
+                window.location.href = piData.url;
+                return;
+            }
+
+            // Cash on Delivery
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
                 method: 'POST',
                 headers: {
@@ -140,12 +119,11 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                 navigate('/my-orders');
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || 'Order creation failed');
+                throw new Error(errorData.message || 'Order creation failed');
             }
         } catch (error) {
             console.error('Payment error:', error);
-            alert('An error occurred during payment processing.');
-        } finally {
+            alert(error.message || 'An error occurred during payment processing.');
             setIsProcessing(false);
         }
     };
@@ -198,7 +176,7 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                                     label={
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <CreditCard />
-                                            <Typography>Credit/Debit Card</Typography>
+                                            <Typography>Credit/Debit Card (Stripe Checkout)</Typography>
                                         </Box>
                                     }
                                 />
@@ -211,61 +189,9 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                         </FormControl>
 
                         {paymentMethod === 'card' && (
-                            <form onSubmit={handlePaymentSubmit}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            label="Name on Card"
-                                            name="nameOnCard"
-                                            value={cardData.nameOnCard}
-                                            onChange={handleCardInputChange}
-                                            error={!!errors.nameOnCard}
-                                            helperText={errors.nameOnCard}
-                                            placeholder="John Doe"
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            label="Card Number"
-                                            name="cardNumber"
-                                            value={cardData.cardNumber}
-                                            onChange={handleCardInputChange}
-                                            error={!!errors.cardNumber}
-                                            helperText={errors.cardNumber}
-                                            placeholder="1234 5678 9012 3456"
-                                            inputProps={{ maxLength: 19 }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        <TextField
-                                            fullWidth
-                                            label="Expiry Date"
-                                            name="expiryDate"
-                                            value={cardData.expiryDate}
-                                            onChange={handleCardInputChange}
-                                            error={!!errors.expiryDate}
-                                            helperText={errors.expiryDate}
-                                            placeholder="MM/YY"
-                                        />
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        <TextField
-                                            fullWidth
-                                            label="CVV"
-                                            name="cvv"
-                                            value={cardData.cvv}
-                                            onChange={handleCardInputChange}
-                                            error={!!errors.cvv}
-                                            helperText={errors.cvv}
-                                            placeholder="123"
-                                            type="password"
-                                            inputProps={{ maxLength: 4 }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </form>
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                You will be redirected to Stripe's secure checkout page to complete your payment.
+                            </Alert>
                         )}
 
                         {paymentMethod === 'cod' && (
@@ -278,7 +204,7 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                             <Lock color="success" />
                             <Typography variant="caption" color="text.secondary">
-                                Your payment information is secure and encrypted
+                                Your payment information is secure and encrypted by Stripe
                             </Typography>
                         </Box>
                     </Paper>
@@ -308,7 +234,7 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                             Order Summary
                         </Typography>
 
-                        <Box sx={{ spaceY: 2, mb: 3 }}>
+                        <Box sx={{ mb: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                 <Typography variant="body2" color="text.secondary">
                                     Subtotal

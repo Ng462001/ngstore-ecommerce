@@ -1,7 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import OrderTracking from './OrderTracking'
+import { useDispatch } from 'react-redux'
+import { clearCart } from '../Redux/action/action'
 
 export default function OrderHistory() {
     const [orders, setOrders] = useState([])
@@ -10,17 +12,58 @@ export default function OrderHistory() {
     const [loading, setLoading] = useState(true)
     const [returnRequests, setReturnRequests] = useState({})
     const navigate = useNavigate()
+    const effectRan = useRef(false)
 
     const statusOptions = ['All', 'Delivered', 'Out for delivery', 'Processing', 'Shipped', 'Cancelled', 'Returned']
     const userInfo = JSON.parse(localStorage.getItem('userInfo'))
 
+    const dispatch = useDispatch()
+
     useEffect(() => {
+        if (effectRan.current) return;
+        effectRan.current = true;
+
+        const query = new URLSearchParams(window.location.search);
+
+        const createPendingOrder = async (orderData) => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${userInfo.token}`,
+                    },
+                    body: JSON.stringify(orderData),
+                });
+                if (response.ok) {
+                    localStorage.removeItem('pendingOrder');
+                    dispatch(clearCart());
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                fetchOrders();
+            }
+        };
+
         if (userInfo) {
-            fetchOrders()
+            if (query.get('success') === 'true') {
+                const pendingOrder = localStorage.getItem('pendingOrder');
+                if (pendingOrder) {
+                    // Remove immediately to prevent React StrictMode from double-firing the order creation
+                    localStorage.removeItem('pendingOrder');
+                    createPendingOrder(JSON.parse(pendingOrder));
+                } else {
+                    fetchOrders();
+                }
+            } else {
+                fetchOrders();
+            }
         } else {
-            setLoading(false)
+            setLoading(false);
         }
-    }, [])
+    }, [dispatch]);
 
     const fetchOrders = async () => {
         try {
