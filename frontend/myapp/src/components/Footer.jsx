@@ -11,7 +11,6 @@ import {
 } from '@mui/icons-material'
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear()
 
   return (
     <footer className="bg-white border-t border-gray-200">
@@ -77,18 +76,18 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
-                  Products
+                <Link to="/" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
+                  Home
                 </Link>
               </li>
               <li>
                 <Link to="/store" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
                   Stores
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
+                  About Us
                 </Link>
               </li>
               <li>
@@ -136,18 +135,18 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2 text-sm text-gray-600">
                 <LocationIcon className="text-indigo-600 mt-0.5" fontSize="small" />
-                <span>123 Business Street, City, State 12345</span>
+                <span>VIPL IT Park, Nagpur, Maharashtra 440022</span>
               </li>
               <li className="flex items-center space-x-2 text-sm text-gray-600">
                 <PhoneIcon className="text-indigo-600" fontSize="small" />
                 <a href="tel:+1234567890" className="hover:text-indigo-600 transition-colors">
-                  +1 (234) 567-890
+                  +91-7775831890
                 </a>
               </li>
               <li className="flex items-center space-x-2 text-sm text-gray-600">
                 <EmailIcon className="text-indigo-600" fontSize="small" />
-                <a href="mailto:support@company.com" className="hover:text-indigo-600 transition-colors">
-                  support@company.com
+                <a href="mailto:ngtech2026@gmail.com" className="hover:text-indigo-600 transition-colors">
+                  ngtech2026@gmail.com
                 </a>
               </li>
             </ul>
@@ -158,7 +157,7 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-500 text-center md:text-left">
-              © {currentYear} NGTech. All rights reserved.
+              © 2025-26 NGStore. All rights reserved.
             </p>
             <div className="flex space-x-6">
               <Link to="/privacy-policy" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
@@ -166,9 +165,6 @@ const Footer = () => {
               </Link>
               <Link to="/terms" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
                 Terms
-              </Link>
-              <Link to="/cookies" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
-                Cookies
               </Link>
             </div>
           </div>

@@ -46,7 +46,7 @@ const About = () => {
 
   const team = [
     {
-      name: 'John Doe',
+      name: 'Nikhil Gahane',
       role: 'CEO & Founder',
       image: 'https://randomuser.me/api/portraits/men/1.jpg'
     },
@@ -83,10 +83,10 @@ const About = () => {
               WebkitTextFillColor: 'transparent'
             }}
           >
-            About NGTech
+            About NGStore
           </Typography>
           <Typography variant="h5" color="text.secondary" sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.8 }}>
-            Your trusted partner in online shopping, delivering quality products and exceptional service since 2020.
+            Your trusted partner in online shopping, delivering quality products and exceptional service since 2025.
           </Typography>
         </Box>
 
@@ -98,7 +98,7 @@ const About = () => {
                 Our Story
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 2, mb: 2 }}>
-                Founded in 2020, NGTech started with a simple mission: to make quality products accessible to everyone.
+                Founded in 2025, NGStore started with a simple mission: to make quality products accessible to everyone.
                 What began as a small startup has grown into a trusted e-commerce platform serving thousands of customers
                 across the country.
               </Typography>

@@ -32,22 +32,22 @@ const Contact = () => {
     {
       icon: <EmailIcon sx={{ fontSize: 40 }} />,
       title: 'Email Us',
-      details: 'support@ngtech.com',
-      link: 'mailto:support@ngtech.com',
+      details: 'ngtech2026@gmail.com',
+      link: 'mailto:ngtech2026@gmail.com',
       color: '#2196F3'
     },
     {
       icon: <PhoneIcon sx={{ fontSize: 40 }} />,
       title: 'Call Us',
-      details: '+1 (234) 567-890',
-      link: 'tel:+1234567890',
+      details: '+91-7775831890',
+      link: 'tel:+91-7775831890',
       color: '#4CAF50'
     },
     {
       icon: <LocationIcon sx={{ fontSize: 40 }} />,
       title: 'Visit Us',
-      details: '123 Business Street, City, State 12345',
-      link: 'https://maps.google.com',
+      details: 'IT Park, Nagpur, Maharashtra 440022',
+      link: 'https://www.google.com/maps/place/IT+Park+Rd,+Nagpur,+Maharashtra+440022/@21.1174284,79.0443799,17z/data=!3m1!4b1!4m6!3m5!1s0x3bd4bf8a1904e029:0xf83cca68b3497831!8m2!3d21.1174284!4d79.0469548!16s%2Fg%2F11b6_mdthz!5m2!1e4!1e2?entry=ttu&g_ep=EgoyMDI2MDQyOS4wIKXMDSoASAFQAw%3D%3D',
       color: '#FF9800'
     }
   ]
@@ -306,7 +306,7 @@ const Contact = () => {
                     What is your return policy?
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                    We offer a 30-day return policy for most items. Products must be in original condition with tags attached.
+                    We offer a 10-day return policy for most items. Products must be in original condition with tags attached.
                   </Typography>
                 </Box>
                 <Box>
