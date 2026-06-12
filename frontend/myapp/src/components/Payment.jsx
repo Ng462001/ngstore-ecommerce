@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { CreditCard, Lock, Payment as PaymentIcon } from '@mui/icons-material';
 
-export default function Payment({ onBack, selectedAddress, checkoutData }) {
+export default function Payment({ onBack, selectedAddress }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('card');
 
@@ -72,6 +72,7 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                 totalPrice: total,
                 isPaid: paymentMethod === 'card',
                 paidAt: paymentMethod === 'card' ? new Date() : undefined,
+                paymentStatus: paymentMethod === 'card' ? "Paid" : "Pending"
             };
 
             if (paymentMethod === 'card') {
@@ -84,14 +85,14 @@ export default function Payment({ onBack, selectedAddress, checkoutData }) {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${userInfo.token}`
                     },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         items: cartItems.map(item => ({
                             name: item.name,
                             image: item.image || item.images?.[0]?.src,
                             price: parseFloat(item.discountedPrice || item.price),
                             quantity: item.quantity
-                        })), 
-                        email: userInfo.email 
+                        })),
+                        email: userInfo.email
                     })
                 });
 

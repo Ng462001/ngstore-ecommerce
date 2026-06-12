@@ -11,7 +11,8 @@ const addOrderItems = async (req, res) => {
         shippingPrice,
         totalPrice,
         isPaid,
-        paidAt
+        paidAt,
+        paymentStatus
     } = req.body;
 
     if (orderItems && orderItems.length === 0) {
@@ -28,7 +29,8 @@ const addOrderItems = async (req, res) => {
             shippingPrice,
             totalPrice,
             isPaid,
-            paidAt
+            paidAt,
+            paymentStatus
         });
 
         const createdOrder = await order.save();
