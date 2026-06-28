@@ -1,5 +1,6 @@
 const ReturnExchange = require('../model/ReturnExchange');
 const Order = require('../model/Order');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Request Return/Exchange
 exports.requestReturnExchange = async (req, res) => {
@@ -15,7 +16,9 @@ exports.requestReturnExchange = async (req, res) => {
 
         let images = [];
         if (req.files && req.files.length > 0) {
-            images = req.files.map(file => `/uploads/${file.filename}`);
+            const uploadPromises = req.files.map(file => uploadToCloudinary(file.path, 'returns'));
+            const uploadResults = await Promise.all(uploadPromises);
+            images = uploadResults.map(result => result.secure_url);
         }
 
         // Parse items if string

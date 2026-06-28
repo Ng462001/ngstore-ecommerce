@@ -390,7 +390,7 @@ const UserReturnDetailsModal = ({ open, onClose, request }) => {
                                             <TableCell>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                     <Avatar
-                                                        src={item.image ? `${import.meta.env.VITE_API_URL}${item.image}` : undefined}
+                                                        src={item.image ? (item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL}${item.image}`) : undefined}
                                                         variant="rounded"
                                                     >
                                                         <ShoppingBag />
@@ -443,7 +443,7 @@ const UserReturnDetailsModal = ({ open, onClose, request }) => {
                                             <Card variant="outlined">
                                                 <Box
                                                     component="img"
-                                                    src={`${import.meta.env.VITE_API_URL}${img}`}
+                                                    src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL}${img}`}
                                                     sx={{
                                                         width: '100%',
                                                         height: 200,

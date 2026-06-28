@@ -93,12 +93,16 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
     const getMainImage = () => {
         if (product.images && product.images[selectedImage]) {
             const img = product.images[selectedImage];
-            return img.src ? `${API_URL.replace('/api', '')}${img.src}` :
-                product.image ? `${API_URL.replace('/api', '')}${product.image}` :
-                    'https://via.placeholder.com/400';
+            const src = img.src || product.image;
+            if (src) {
+                return src.startsWith('http') ? src : `${API_URL.replace('/api', '')}${src}`;
+            }
+            return 'https://via.placeholder.com/400';
         }
-        return product.image ? `${API_URL.replace('/api', '')}${product.image}` :
-            'https://via.placeholder.com/400';
+        if (product.image) {
+            return product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`;
+        }
+        return 'https://via.placeholder.com/400';
     };
 
     const getStatusColor = (status) => {
@@ -289,7 +293,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                         }}
                                                     >
                                                         <img
-                                                            src={img.src ? `${API_URL.replace('/api', '')}${img.src}` : 'https://via.placeholder.com/60'}
+                                                            src={img.src ? (img.src.startsWith('http') ? img.src : `${API_URL.replace('/api', '')}${img.src}`) : 'https://via.placeholder.com/60'}
                                                             alt={`${product.name} ${index + 1}`}
                                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         />
@@ -578,7 +582,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                         }}>
                                             <Box
                                                 component="img"
-                                                src={product.image ? `${API_URL.replace('/api', '')}${product.image}` : 'https://via.placeholder.com/300'}
+                                                src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/300'}
                                                 alt={`${product.name}`}
                                                 sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             />
@@ -614,7 +618,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                 }}>
                                                     <Box
                                                         component="img"
-                                                        src={img.src ? `${API_URL.replace('/api', '')}${img.src}` : 'https://via.placeholder.com/300'}
+                                                        src={img.src ? (img.src.startsWith('http') ? img.src : `${API_URL.replace('/api', '')}${img.src}`) : 'https://via.placeholder.com/300'}
                                                         alt={`${product.name} ${index + 1}`}
                                                         sx={{ width: '100%', height: '120', objectFit: 'cover' }}
                                                     />

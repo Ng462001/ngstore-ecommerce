@@ -739,7 +739,11 @@ const Home = () => {
                       >
                         <CardMedia
                           component="img"
-                          image={`${import.meta.env.VITE_API_URL}${product.images?.[0]?.src || product.image}`}
+                          image={(() => {
+                            const src = product.images?.[0]?.src || product.image;
+                            if (!src) return '';
+                            return src.startsWith('http') ? src : `${import.meta.env.VITE_API_URL}${src}`;
+                          })()}
                           alt={product.name}
                           sx={{
                             height: '100%',

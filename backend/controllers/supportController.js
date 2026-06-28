@@ -1,5 +1,6 @@
 const Support = require('../model/Support');
 const mongoose = require('mongoose');
+const { uploadToCloudinary } = require('../services/cloudinaryService');
 
 // Create a new support ticket
 exports.createTicket = async (req, res) => {
@@ -16,7 +17,9 @@ exports.createTicket = async (req, res) => {
 
         let files = [];
         if (req.files && req.files.length > 0) {
-            files = req.files.map(file => `/uploads/${file.filename}`);
+            const uploadPromises = req.files.map(file => uploadToCloudinary(file.path, 'support'));
+            const uploadResults = await Promise.all(uploadPromises);
+            files = uploadResults.map(result => result.secure_url);
         }
 
         const ticket = await Support.create({

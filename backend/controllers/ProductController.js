@@ -1,5 +1,6 @@
 const Product = require("../model/Product");
 const mongoose = require("mongoose");
+const { uploadToCloudinary, deleteFromCloudinary } = require("../services/cloudinaryService");
 
 class ProductController {
     // Get all products with filtering, pagination, and sorting
@@ -167,7 +168,8 @@ class ProductController {
             // Handle uploaded files
             if (req.files) {
                 if (req.files.image && req.files.image.length > 0) {
-                    productData.image = `/uploads/${req.files.image[0].filename}`;
+                    const uploadResult = await uploadToCloudinary(req.files.image[0].path, 'products');
+                    productData.image = uploadResult.secure_url;
                 }
 
                 // Initialize images array if it doesn't exist
@@ -182,9 +184,11 @@ class ProductController {
                 }
 
                 if (req.files.images && req.files.images.length > 0) {
-                    const newImages = req.files.images.map(file => ({
-                        src: `/uploads/${file.filename}`,
-                        alt: file.originalname
+                    const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'products'));
+                    const uploadResults = await Promise.all(uploadPromises);
+                    const newImages = uploadResults.map((result, index) => ({
+                        src: result.secure_url,
+                        alt: req.files.images[index].originalname
                     }));
                     productData.images = [...productData.images, ...newImages];
                 }
@@ -321,14 +325,17 @@ class ProductController {
             if (req.files) {
                 // Only update main image if a new one is uploaded
                 if (req.files.image && req.files.image.length > 0) {
-                    updateData.image = `/uploads/${req.files.image[0].filename}`;
+                    const uploadResult = await uploadToCloudinary(req.files.image[0].path, 'products');
+                    updateData.image = uploadResult.secure_url;
                 }
 
                 // Only update additional images if new ones are uploaded
                 if (req.files.images && req.files.images.length > 0) {
-                    const newImages = req.files.images.map(file => ({
-                        src: `/uploads/${file.filename}`,
-                        alt: file.originalname
+                    const uploadPromises = req.files.images.map(file => uploadToCloudinary(file.path, 'products'));
+                    const uploadResults = await Promise.all(uploadPromises);
+                    const newImages = uploadResults.map((result, index) => ({
+                        src: result.secure_url,
+                        alt: req.files.images[index].originalname
                     }));
 
                     // If updateData.images exists (from parsed JSON), append to it.
@@ -422,8 +429,27 @@ class ProductController {
                 });
             }
 
-            // Soft delete by updating status
+            // Soft delete by updating status (actually permanent delete)
             const deletedProduct = await Product.findByIdAndDelete(id);
+
+            if (deletedProduct) {
+                // Delete main image from Cloudinary
+                if (deletedProduct.image) {
+                    deleteFromCloudinary(deletedProduct.image).catch(err => 
+                        console.error('[CLOUDINARY] Failed to delete main image:', err)
+                    );
+                }
+                // Delete additional images from Cloudinary
+                if (deletedProduct.images && deletedProduct.images.length > 0) {
+                    deletedProduct.images.forEach(img => {
+                        if (img.src) {
+                            deleteFromCloudinary(img.src).catch(err => 
+                                console.error('[CLOUDINARY] Failed to delete additional image:', err)
+                            );
+                        }
+                    });
+                }
+            }
 
             res.json({
                 success: true,
@@ -459,6 +485,23 @@ class ProductController {
                 return res.status(404).json({
                     success: false,
                     message: 'Product not found'
+                });
+            }
+
+            // Delete main image from Cloudinary
+            if (product.image) {
+                deleteFromCloudinary(product.image).catch(err => 
+                    console.error('[CLOUDINARY] Failed to delete main image during hard delete:', err)
+                );
+            }
+            // Delete additional images from Cloudinary
+            if (product.images && product.images.length > 0) {
+                product.images.forEach(img => {
+                    if (img.src) {
+                        deleteFromCloudinary(img.src).catch(err => 
+                            console.error('[CLOUDINARY] Failed to delete additional image during hard delete:', err)
+                        );
+                    }
                 });
             }
 

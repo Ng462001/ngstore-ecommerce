@@ -371,7 +371,7 @@ const Products = () => {
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
                                                         <ProductImage
-                                                            src={product.image ? `${API_URL.replace('/api', '')}${product.image}` : 'https://via.placeholder.com/48'}
+                                                            src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/48'}
                                                             alt={product.name}
                                                             className="w-12 h-12 object-cover rounded"
                                                         />

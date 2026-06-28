@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 
 class AdminController {
 
-
     //Get all orders
     static getAllOrders = async (req, res) => {
         try {

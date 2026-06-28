@@ -728,7 +728,7 @@ const ReturnRequestDetailsModal = ({ open, onClose, request, onRequestUpdate }) 
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                     {item.image ? (
                                                         <Avatar
-                                                            src={`${import.meta.env.VITE_API_URL}${item.image}`}
+                                                            src={item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL}${item.image}`}
                                                             sx={{ width: 50, height: 50 }}
                                                         />
                                                     ) : (
@@ -809,7 +809,7 @@ const ReturnRequestDetailsModal = ({ open, onClose, request, onRequestUpdate }) 
                                         <CardContent sx={{ textAlign: 'center' }}>
                                             <Box
                                                 component="img"
-                                                src={`${import.meta.env.VITE_API_URL}${image}`}
+                                                src={image.startsWith('http') ? image : `${import.meta.env.VITE_API_URL}${image}`}
                                                 alt={`Proof Image ${index + 1}`}
                                                 sx={{
                                                     width: '100%',
