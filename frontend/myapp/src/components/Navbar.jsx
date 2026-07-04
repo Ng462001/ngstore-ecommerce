@@ -44,6 +44,8 @@ export default function Navbar() {
   const [cartOpen, setCartOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
   const [anchorElUser, setAnchorElUser] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
@@ -107,6 +109,34 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // Fetch search suggestions with debouncing
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setSuggestionsLoading(true)
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`)
+        const result = await response.json()
+        if (result.success && result.data) {
+          setSuggestions(result.data)
+        } else {
+          setSuggestions([])
+        }
+      } catch (error) {
+        console.error('Error fetching suggestions:', error)
+        setSuggestions([])
+      } finally {
+        setSuggestionsLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchQuery])
+
   const handleLogout = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -144,9 +174,10 @@ export default function Navbar() {
   const handleSearch = useCallback((e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
+      navigate(`/store?search=${encodeURIComponent(searchQuery)}`)
       setSearchOpen(false)
       setSearchQuery('')
+      setSuggestions([])
     }
   }, [searchQuery, navigate])
 
@@ -353,8 +384,14 @@ export default function Navbar() {
     </PopoverGroup>
   )
 
+  const handleSearchClose = () => {
+    setSearchOpen(false)
+    setSearchQuery('')
+    setSuggestions([])
+  }
+
   const renderSearchModal = () => (
-    <Dialog open={searchOpen} onClose={() => setSearchOpen(false)} className="relative z-50">
+    <Dialog open={searchOpen} onClose={handleSearchClose} className="relative z-50">
       <DialogBackdrop
         transition
         className="fixed inset-0 bg-black/50 transition-opacity duration-300 ease-linear data-closed:opacity-0"
@@ -369,20 +406,80 @@ export default function Navbar() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for products, brands, categories..."
+              placeholder="Search for products, categories, tags..."
               className="w-full rounded-lg border border-gray-300 px-4 py-3 pl-12 text-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
               autoFocus
             />
             <MagnifyingGlassIcon className="absolute left-4 top-3.5 size-6 text-gray-400" />
             <button
               type="button"
-              onClick={() => setSearchOpen(false)}
+              onClick={handleSearchClose}
               className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
               aria-label="Close search"
             >
               <XMarkIcon className="size-6" />
             </button>
           </form>
+
+          {/* Suggestions Dropdown */}
+          {(suggestions.length > 0 || suggestionsLoading || searchQuery.trim().length >= 2) && (
+            <div className="mt-4 border-t border-gray-100 pt-4 max-h-[350px] overflow-y-auto">
+              {suggestionsLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                  <span className="ml-3 text-gray-500 text-sm">Searching...</span>
+                </div>
+              ) : suggestions.length > 0 ? (
+                <div className="space-y-1">
+                  <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Product Suggestions
+                  </div>
+                  {suggestions.map((product) => {
+                    const productImg = product.image || product.images?.[0]?.src || 'https://via.placeholder.com/40x40?text=No+Image';
+                    const fullImgUrl = productImg.startsWith('http') ? productImg : `${import.meta.env.VITE_API_URL}${productImg}`;
+                    return (
+                      <button
+                        key={product._id}
+                        onClick={() => {
+                          navigate(`/product/${product._id}`)
+                          handleSearchClose()
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <img
+                          src={fullImgUrl}
+                          alt={product.name}
+                          className="w-10 h-10 object-contain rounded-md bg-gray-50 border border-gray-100"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/40x40?text=No+Image'
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 truncate">{product.name}</h4>
+                          <p className="text-xs text-gray-500 truncate">{product.category}</p>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          ₹{(product.discountedPrice || product.price)?.toLocaleString()}
+                        </div>
+                      </button>
+                    )
+                  })}
+                  <div className="border-t border-gray-50 pt-2 mt-2">
+                    <button
+                      onClick={handleSearch}
+                      className="w-full text-center py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                    >
+                      See all results for "{searchQuery}"
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500 text-sm">
+                  No products found for "{searchQuery}"
+                </div>
+              )}
+            </div>
+          )}
         </DialogPanel>
       </div>
     </Dialog>

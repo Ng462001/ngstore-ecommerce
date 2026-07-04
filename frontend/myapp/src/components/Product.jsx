@@ -110,6 +110,7 @@ export default function Product() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [pagination, setPagination] = useState({})
+    const [searchQuery, setSearchQuery] = useState('')
     const location = useLocation()
     const navigate = useNavigate()
 
@@ -162,6 +163,10 @@ export default function Product() {
             option.value === (orderFromUrl === 'desc' ? `-${sortFromUrl}` : sortFromUrl)
         ) || sortOptions[0]
 
+        // Get search from URL
+        const querySearch = searchParams.get('search') || ''
+        setSearchQuery(querySearch)
+
         setSortOption(selectedSort)
         setActiveFilters(newFilters)
 
@@ -190,6 +195,10 @@ export default function Product() {
             apiQueryParams.set('order', 'asc')
         }
 
+        if (querySearch) {
+            apiQueryParams.set('search', querySearch)
+        }
+
         // Add inStock filter by default for better UX
         apiQueryParams.set('inStock', 'true')
 
@@ -212,6 +221,12 @@ export default function Product() {
         }
 
         const searchParams = new URLSearchParams()
+
+        // Preserve search query if it exists
+        const currentSearch = new URLSearchParams(location.search).get('search')
+        if (currentSearch) {
+            searchParams.set('search', currentSearch)
+        }
 
         // Add filters
         Object.entries(newFilters).forEach(([key, values]) => {
@@ -397,7 +412,9 @@ export default function Product() {
 
                 <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
-                        <h1 className="text-4xl font-bold tracking-tight text-gray-900">New Arrivals</h1>
+                        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+                            {searchQuery ? `Search Results for "${searchQuery}"` : 'New Arrivals'}
+                        </h1>
 
                         <div className="flex items-center">
                             <Menu as="div" className="relative inline-block text-left">
@@ -444,8 +461,27 @@ export default function Product() {
                     </div>
 
                     {/* Active Filters */}
-                    {Object.keys(activeFilters).length > 0 && (
+                    {(Object.keys(activeFilters).length > 0 || searchQuery) && (
                         <div className="flex flex-wrap gap-2 mt-4">
+                            {searchQuery && (
+                                <span
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                                >
+                                    Search: "{searchQuery}"
+                                    <button
+                                        onClick={() => {
+                                            const searchParams = new URLSearchParams(location.search)
+                                            searchParams.delete('search')
+                                            searchParams.set('page', '1')
+                                            navigate(`${location.pathname}?${searchParams.toString()}`)
+                                        }}
+                                        className="ml-2 hover:bg-indigo-200 rounded-full size-4 flex items-center justify-center"
+                                        aria-label="Clear search"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            )}
                             {Object.entries(activeFilters).map(([filterType, values]) =>
                                 values.map(value => (
                                     <span
