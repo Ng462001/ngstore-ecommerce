@@ -2,9 +2,10 @@ require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const connectDB = require("./config/db");
+const PORT = process.env.PORT || 3000;
 
 const app = express();
-const connectDB = require("./config/db");
 
 // Middleware
 app.use(cors({
@@ -27,9 +28,7 @@ app.use("/api/return-exchange", require("./routes/returnExchangeRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 
-const PORT = process.env.PORT || 3000;
-
-// ✅ Start server ONLY after DB connects
+//Server
 connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

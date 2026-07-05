@@ -19,7 +19,7 @@ const supportSchema = new mongoose.Schema({
         required: true
     },
     files: [{
-        type: String // URL to uploaded file
+        type: String
     }],
     status: {
         type: String,
@@ -39,7 +39,7 @@ const supportSchema = new mongoose.Schema({
     responses: [{
         sender: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User' // Could be the user or an admin user
+            ref: 'User'
         },
         senderRole: {
             type: String,

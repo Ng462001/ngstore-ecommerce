@@ -252,8 +252,8 @@ class ContactController {
             contact.repliedAt = new Date();
             contact.status = 'replied';
 
-            // If you have user authentication, you can set repliedBy
-            // contact.repliedBy = req.user._id;
+            // Set who replied to the contact request
+            contact.repliedBy = req.user._id;
 
             await contact.save();
 
