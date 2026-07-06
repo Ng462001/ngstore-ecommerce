@@ -31,13 +31,26 @@ import AdminContactManagement from './admin/AdminContactManagement'
 import VerifyEmail from './components/VerifyEmail'
 
 // Private Route Wrapper
-const PrivateRoute = ({ children }) => {
+const PrivateAdminRoute = ({ children }) => {
   const userInfo = localStorage.getItem('userInfo');
   const user = JSON.parse(userInfo);
   if (!user) {
     return <Navigate to="/login" />;
   }
   if (user.role === 'admin') {
+    return children;
+  }
+  return <Navigate to="/" />;
+};
+
+// Private Route Wrapper
+const PrivateUserRoute = ({ children }) => {
+  const userInfo = localStorage.getItem('userInfo');
+  const user = JSON.parse(userInfo);
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  if (user.role === 'user') {
     return children;
   }
   return <Navigate to="/" />;
@@ -113,11 +126,11 @@ const App = () => {
         },
         {
           path: '/checkout',
-          element: <Checkout />
+          element: <PrivateUserRoute> <Checkout /></PrivateUserRoute>
         },
         {
           path: '/my-orders',
-          element: <MyOrder />
+          element: <PrivateUserRoute><MyOrder /></PrivateUserRoute>
         },
         {
           path: '/order-details/:id',
@@ -125,20 +138,20 @@ const App = () => {
         },
         {
           path: '/payment',
-          element: <Payment />
+          element: <PrivateUserRoute><Payment /></PrivateUserRoute>
         },
         {
           path: '/profile',
-          element: <Profile />
+          element: <PrivateUserRoute><Profile /></PrivateUserRoute>
         }
       ]
     },
     {
       path: '/admin',
       element: (
-        <PrivateRoute>
+        <PrivateAdminRoute>
           <AdminLayout />
-        </PrivateRoute>
+        </PrivateAdminRoute>
       ),
       children: [
         {

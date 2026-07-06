@@ -246,7 +246,7 @@ const Home = () => {
   }
 
   const getProductImage = (product) => {
-    const src = product.images?.[0]?.src || product.image
+    const src = product.image || product.images?.[0]?.src
     if (!src) return ''
     return src.startsWith('http') ? src : `${import.meta.env.VITE_API_URL}${src}`
   }
@@ -501,7 +501,7 @@ const Home = () => {
                   {/* Image */}
                   <Box
                     sx={{
-                      height: 180,
+                      height: 220,
                       overflow: 'hidden',
                       bgcolor: '#F8F9FA',
                       display: 'flex',
@@ -518,7 +518,6 @@ const Home = () => {
                       alt={product.name}
                       sx={{
                         height: '100%',
-                        width: 'auto',
                         maxWidth: '100%',
                         objectFit: 'contain',
                         transition: 'transform 0.3s ease',
@@ -564,16 +563,20 @@ const Home = () => {
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, mb: 1 }}>
-                      <Rating
-                        value={product.rating?.average || 0}
-                        precision={0.1}
-                        size="small"
-                        readOnly
-                        sx={{ '& .MuiRating-icon': { fontSize: 14 } }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
-                        ({product.rating?.count || 0})
-                      </Typography>
+                      {product?.rating && product?.rating?.count > 0 &&
+                        <>
+                          <Rating
+                            value={product.rating?.average || 0}
+                            precision={0.1}
+                            size="small"
+                            readOnly
+                            sx={{ '& .MuiRating-icon': { fontSize: 14 } }}
+                          />
+                          <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                            ({product.rating?.count || 0})
+                          </Typography>
+                        </>
+                      }
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

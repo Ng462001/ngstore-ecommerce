@@ -27,6 +27,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 
 const navigation = {
   pages: [
+    { name: 'Home', href: '/' },
     { name: 'Stores', href: '/store' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
