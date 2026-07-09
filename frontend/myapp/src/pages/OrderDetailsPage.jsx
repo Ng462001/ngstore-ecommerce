@@ -37,10 +37,10 @@ import {
     CopyAll as CopyIcon,
     AssignmentReturned as ReturnIcon
 } from '@mui/icons-material'
-import OrderTracking from './OrderTracking'
+import OrderTracking from '../components/OrderTracking'
 import { format, isValid } from 'date-fns'
-import SupportModal from './SupportModal'
-import ReturnExchangeModal from './ReturnExchangeModal'
+import SupportModal from '../components/SupportModal'
+import ReturnExchangeModal from '../components/ReturnExchangeModal'
 
 const OrderDetailsPage = () => {
     const { id } = useParams()

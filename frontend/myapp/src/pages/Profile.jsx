@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import AddressCard from './AddressCard'
+import AddressCard from '../components/AddressCard'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { loginUser, logoutUser } from '../Redux/action/action'
 
-import UserRequests from './UserRequests'
+import UserRequests from '../components/UserRequests'
 
 const Profile = () => {
     const [user, setUser] = useState(null)

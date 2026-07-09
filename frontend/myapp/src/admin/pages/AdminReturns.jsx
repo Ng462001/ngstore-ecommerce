@@ -39,7 +39,7 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
-import ReturnRequestDetailsModal from './ReturnRequestDetailsModal';
+import ReturnRequestDetailsModal from '../components/ReturnRequestDetailsModal';
 
 // Custom hook for debouncing
 const useDebounce = (value, delay) => {

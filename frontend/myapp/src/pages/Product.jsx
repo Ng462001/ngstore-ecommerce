@@ -15,7 +15,7 @@ import {
 } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon } from '@heroicons/react/20/solid'
-import ProductCard from './ProductCard'
+import ProductCard from '../components/ProductCard'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const sortOptions = [

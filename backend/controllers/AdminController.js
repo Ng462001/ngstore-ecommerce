@@ -129,11 +129,6 @@ class AdminController {
                 timestamp: Date.now()
             });
 
-            // TODO: Implement email notification if notifyCustomer is true
-            // if (notifyCustomer) {
-            //     sendStatusUpdateEmail(order.user.email, order._id, status, notes);
-            // }
-
             res.json(updatedOrder);
         } catch (error) {
             res.status(500).json({ message: 'Error updating order status', error: error.message });
@@ -261,9 +256,6 @@ class AdminController {
                 },
                 timestamp: Date.now()
             });
-
-            // TODO: Integrate with payment gateway for actual refund
-            // await processRefund(order.paymentDetails.transactionId, order.totalPrice);
 
             res.json(updatedOrder);
         } catch (error) {
@@ -668,67 +660,6 @@ class AdminController {
         }
     };
 
-    //Get review by id
-    static getReviewById = async (req, res) => {
-        try {
-            const reviewId = req.params.id;
-
-            // Validate review ID format
-            if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid review ID format'
-                });
-            }
-
-            // Find product that contains this review
-            const product = await Product.findOne({
-                'reviews._id': reviewId
-            }).lean();
-
-            if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Review not found'
-                });
-            }
-
-            // Find the specific review
-            const review = product.reviews.find(r =>
-                r._id && r._id.toString() === reviewId
-            );
-
-            if (!review) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Review not found'
-                });
-            }
-
-            // Create response without virtual properties
-            const reviewWithProductInfo = {
-                ...review,
-                productId: product._id,
-                productName: product.name,
-                productImage: product.image,
-                productCategory: product.category,
-                productPrice: product.price,
-                productStatus: product.status
-            };
-
-            res.json({
-                success: true,
-                review: reviewWithProductInfo
-            });
-        } catch (error) {
-            console.error('Error fetching review:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Error fetching review',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    };
 
     //Update review
     static updateReview = async (req, res) => {
@@ -964,19 +895,6 @@ class AdminController {
         }
     };
 
-    //Get user activity
-    static getUserActivity = async (req, res) => {
-        try {
-            // Find activities where user is the actor OR target
-            const activities = await ActivityLog.find({ userId: req.params.id })
-                .sort({ createdAt: -1 })
-                .limit(50);
-
-            res.json(activities);
-        } catch (error) {
-            res.status(500).json({ message: 'Error fetching user activity', error: error.message });
-        }
-    };
 
     //Update user
     static updateUser = async (req, res) => {

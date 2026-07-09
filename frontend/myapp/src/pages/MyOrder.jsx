@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import OrderTracking from './OrderTracking'
+import OrderTracking from '../components/OrderTracking'
 import { useDispatch } from 'react-redux'
 import { clearCart } from '../Redux/action/action'
 

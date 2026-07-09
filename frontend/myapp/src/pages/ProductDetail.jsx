@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { addProduct } from '../Redux/action/action'
 import { toast } from 'react-toastify'
-import ProductImageGallery from './ProductImageGallery'
+import ProductImageGallery from '../components/ProductImageGallery'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')

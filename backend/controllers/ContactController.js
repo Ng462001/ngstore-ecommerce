@@ -4,7 +4,7 @@ const emailService = require('../services/emailService');
 
 class ContactController {
     // Create new contact message
-    static async createContact(req, res) {
+    static createContact = async (req, res) => {
         try {
             const { name, email, phone, subject, message } = req.body;
 
@@ -69,10 +69,9 @@ class ContactController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Get all contact messages (Admin only)
-    static async getAllContacts(req, res) {
+    static getAllContacts = async (req, res) => {
         try {
             const {
                 page = 1,
@@ -127,52 +126,10 @@ class ContactController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Get contact by ID (Admin only)
-    static async getContactById(req, res) {
-        try {
-            const { id } = req.params;
 
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid contact ID format'
-                });
-            }
-
-            const contact = await Contact.findById(id).select('-__v');
-
-            if (!contact) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Contact message not found'
-                });
-            }
-
-            // Mark as read if status is 'new'
-            if (contact.status === 'new') {
-                contact.status = 'read';
-                await contact.save();
-            }
-
-            res.json({
-                success: true,
-                data: contact
-            });
-
-        } catch (error) {
-            console.error('Get contact by ID error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch contact message',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
-
-    // Update contact status (Admin only)
-    static async updateContactStatus(req, res) {
+    static updateContactStatus = async (req, res) => {
         try {
             const { id } = req.params;
             const { status, adminNotes } = req.body;
@@ -217,10 +174,9 @@ class ContactController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Reply to contact (Admin only)
-    static async replyToContact(req, res) {
+    static replyToContact = async (req, res) => {
         try {
             const { id } = req.params;
             const { reply } = req.body;
@@ -294,10 +250,9 @@ class ContactController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Delete contact (Admin only)
-    static async deleteContact(req, res) {
+    static deleteContact = async (req, res) => {
         try {
             const { id } = req.params;
 
@@ -331,44 +286,8 @@ class ContactController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Get contact statistics (Admin only)
-    static async getContactStats(req, res) {
-        try {
-            const stats = await Contact.aggregate([
-                {
-                    $group: {
-                        _id: '$status',
-                        count: { $sum: 1 }
-                    }
-                }
-            ]);
-
-            const total = await Contact.countDocuments();
-
-            const formattedStats = {
-                total,
-                byStatus: stats.reduce((acc, stat) => {
-                    acc[stat._id] = stat.count;
-                    return acc;
-                }, {})
-            };
-
-            res.json({
-                success: true,
-                data: formattedStats
-            });
-
-        } catch (error) {
-            console.error('Get contact stats error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch contact statistics',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
 }
 
 module.exports = ContactController;

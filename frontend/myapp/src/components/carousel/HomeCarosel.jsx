@@ -2,7 +2,7 @@ import React from 'react';
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
 import HomeSection from '../components/HomeSection';
-import arrival from '../api/arrival';
+import arrival from '../../api/arrival';
 
 const responsive = {
     0: { items: 1 },

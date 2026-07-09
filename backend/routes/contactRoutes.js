@@ -8,8 +8,6 @@ router.post('/', ContactController.createContact);
 
 // Admin routes - Protected
 router.get('/', protect, admin, ContactController.getAllContacts);
-router.get('/stats', protect, admin, ContactController.getContactStats);
-router.get('/:id', protect, admin, ContactController.getContactById);
 router.patch('/:id/status', protect, admin, ContactController.updateContactStatus);
 router.post('/:id/reply', protect, admin, ContactController.replyToContact);
 router.delete('/:id', protect, admin, ContactController.deleteContact);

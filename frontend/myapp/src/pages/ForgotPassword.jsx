@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from "react-hot-toast"
 import { NavLink } from "react-router-dom"
 
 export default function ForgotPassword() {
@@ -24,12 +25,15 @@ export default function ForgotPassword() {
 
             if (response.ok) {
                 setIsSubmitted(true)
+                setIsLoading(false)
+                toast.success(data.message)
             } else {
-                alert(data.message || 'Failed to send reset link')
+                toast.error(data.message)
+                setIsLoading(false)
             }
         } catch (error) {
             console.error('Forgot password error:', error)
-            alert('An error occurred. Please try again.')
+            toast.error('An error occurred. Please try again.')
         } finally {
             setIsLoading(false)
         }

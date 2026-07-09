@@ -12,7 +12,7 @@ import {
     Email
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { logoutUser } from '../Redux/action/action';
+import { logoutUser } from '../../Redux/action/action';
 import { useDispatch } from 'react-redux';
 
 const Sidebar = ({ onMobileClose }) => {

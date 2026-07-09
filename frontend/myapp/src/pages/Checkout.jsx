@@ -5,10 +5,10 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import { useLocation, useNavigate } from 'react-router-dom';
-import DeliveryAddress from './DeliveryAddress';
+import DeliveryAddress from '../components/DeliveryAddress';
 import Payment from './Payment';
 import { Typography, Container, Paper } from '@mui/material';
-import OrderSummary from './OrderSummary';
+import OrderSummary from '../components/OrderSummary';
 import CheckIcon from '@mui/icons-material/Check';
 
 const steps = ['Shipping address', 'Order summary', 'Payment details'];

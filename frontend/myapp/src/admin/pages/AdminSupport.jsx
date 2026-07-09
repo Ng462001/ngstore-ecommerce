@@ -41,7 +41,7 @@ import {
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
-import SupportTicketDetailsModal from './SupportTicketDetailsModal';
+import SupportTicketDetailsModal from '../components/SupportTicketDetailsModal';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const ITEMS_PER_PAGE = 10;

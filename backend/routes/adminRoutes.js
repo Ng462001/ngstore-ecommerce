@@ -19,14 +19,12 @@ router.put('/orders/:id/priority', protect, admin, AdminController.updateOrderPr
 router.get('/reviews/stats', protect, admin, AdminController.getReviewStats);
 router.get('/reviews', protect, admin, AdminController.getAllReviews);
 router.get('/reviews/products', protect, admin, AdminController.getReviewProducts);
-router.get('/reviews/:id', protect, admin, AdminController.getReviewById);
 router.put('/reviews/:id', protect, admin, AdminController.updateReview);
 router.delete('/reviews/:id', protect, admin, AdminController.deleteReview);
 
 // User Management Routes
 router.get('/users', protect, admin, AdminController.getAllUsers);
 router.get('/users/:id', protect, admin, AdminController.getUserDetails);
-router.get('/users/:id/activity', protect, admin, AdminController.getUserActivity);
 router.put('/users/:id', protect, admin, AdminController.updateUser);
 router.get('/users/:id/orders', protect, admin, AdminController.getUserOrders);
 

@@ -121,7 +121,7 @@ import {
   Close,
   Clear,
 } from '@mui/icons-material'
-import Carousel from '../carsouel/Carousel'
+import Carousel from '../components/carousel/Carousel'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { keyframes } from '@mui/system'

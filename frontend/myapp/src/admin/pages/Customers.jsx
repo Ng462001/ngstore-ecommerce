@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { Refresh, Visibility } from '@mui/icons-material';
 import axios from 'axios';
-import CustomerDetailsModal from './CustomerDetailsModal';
+import CustomerDetailsModal from '../components/CustomerDetailsModal';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

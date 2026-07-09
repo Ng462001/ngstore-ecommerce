@@ -1,23 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const {
-    requestReturnExchange,
-    getUserRequests,
-    getRequestById,
-    getRequestsByOrderId,
-    getAllRequests,
-    updateRequestStatus
-} = require('../controllers/returnExchangeController');
+const ReturnExchangeController = require('../controllers/returnExchangeController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-router.post('/', protect, upload.array('images', 5), requestReturnExchange);
-router.get('/my-requests', protect, getUserRequests);
-router.get('/order/:orderId', protect, getRequestsByOrderId);
-router.get('/:id', protect, getRequestById);
+router.post('/', protect, upload.array('images', 5), ReturnExchangeController.requestReturnExchange);
+router.get('/my-requests', protect, ReturnExchangeController.getUserRequests);
+router.get('/order/:orderId', protect, ReturnExchangeController.getRequestsByOrderId);
 
 // Admin routes
-router.get('/admin/all', protect, admin, getAllRequests);
-router.put('/admin/:id/status', protect, admin, updateRequestStatus);
+router.get('/admin/all', protect, admin, ReturnExchangeController.getAllRequests);
+router.put('/admin/:id/status', protect, admin, ReturnExchangeController.updateRequestStatus);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import React from 'react';
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
-import mainCarousel from '../api/maincarousel';
+import mainCarousel from '../../api/maincarousel';
 
 
 const items = mainCarousel.map((item, index) => (

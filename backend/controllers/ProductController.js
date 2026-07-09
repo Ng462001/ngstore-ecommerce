@@ -3,8 +3,7 @@ const mongoose = require("mongoose");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../services/cloudinaryService");
 
 class ProductController {
-    // Get all products with filtering, pagination, and sorting
-    static async getAllProducts(req, res) {
+    static getAllProducts = async (req, res) => {
         try {
             const {
                 page = 1,
@@ -122,10 +121,10 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
     // Get product by ID
-    static async getProductById(req, res) {
+    static getProductById = async (req, res) => {
         try {
             const { id } = req.params;
 
@@ -158,10 +157,10 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
     // Create new product
-    static async createProduct(req, res) {
+    static createProduct = async (req, res) => {
         try {
             const productData = req.body;
 
@@ -268,10 +267,10 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
     // Update product
-    static async updateProduct(req, res) {
+    static updateProduct = async (req, res) => {
         try {
             const { id } = req.params;
             const updateData = req.body;
@@ -407,10 +406,10 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
     // Delete product (soft delete by updating status)
-    static async deleteProduct(req, res) {
+    static deleteProduct = async (req, res) => {
         try {
             const { id } = req.params;
 
@@ -465,149 +464,11 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Hard delete product (completely remove from database)
-    static async hardDeleteProduct(req, res) {
-        try {
-            const { id } = req.params;
-
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid product ID format'
-                });
-            }
-
-            const product = await Product.findByIdAndDelete(id);
-
-            if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Product not found'
-                });
-            }
-
-            // Delete main image from Cloudinary
-            if (product.image) {
-                deleteFromCloudinary(product.image).catch(err => 
-                    console.error('[CLOUDINARY] Failed to delete main image during hard delete:', err)
-                );
-            }
-            // Delete additional images from Cloudinary
-            if (product.images && product.images.length > 0) {
-                product.images.forEach(img => {
-                    if (img.src) {
-                        deleteFromCloudinary(img.src).catch(err => 
-                            console.error('[CLOUDINARY] Failed to delete additional image during hard delete:', err)
-                        );
-                    }
-                });
-            }
-
-            res.json({
-                success: true,
-                message: 'Product permanently deleted',
-                data: product
-            });
-
-        } catch (error) {
-            console.error('Hard delete product error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to delete product',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
-
-    // Get products by category
-    static async getProductsByCategory(req, res) {
-        try {
-            const { category } = req.params;
-            const { page = 1, limit = 12, sort = 'createdAt', order = 'desc' } = req.query;
-
-            const sortConfig = {};
-            sortConfig[sort] = order === 'desc' ? -1 : 1;
-
-            const products = await Product.find({
-                category: { $regex: category, $options: 'i' },
-                status: 'active'
-            })
-                .sort(sortConfig)
-                .limit(limit * 1)
-                .skip((page - 1) * limit)
-                .select('-__v');
-
-            const total = await Product.countDocuments({
-                category: { $regex: category, $options: 'i' },
-                status: 'active'
-            });
-
-            res.json({
-                success: true,
-                data: products,
-                pagination: {
-                    current: parseInt(page),
-                    pages: Math.ceil(total / limit),
-                    total
-                }
-            });
-
-        } catch (error) {
-            console.error('Get products by category error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch products by category',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
-
-    // Update product inventory
-    static async updateInventory(req, res) {
-        try {
-            const { id } = req.params;
-            const { quantityChange, operation = 'add' } = req.body; // operation: 'add' or 'subtract'
-
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid product ID format'
-                });
-            }
-
-            const product = await Product.findById(id);
-            if (!product) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Product not found'
-                });
-            }
-
-            const change = operation === 'subtract' ? -quantityChange : quantityChange;
-            await product.updateInventory(change);
-
-            const updatedProduct = await Product.findById(id).select('-__v');
-
-            res.json({
-                success: true,
-                message: 'Inventory updated successfully',
-                data: updatedProduct
-            });
-
-        } catch (error) {
-            console.error('Update inventory error:', error);
-            res.status(400).json({
-                success: false,
-                message: 'Failed to update inventory',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
 
     // Add product rating and review
-    static async addRating(req, res) {
+    static addRating = async (req, res) => {
         try {
             const { id } = req.params;
             const { rating, comment, name, userId } = req.body;
@@ -667,36 +528,8 @@ class ProductController {
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
-    }
+    };
 
-    // Get products with high discounts
-    static async getDiscountedProducts(req, res) {
-        try {
-            const { minDiscount = 20, limit = 10 } = req.query;
-
-            const discountedProducts = await Product.find({
-                discount: { $gte: parseInt(minDiscount) },
-                status: 'active',
-                quantity: { $gt: 0 }
-            })
-                .sort({ discount: -1 })
-                .limit(parseInt(limit))
-                .select('-__v');
-
-            res.json({
-                success: true,
-                data: discountedProducts
-            });
-
-        } catch (error) {
-            console.error('Get discounted products error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch discounted products',
-                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-            });
-        }
-    }
 }
 
 module.exports = ProductController;

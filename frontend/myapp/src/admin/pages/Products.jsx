@@ -34,8 +34,8 @@ import {
     Visibility
 } from '@mui/icons-material';
 import axios from 'axios';
-import ProductFormModal from './ProductFormModal';
-import ProductDetailsModal from './ProductDetailsModal';
+import ProductFormModal from '../components/ProductFormModal';
+import ProductDetailsModal from '../components/ProductDetailsModal';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 

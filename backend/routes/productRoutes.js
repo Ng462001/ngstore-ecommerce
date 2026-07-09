@@ -11,11 +11,6 @@ router.post("/", upload.fields([
 ]), ProductController.createProduct);
 
 // Featured and special collections
-router.get("/discounted", ProductController.getDiscountedProducts);
-router.get("/category/:category", ProductController.getProductsByCategory);
-
-// Inventory management
-router.patch("/:id/inventory", ProductController.updateInventory);
 
 // Rating management
 router.patch("/:id/rating", ProductController.addRating);
@@ -27,6 +22,5 @@ router.put("/:id", upload.fields([
     { name: 'images', maxCount: 10 }
 ]), ProductController.updateProduct);
 router.delete("/:id", ProductController.deleteProduct);
-router.delete("/:id/hard", ProductController.hardDeleteProduct);
 
 module.exports = router;

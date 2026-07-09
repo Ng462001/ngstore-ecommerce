@@ -13,7 +13,7 @@ import {
     useTheme
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
-import Sidebar from '../Sidebar';
+import Sidebar from './Sidebar';
 
 
 const drawerWidth = 280;

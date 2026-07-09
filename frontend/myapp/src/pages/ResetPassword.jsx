@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from "react-hot-toast"
 import { useParams, useNavigate } from "react-router-dom"
 
 export default function ResetPassword() {
@@ -12,7 +13,7 @@ export default function ResetPassword() {
         event.preventDefault()
 
         if (password !== confirmPassword) {
-            alert('Passwords do not match')
+            toast.error('New password and confirm password should be the same')
             return
         }
 
@@ -30,14 +31,14 @@ export default function ResetPassword() {
             const data = await response.json()
 
             if (response.ok) {
-                alert('Password reset successful. You can now login with your new password.')
+                toast.success(data.message)
                 navigate('/login')
             } else {
-                alert(data.message || 'Failed to reset password')
+                toast.error(data.message)
             }
         } catch (error) {
             console.error('Reset password error:', error)
-            alert('An error occurred. Please try again.')
+            toast.error('An error occurred. Please try again.')
         } finally {
             setIsLoading(false)
         }

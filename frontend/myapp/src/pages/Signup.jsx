@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
 import { NavLink, useNavigate } from 'react-router-dom'
 
 const Signup = () => {
@@ -12,6 +13,14 @@ const Signup = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault()
+        if (password.length < 6) {
+            toast.error('Password must be at least 6 characters')
+            return
+        }
+        if (phone.length < 10) {
+            toast.error('Phone number must be at least 10 digits')
+            return
+        }
         setLoading(true)
         try {
             // Remove formatting from phone number before sending
@@ -27,16 +36,19 @@ const Signup = () => {
 
             const data = await response.json()
 
-            setLoading(false)
             if (response.ok) {
-                alert(data.message || 'Registration successful. Please check your email to verify your account.')
+                toast.success(data.message || 'Registration successful. Please check your email to verify your account.')
+                setLoading(false)
                 navigate('/login')
             } else {
-                alert(data.message || 'Signup failed')
+                toast.error(data.message || 'Signup failed')
+                setLoading(false)
             }
         } catch (error) {
             console.error('Signup error:', error)
-            alert('An error occurred during signup')
+            toast.error('An error occurred during signup')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -136,7 +148,15 @@ const Signup = () => {
                             type="submit"
                             className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
-                            {loading ? 'Signing Up...' : 'Sign Up'}
+                            {loading ? <div role="status">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="size-9 shrink-0 animate-spin dark:fill-slate-50"
+                                    viewBox="0 0 256 256" aria-hidden="true">
+                                    <path
+                                        d="M128 63.04c-5.104 0-9.28-4.176-9.28-9.28V16.64c0-5.104 4.176-9.28 9.28-9.28s9.28 4.176 9.28 9.28v37.12c0 5.104-4.176 9.28-9.28 9.28zm52.548 21.692c-2.32 0-4.756-.928-6.612-2.668-3.596-3.596-3.596-9.512 0-13.108l26.216-26.216c3.596-3.596 9.512-3.596 13.108 0s3.596 9.512 0 13.108l-26.216 26.216c-1.856 1.856-4.176 2.668-6.496 2.668zm58.812 52.548h-37.12c-5.104 0-9.28-4.176-9.28-9.28s4.176-9.28 9.28-9.28h37.12c5.104 0 9.28 4.176 9.28 9.28s-4.176 9.28-9.28 9.28zm-32.596 78.764c-2.32 0-4.756-.928-6.612-2.668l-26.216-26.216c-3.596-3.596-3.596-9.512 0-13.108s9.512-3.596 13.108 0l26.216 26.216c3.596 3.596 3.596 9.512 0 13.108-1.74 1.74-4.176 2.668-6.496 2.668zM128 248.64c-5.104 0-9.28-4.176-9.28-9.28v-37.12c0-5.104 4.176-9.28 9.28-9.28s9.28 4.176 9.28 9.28v37.12c0 5.104-4.176 9.28-9.28 9.28zm-78.764-32.596c-2.32 0-4.756-.928-6.612-2.668-3.596-3.596-3.596-9.512 0-13.108l26.216-26.216c3.596-3.596 9.512-3.596 13.108 0s3.596 9.512 0 13.108l-26.216 26.216c-1.74 1.74-4.06 2.668-6.496 2.668zm4.524-78.764H16.64c-5.104 0-9.28-4.176-9.28-9.28s4.176-9.28 9.28-9.28h37.12c5.104 0 9.28 4.176 9.28 9.28s-4.176 9.28-9.28 9.28zm21.692-52.548c-2.32 0-4.756-.928-6.612-2.668l-26.1-26.216c-3.596-3.596-3.596-9.512 0-13.108s9.512-3.596 13.108 0l26.216 26.216c3.596 3.596 3.596 9.512 0 13.108-1.856 1.856-4.176 2.668-6.612 2.668z"
+                                        data-original="#000000" />
+                                </svg>
+                                <span className="sr-only">Loading…</span>
+                            </div> : 'Sign Up'}
                         </button>
                     </div>
                 </form>
