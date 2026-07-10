@@ -124,7 +124,8 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
 
         try {
             setLoadingHistory(true);
-            const token = localStorage.getItem('token');
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const token = userInfo?.token;
             // In a real app, you would have an endpoint for ticket history
             // For now, we'll simulate with the existing data
             const history = [
@@ -192,11 +193,14 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                 // Given the file structure, it's better to make AdminSupport accept message as arg or just do the fetch here.
                 // Accessing the backend directly here seems cleaner given the parent's implementation is flawed for a passed prop.
 
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                const token = userInfo?.token;
+
                 const response = await fetch(`${API_URL}/support/${ticket._id}/response`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Simplify token access
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ message: responseMessage })
                 });
@@ -235,6 +239,15 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
         }
     };
 
+    const formatDistanceToNowSafe = (dateString) => {
+        if (!dateString) return '';
+        try {
+            return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+        } catch (e) {
+            return '';
+        }
+    };
+
     const getStatusColor = (status) => {
         const statusMap = {
             'Open': { color: 'error', bgColor: '#ffebee', textColor: '#c62828' },
@@ -257,13 +270,13 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
 
     const getCategoryColor = (category) => {
         const categoryMap = {
+            'Order Issue': { color: 'success', bgColor: '#e8f5e9', textColor: '#2e7d32' },
+            'Payment': { color: 'secondary', bgColor: '#f3e5f5', textColor: '#7b1fa2' },
+            'Product Inquiry': { color: 'info', bgColor: '#e0f7fa', textColor: '#00838f' },
             'Technical': { color: 'primary', bgColor: '#e3f2fd', textColor: '#1565c0' },
-            'Billing': { color: 'secondary', bgColor: '#f3e5f5', textColor: '#7b1fa2' },
-            'Order': { color: 'success', bgColor: '#e8f5e9', textColor: '#2e7d32' },
-            'Account': { color: 'info', bgColor: '#e0f7fa', textColor: '#00838f' },
-            'General': { color: 'default', bgColor: '#f5f5f5', textColor: '#616161' }
+            'Other': { color: 'default', bgColor: '#f5f5f5', textColor: '#616161' }
         };
-        return categoryMap[category] || categoryMap['General'];
+        return categoryMap[category] || categoryMap['Other'];
     };
 
     const calculateResponseTime = () => {
@@ -347,7 +360,7 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                                                 {formatDate(ticket.createdAt)}
                                                 {ticket.createdAt && (
                                                     <Typography variant="caption" display="block" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                        {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+                                                        {formatDistanceToNowSafe(ticket.createdAt)}
                                                     </Typography>
                                                 )}
                                             </Box>
@@ -567,23 +580,36 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                                         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <AttachFile /> Attachments ({ticket.files.length})
                                         </Typography>
-                                        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
-                                            {ticket.files.map((file, index) => (
-                                                <a
-                                                    key={index}
-                                                    href={`${API_URL}${file}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{ textDecoration: 'none' }}
-                                                >
-                                                    <Card variant="outlined" sx={{ p: 1, minWidth: 100, textAlign: 'center' }}>
-                                                        <AttachFile color="action" sx={{ fontSize: 40 }} />
-                                                        <Typography variant="caption" display="block">
-                                                            File {index + 1}
-                                                        </Typography>
-                                                    </Card>
-                                                </a>
-                                            ))}
+                                        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                                            {ticket.files.map((file, index) => {
+                                                const fileUrl = file.startsWith('http') ? file : `${API_URL}${file}`;
+                                                const isImage = /\.(jpeg|jpg|gif|png|webp)($|\?)/i.test(file);
+                                                return (
+                                                    <a
+                                                        key={index}
+                                                        href={fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ textDecoration: 'none' }}
+                                                    >
+                                                        <Card variant="outlined" sx={{ p: 1, width: 100, height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {isImage ? (
+                                                                <Box
+                                                                    component="img"
+                                                                    src={fileUrl}
+                                                                    alt={`Attachment ${index + 1}`}
+                                                                    sx={{ width: '100%', height: '70%', objectFit: 'cover', borderRadius: 1 }}
+                                                                />
+                                                            ) : (
+                                                                <AttachFile color="action" sx={{ fontSize: 32 }} />
+                                                            )}
+                                                            <Typography variant="caption" display="block" sx={{ mt: 0.5, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '90%', textAlign: 'center' }}>
+                                                                File {index + 1}
+                                                            </Typography>
+                                                        </Card>
+                                                    </a>
+                                                );
+                                            })}
                                         </Stack>
                                     </Paper>
                                 </Grid>
@@ -855,7 +881,7 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                                                     {formatDate(item.timestamp)}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                                    {formatDistanceToNowSafe(item.timestamp)}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>

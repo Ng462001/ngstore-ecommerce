@@ -124,8 +124,9 @@ class SupportController {
 
             await ticket.save();
 
-            // Populate sender info in response
+            // Populate user and sender info in response
             const populatedTicket = await Support.findById(id)
+                .populate('user', 'name email')
                 .populate('responses.sender', 'name email');
 
             res.status(200).json({
@@ -226,7 +227,8 @@ class SupportController {
                 id,
                 { status },
                 { new: true, runValidators: true }
-            ).populate('user', 'name email');
+            ).populate('user', 'name email')
+             .populate('responses.sender', 'name email');
 
             if (!ticket) {
                 return res.status(404).json({

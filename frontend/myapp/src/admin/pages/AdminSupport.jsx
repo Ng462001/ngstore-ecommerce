@@ -131,6 +131,15 @@ const AdminSupport = () => {
     };
 
     const handleTicketUpdate = async (ticketId, updateData) => {
+        if (updateData._id) {
+            setTickets(prevTickets =>
+                prevTickets.map(ticket =>
+                    ticket._id === ticketId ? updateData : ticket
+                )
+            );
+            setSelectedTicket(updateData);
+            return updateData;
+        }
         if (updateData.status) {
             return await handleUpdateStatus(ticketId, updateData.status);
         }
