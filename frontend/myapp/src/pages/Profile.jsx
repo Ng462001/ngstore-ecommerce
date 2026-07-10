@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import AddressCard from '../components/AddressCard'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { toast } from 'react-hot-toast'
 import { loginUser, logoutUser } from '../Redux/action/action'
 
 import UserRequests from '../components/UserRequests'
@@ -103,6 +102,14 @@ const Profile = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
+        if (name === 'phone') {
+            const numericValue = value.replace(/\D/g, '').slice(0, 10)
+            setEditedUser(prev => ({
+                ...prev,
+                [name]: numericValue
+            }))
+            return
+        }
         setEditedUser(prev => ({
             ...prev,
             [name]: value
@@ -111,6 +118,17 @@ const Profile = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        if (editedUser.name.trim().length === 0 || editedUser.phone.trim().length === 0) {
+            toast.error('Please fill all the fields')
+            return
+        }
+
+        if (editedUser.phone.length !== 10) {
+            toast.error('Phone number must be exactly 10 digits')
+            return
+        }
+
         setIsLoading(true)
 
         try {
@@ -219,7 +237,7 @@ const Profile = () => {
                                 <h2 className="font-semibold text-gray-900">{user.name}</h2>
                                 <p className="text-sm text-gray-500">{user.email}</p>
                                 <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                    {user.role}
+                                    {user.role === 'user' && 'User'}
                                 </span>
                             </div>
 
@@ -338,6 +356,7 @@ const Profile = () => {
                                                         <input
                                                             type="email"
                                                             name="email"
+                                                            disabled
                                                             value={editedUser.email}
                                                             onChange={handleInputChange}
                                                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -349,6 +368,8 @@ const Profile = () => {
                                                         <label className="text-sm font-medium text-gray-700">Phone Number</label>
                                                         <input
                                                             type="tel"
+                                                            pattern='[0-9]{10}'
+                                                            maxLength="10"
                                                             name="phone"
                                                             value={editedUser.phone || ''}
                                                             onChange={handleInputChange}

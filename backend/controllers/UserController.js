@@ -117,6 +117,10 @@ class UserController {
 
         const { name, email, phone } = req.body;
 
+        if (phone && !/^\d{10}$/.test(phone)) {
+            return res.status(400).json({ message: 'Phone number must be exactly 10 digits' });
+        }
+
         const user = await User.findById(req.user.id);
 
         if (user) {
@@ -148,6 +152,10 @@ class UserController {
         const { currentPassword, newPassword } = req.body;
 
         const user = await User.findById(req.user.id).select('+password');
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: 'New password and Current password should not be same' });
+        }
 
         if (user && (await user.matchPassword(currentPassword))) {
             user.password = newPassword;
@@ -261,14 +269,22 @@ class UserController {
         const user = await User.findOne({
             resetPasswordToken,
             resetPasswordExpire: { $gt: Date.now() }
-        });
+        }).select('+password');
 
         if (!user) {
             return res.status(400).json({ message: 'Invalid token or token has expired' });
         }
 
+        // Check if new password is the same as the old password
+        const isMatch = await user.matchPassword(req.body.password);
+        if (isMatch) {
+            return res.status(400).json({ message: 'New password must be different from your old password.' });
+        }
+
         // Set new password
         user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
 
         await user.save();
 
