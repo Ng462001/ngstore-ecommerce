@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import {
     Modal,
@@ -18,7 +16,6 @@ import {
     FormControlLabel,
     Radio,
     Chip,
-    Divider,
     Alert,
     CircularProgress,
     Stack,
@@ -50,9 +47,10 @@ import {
     Notifications as NotificationsIcon
 } from '@mui/icons-material'
 import axios from 'axios'
+import toast from 'react-hot-toast'
 
 const SupportModal = ({ open, onClose, order, user, token }) => {
-    const [activeStep, setActiveStep] = useState(0) // 0: Options, 1: Form, 2: Success
+    const [activeStep, setActiveStep] = useState(0)
     const [selectedOption, setSelectedOption] = useState('')
     const [queryType, setQueryType] = useState('')
     const [formData, setFormData] = useState({
@@ -72,15 +70,8 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
     const [userTickets, setUserTickets] = useState([])
     const [showMyTickets, setShowMyTickets] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
-
-    // Map frontend categories to backend categories
-    const categoryMap = {
-        'order': 'Order Issue',
-        'shipping': 'Order Issue',
-        'payment': 'Payment',
-        'return': 'Order Issue',
-        'account': 'Other'
-    }
+    const [selectedTicket, setSelectedTicket] = useState(null)
+    const [responseMessage, setResponseMessage] = useState('')
 
     const supportOptions = [
         {
@@ -173,18 +164,30 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
         }
     ]
 
-    // Fetch user tickets when modal opens
+    // Fetch user tickets and initialize user data when modal opens
     useEffect(() => {
-        if (open && user && token) {
-            fetchUserTickets()
+        if (open && user) {
+            setFormData(prev => ({
+                ...prev,
+                name: prev.name || user.name || '',
+                email: prev.email || user.email || '',
+                phone: prev.phone || user.phone || ''
+            }))
+
+            const activeToken = token || JSON.parse(localStorage.getItem('userInfo'))?.token
+            if (activeToken) {
+                fetchUserTickets()
+            }
         }
     }, [open, user, token])
 
     const fetchUserTickets = async () => {
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/support/my-tickets`, {
+            const activeToken = token || JSON.parse(localStorage.getItem('userInfo'))?.token
+            if (!activeToken) return
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/support/my-tickets`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${activeToken}`
                 }
             })
             if (response.data.success) {
@@ -276,8 +279,20 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
         setError('')
 
         // Validate form
+        if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+            setError('Name, email, and phone number are required')
+            setLoading(false)
+            return
+        }
+
         if (!formData.subject.trim() || !formData.message.trim()) {
             setError('Subject and message are required')
+            setLoading(false)
+            return
+        }
+
+        if (!formData.category) {
+            setError('Category is required')
             setLoading(false)
             return
         }
@@ -289,7 +304,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
             Object.keys(formData).forEach(key => {
                 if (key === 'attachments') {
                     formData.attachments.forEach(file => {
-                        formDataToSend.append('files', file)
+                        formDataToSend.append('attachments', file)
                     })
                 } else if (key !== 'attachments' && formData[key]) {
                     formDataToSend.append(key, formData[key])
@@ -301,12 +316,13 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                 formDataToSend.append('order', order._id)
             }
 
+            const activeToken = token || JSON.parse(localStorage.getItem('userInfo'))?.token
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/support/create-ticket`,
+                `${import.meta.env.VITE_API_URL}/api/support`,
                 formDataToSend,
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${activeToken}`,
                         'Content-Type': 'multipart/form-data'
                     }
                 }
@@ -345,11 +361,52 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
         setSuccess('')
         setTicketId('')
         setShowMyTickets(false)
+        setSelectedTicket(null)
+        setResponseMessage('')
         onClose()
     }
 
     const handleViewTicket = (ticketId) => {
-        window.open(`/support/ticket/${ticketId}`, '_blank')
+        const ticket = userTickets.find(t => t._id === ticketId)
+        if (ticket) {
+            setSelectedTicket(ticket)
+        }
+    }
+
+    const handleSendResponse = async () => {
+        if (!responseMessage.trim()) return
+        setLoading(true)
+        setError('')
+        try {
+            const activeToken = token || JSON.parse(localStorage.getItem('userInfo'))?.token
+            if (!activeToken) return
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/support/${selectedTicket._id}/response`,
+                { message: responseMessage },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${activeToken}`
+                    }
+                }
+            )
+
+            if (response.data.success) {
+                toast.success('Reply sent successfully')
+                setResponseMessage('')
+                // Update local selected ticket responses
+                setSelectedTicket(prev => ({
+                    ...prev,
+                    responses: [...prev.responses, response.data.newResponse]
+                }))
+                // Refresh list of tickets in background
+                fetchUserTickets()
+            }
+        } catch (err) {
+            console.error('Error sending response:', err)
+            setError(err.response?.data?.message || 'Failed to send response')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const getStatusColor = (status) => {
@@ -463,7 +520,111 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
         </Box>
     )
 
+    const renderTicketDetail = () => {
+        if (!selectedTicket) return null
+
+        return (
+            <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Box>
+                        <Typography variant="h6" fontWeight={600}>
+                            {selectedTicket.subject}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Ticket ID: #{selectedTicket._id.toUpperCase()} • Category: {selectedTicket.category}
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            setSelectedTicket(null);
+                            setError('');
+                        }}
+                    >
+                        Back to List
+                    </Button>
+                </Box>
+
+                <Box sx={{
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    mb: 3,
+                    p: 2,
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 2,
+                    bgcolor: 'grey.50'
+                }}>
+                    {/* Main Issue Message */}
+                    <Box sx={{ alignSelf: 'flex-start', maxWidth: '85%', bgcolor: 'grey.200', p: 2, borderRadius: 2 }}>
+                        <Typography variant="body2">{selectedTicket.message}</Typography>
+                        <Typography variant="caption" display="block" sx={{ mt: 1, opacity: 0.7 }}>
+                            You • {new Date(selectedTicket.createdAt).toLocaleString()}
+                        </Typography>
+                    </Box>
+
+                    {/* Responses */}
+                    {selectedTicket.responses?.map((resp, idx) => (
+                        <Box
+                            key={idx}
+                            sx={{
+                                alignSelf: resp.senderRole === 'User' ? 'flex-start' : 'flex-end',
+                                maxWidth: '85%',
+                                bgcolor: resp.senderRole === 'User' ? 'grey.200' : 'primary.light',
+                                color: resp.senderRole === 'User' ? 'text.primary' : 'white',
+                                p: 2,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="body2">{resp.message}</Typography>
+                            <Typography variant="caption" display="block" sx={{ mt: 1, opacity: 0.7 }}>
+                                {resp.senderRole} • {new Date(resp.createdAt).toLocaleString()}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+
+                {selectedTicket.status !== 'Closed' ? (
+                    <Box>
+                        <TextField
+                            fullWidth
+                            multiline
+                            rows={3}
+                            placeholder="Type your reply here..."
+                            value={responseMessage}
+                            onChange={(e) => setResponseMessage(e.target.value)}
+                            sx={{ mb: 2 }}
+                        />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                variant="contained"
+                                onClick={handleSendResponse}
+                                disabled={!responseMessage.trim() || loading}
+                                startIcon={loading ? <CircularProgress size={20} /> : null}
+                            >
+                                {loading ? 'Sending...' : 'Send Reply'}
+                            </Button>
+                        </Box>
+                    </Box>
+                ) : (
+                    <Alert severity="info">This ticket is closed. You can no longer reply to it.</Alert>
+                )}
+            </Box>
+        )
+    }
+
     const renderStep = () => {
+        if (selectedTicket) {
+            return renderTicketDetail()
+        }
         if (showMyTickets) {
             return renderMyTickets()
         }
@@ -603,7 +764,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                         fullWidth
                                         variant="contained"
                                         startIcon={<ChatIcon />}
-                                        onClick={() => window.open('https://wa.me/919876543210', '_blank')}
+                                        onClick={() => window.open('https://wa.me/+919422498134', '_blank')}
                                         color="success"
                                     >
                                         WhatsApp Chat
@@ -614,7 +775,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                         fullWidth
                                         variant="contained"
                                         startIcon={<PhoneIcon />}
-                                        href="tel:18002089898"
+                                        href="tel:+919422498134"
                                         color="primary"
                                     >
                                         Call Support
@@ -625,7 +786,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                         fullWidth
                                         variant="contained"
                                         startIcon={<EmailIcon />}
-                                        href="mailto:support@example.com"
+                                        href="mailto:ngtech2026@gmail.com"
                                         color="secondary"
                                     >
                                         Email Us
@@ -679,7 +840,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                     fullWidth
                                     label="Name"
                                     name="name"
-                                    value={formData.name || user?.name || ''}
+                                    value={formData.name}
                                     onChange={handleInputChange}
                                     required
                                     error={!formData.name}
@@ -691,7 +852,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                     fullWidth
                                     label="Phone Number"
                                     name="phone"
-                                    value={formData.phone || user?.phone || ''}
+                                    value={formData.phone}
                                     onChange={handleInputChange}
                                     required
                                     error={!formData.phone}
@@ -704,7 +865,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                                     label="Email"
                                     name="email"
                                     type="email"
-                                    value={formData.email || user?.email || ''}
+                                    value={formData.email}
                                     onChange={handleInputChange}
                                     required
                                     error={!formData.email}
@@ -957,7 +1118,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                     </Box>
 
                     {/* Footer */}
-                    {activeStep !== 2 && !showMyTickets && (
+                    {activeStep !== 2 && !showMyTickets && !selectedTicket && (
                         <Box sx={{
                             p: 2,
                             borderTop: 1,
@@ -965,7 +1126,7 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                             bgcolor: 'grey.50'
                         }}>
                             <Typography variant="caption" color="text.secondary">
-                                <strong>Support Hours:</strong> Mon-Sun, 7 AM - 12 AM | <strong>Email:</strong> support@example.com | <strong>Phone:</strong> 1800-208-9898
+                                <strong>Support Hours:</strong> Mon-Sun, 7 AM - 12 AM | <strong>Email:</strong> ngtech2026@gmail.com | <strong>Phone:</strong> +919422498134
                             </Typography>
                         </Box>
                     )}

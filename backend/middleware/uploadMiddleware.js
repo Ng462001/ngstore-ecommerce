@@ -20,16 +20,33 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter to accept only images
+// File filter to accept images for products, and images + docs for support/returns
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const isSupportOrReturn = file.fieldname === 'attachments' || 
+                              (req.originalUrl && (req.originalUrl.includes('/api/support') || req.originalUrl.includes('/api/return-exchange')));
 
-    if (extname && mimetype) {
-        cb(null, true);
+    if (isSupportOrReturn) {
+        const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx|txt/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const allowedMimeTypes = /image\/(jpeg|jpg|png|gif|webp)|application\/(pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document)|text\/plain/;
+        const mimetype = allowedMimeTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Allowed file types: images, PDF, DOC, DOCX, TXT'));
+        }
     } else {
-        cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
+        // Product images only
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
+        }
     }
 };
 

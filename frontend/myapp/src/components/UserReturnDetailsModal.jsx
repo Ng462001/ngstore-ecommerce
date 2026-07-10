@@ -36,12 +36,10 @@ import {
     ArrowForward,
     ShoppingBag,
     LocationOn,
-    AttachFile,
     TrackChanges,
     Phone
 } from '@mui/icons-material';
-import { format, formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 import ReturnTracking from './ReturnTracking';
 
 // Status configuration

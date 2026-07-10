@@ -17,7 +17,7 @@ import {
     Divider
 } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { Assignment, Sync as SyncIcon, Visibility } from '@mui/icons-material';
 import UserReturnDetailsModal from './UserReturnDetailsModal';
 
