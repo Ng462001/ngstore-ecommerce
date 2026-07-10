@@ -5,7 +5,7 @@ import { StarIcon } from '@heroicons/react/20/solid'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { addProduct } from '../Redux/action/action'
-import { toast } from 'react-toastify'
+import { toast } from 'react-hot-toast'
 import ProductImageGallery from '../components/ProductImageGallery'
 
 function classNames(...classes) {
@@ -177,7 +177,7 @@ export default function ProductDetail() {
 
     dispatch(addProduct(cartProduct))
     setAddedToCart(true)
-    toast.success('Added to cart! 🛒', { autoClose: 2000, position: 'bottom-right' })
+    toast.success('Added to cart! 🛒', { autoClose: 2000 })
 
     setTimeout(() => {
       setAddedToCart(false)
@@ -217,7 +217,7 @@ export default function ProductDetail() {
         await fetchProduct()  // refresh reviews after submit
         setReviewForm({ rating: 5, comment: '', name: '' })
         setReviewSuccess(true)
-        toast.success('Review submitted! Thank you.', { autoClose: 3000, position: 'bottom-right' })
+        toast.success('Review submitted! Thank you.', { autoClose: 3000 })
         setTimeout(() => setReviewSuccess(false), 4000)
       } else {
         throw new Error(result.message)

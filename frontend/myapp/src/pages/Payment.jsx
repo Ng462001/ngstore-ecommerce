@@ -18,6 +18,7 @@ import {
     Divider
 } from '@mui/material';
 import { CreditCard, Lock, Payment as PaymentIcon } from '@mui/icons-material';
+import { toast } from 'react-hot-toast'
 
 export default function Payment({ onBack, selectedAddress }) {
     const [isProcessing, setIsProcessing] = useState(false);
@@ -41,13 +42,13 @@ export default function Payment({ onBack, selectedAddress }) {
         e.preventDefault();
 
         if (!userInfo) {
-            alert('Please log in to complete your purchase.');
+            toast.error('Please log in to complete your purchase.');
             navigate('/login');
             return;
         }
 
         if (!selectedAddress) {
-            alert('Please select a shipping address.');
+            toast.error('Please select a shipping address.');
             return;
         }
 
@@ -116,7 +117,7 @@ export default function Payment({ onBack, selectedAddress }) {
 
             if (response.ok) {
                 dispatch(clearCart());
-                alert('Payment successful! Order has been placed.');
+                toast.success('Payment successful! Order has been placed.');
                 navigate('/my-orders');
             } else {
                 const errorData = await response.json();
@@ -124,7 +125,7 @@ export default function Payment({ onBack, selectedAddress }) {
             }
         } catch (error) {
             console.error('Payment error:', error);
-            alert(error.message || 'An error occurred during payment processing.');
+            toast.error(error.message || 'An error occurred during payment processing.');
             setIsProcessing(false);
         }
     };
