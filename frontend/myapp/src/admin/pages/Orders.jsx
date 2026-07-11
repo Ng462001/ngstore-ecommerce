@@ -23,7 +23,12 @@ import {
     Grid,
     Divider,
     Box,
-    Tooltip
+    Tooltip,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    Paper
 } from '@mui/material';
 import {
     Visibility,
@@ -31,10 +36,12 @@ import {
     Edit,
     Close,
     Receipt,
-    ArrowDropDown
+    ArrowDropDown,
+    Search
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -52,9 +59,85 @@ const Orders = () => {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [viewOrder, setViewOrder] = useState(null);
 
+    // Filters State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [paymentFilter, setPaymentFilter] = useState('All');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
     useEffect(() => {
         fetchOrders();
     }, []);
+
+    // Filter Logic
+    const filteredOrders = orders.filter(order => {
+        // 1. Search Query filter (checks Order ID, customer name, customer email, and product names in orderItems)
+        const q = searchQuery.toLowerCase().trim();
+        if (q) {
+            const orderIdMatches = order._id.toLowerCase().includes(q);
+            const customerNameMatches = (order.user?.name || '').toLowerCase().includes(q);
+            const customerEmailMatches = (order.user?.email || '').toLowerCase().includes(q);
+            const productMatches = order.orderItems?.some(item => (item.name || '').toLowerCase().includes(q));
+
+            if (!orderIdMatches && !customerNameMatches && !customerEmailMatches && !productMatches) {
+                return false;
+            }
+        }
+
+        // 2. Order Status filter
+        if (statusFilter !== 'All') {
+            if ((order.status || 'Pending').toLowerCase() !== statusFilter.toLowerCase()) {
+                return false;
+            }
+        }
+
+        // 3. Payment Status filter
+        if (paymentFilter !== 'All') {
+            const isPaid = order.paymentStatus === 'Paid' || order.isPaid === true;
+            if (paymentFilter === 'Paid' && !isPaid) return false;
+            if (paymentFilter === 'Unpaid' && isPaid) return false;
+        }
+
+        // 4. Date Range filter
+        if (startDate) {
+            const orderDate = new Date(order.createdAt);
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            if (orderDate < start) return false;
+        }
+        if (endDate) {
+            const orderDate = new Date(order.createdAt);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (orderDate > end) return false;
+        }
+
+        return true;
+    });
+
+    const getAllowedTransitions = (currentStatus) => {
+        const s = currentStatus || 'Pending';
+        switch (s) {
+            case 'Pending':
+            case 'Confirmed':
+                return ['Processing', 'Cancelled'];
+            case 'Processing':
+                return ['Shipped'];
+            case 'Shipped':
+                return ['Out for delivery'];
+            case 'Out for delivery':
+                return ['Delivered'];
+            case 'Delivered':
+                return ['Returned'];
+            case 'Returned':
+                return ['Refunded'];
+            case 'Cancelled':
+            case 'Refunded':
+            default:
+                return [];
+        }
+    };
 
     const fetchOrders = async () => {
         try {
@@ -116,11 +199,11 @@ const Orders = () => {
                     ? { ...order, status: newStatus, isDelivered: newStatus === 'Delivered' ? true : order.isDelivered, isPaid: newStatus === 'Delivered' ? true : false }
                     : order
             ));
-
+            toast.success(`Successfully updated status to ${newStatus}`);
             handleStatusClose();
         } catch (err) {
             console.error('Error updating status:', err);
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -163,7 +246,7 @@ const Orders = () => {
                         Orders
                     </Typography>
                     <Typography variant="body1" className="text-gray-600">
-                        Manage and track customer orders ({orders.length} orders)
+                        Manage and track customer orders ({filteredOrders.length} of {orders.length} orders)
                     </Typography>
                 </div>
                 <Button
@@ -181,16 +264,114 @@ const Orders = () => {
                 </div>
             )}
 
+            {/* Filter Bar */}
+            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.04)', bgcolor: 'white' }}>
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Search"
+                            placeholder="Search Order ID, product, customer..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            InputProps={{
+                                startAdornment: <Search sx={{ color: '#94a3b8', mr: 1 }} />,
+                                sx: { borderRadius: 2 }
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Order Status</InputLabel>
+                            <Select
+                                value={statusFilter}
+                                label="Order Status"
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                <MenuItem value="All">All Statuses</MenuItem>
+                                <MenuItem value="Pending">Pending</MenuItem>
+                                <MenuItem value="Shipped">Shipped</MenuItem>
+                                <MenuItem value="Out for delivery">Out for Delivery</MenuItem>
+                                <MenuItem value="Delivered">Delivered</MenuItem>
+                                <MenuItem value="Cancelled">Cancelled</MenuItem>
+                                <MenuItem value="Returned">Returned</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Payment</InputLabel>
+                            <Select
+                                value={paymentFilter}
+                                label="Payment"
+                                onChange={(e) => setPaymentFilter(e.target.value)}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                <MenuItem value="All">All Payment</MenuItem>
+                                <MenuItem value="Paid">Paid</MenuItem>
+                                <MenuItem value="Unpaid">Unpaid</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="date"
+                            label="Start Date"
+                            InputLabelProps={{ shrink: true }}
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            InputProps={{ sx: { borderRadius: 2 } }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            type="date"
+                            label="End Date"
+                            InputLabelProps={{ shrink: true }}
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            InputProps={{ sx: { borderRadius: 2 } }}
+                        />
+                    </Grid>
+                </Grid>
+
+                {/* Clear Filters */}
+                {(searchQuery || statusFilter !== 'All' || paymentFilter !== 'All' || startDate || endDate) && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Button
+                            size="small"
+                            color="secondary"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setStatusFilter('All');
+                                setPaymentFilter('All');
+                                setStartDate('');
+                                setEndDate('');
+                            }}
+                            sx={{ textTransform: 'none', fontWeight: 600 }}
+                        >
+                            Clear Filters
+                        </Button>
+                    </Box>
+                )}
+            </Paper>
+
             <Card className="shadow-md rounded-xl">
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
                             <CircularProgress />
                         </div>
-                    ) : orders.length === 0 ? (
+                    ) : filteredOrders.length === 0 ? (
                         <div className="text-center py-12">
                             <Typography className="text-gray-500">
-                                No orders found
+                                {orders.length === 0 ? 'No orders found' : 'No orders found matching the filter criteria'}
                             </Typography>
                         </div>
                     ) : (
@@ -209,7 +390,7 @@ const Orders = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {orders.map((order) => (
+                                    {filteredOrders.map((order) => (
                                         <TableRow key={order._id} className="hover:bg-gray-50">
                                             <TableCell>
                                                 <Typography variant="body1" className="font-medium">
@@ -239,15 +420,23 @@ const Orders = () => {
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Chip
-                                                    label={order.status || 'Processing'}
-                                                    color={getStatusColor(order.status)}
-                                                    onClick={(e) => handleStatusClick(e, order)}
-                                                    onDelete={(e) => handleStatusClick(e, order)}
-                                                    deleteIcon={<ArrowDropDown style={{ fontSize: 16 }} />}
-                                                    variant='outlined'
-                                                    className="cursor-pointer hover:shadow-sm"
-                                                />
+                                                {getAllowedTransitions(order.status).length > 0 ? (
+                                                    <Chip
+                                                        label={order.status || 'Pending'}
+                                                        color={getStatusColor(order.status)}
+                                                        onClick={(e) => handleStatusClick(e, order)}
+                                                        onDelete={(e) => handleStatusClick(e, order)}
+                                                        deleteIcon={<ArrowDropDown style={{ fontSize: 16 }} />}
+                                                        variant="outlined"
+                                                        className="cursor-pointer hover:shadow-sm"
+                                                    />
+                                                ) : (
+                                                    <Chip
+                                                        label={order.status || 'Pending'}
+                                                        color={getStatusColor(order.status)}
+                                                        variant="outlined"
+                                                    />
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex space-x-2 justify-center">
@@ -284,11 +473,11 @@ const Orders = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleStatusClose}
             >
-                <MenuItem onClick={() => handleStatusUpdate('Processing')}>Processing</MenuItem>
-                <MenuItem onClick={() => handleStatusUpdate('Shipped')}>Shipped</MenuItem>
-                <MenuItem onClick={() => handleStatusUpdate('Out for delivery')}>Out for delivery</MenuItem>
-                <MenuItem onClick={() => handleStatusUpdate('Delivered')}>Delivered</MenuItem>
-                <MenuItem onClick={() => handleStatusUpdate('Cancelled')}>Cancelled</MenuItem>
+                {selectedOrder && getAllowedTransitions(selectedOrder.status).map((nextStatus) => (
+                    <MenuItem key={nextStatus} onClick={() => handleStatusUpdate(nextStatus)}>
+                        {nextStatus}
+                    </MenuItem>
+                ))}
             </Menu>
 
             {/* Order Details Dialog */}

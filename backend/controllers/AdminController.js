@@ -59,6 +59,40 @@ class AdminController {
             }
 
             const oldStatus = order.status;
+
+            // Validate strict 1-to-1 sequential transitions
+            const getAllowedTransitions = (currentStatus) => {
+                const s = currentStatus || 'Pending';
+                switch (s) {
+                    case 'Pending':
+                    case 'Confirmed':
+                        return ['Processing', 'Cancelled'];
+                    case 'Processing':
+                        return ['Shipped'];
+                    case 'Shipped':
+                        return ['Out for delivery'];
+                    case 'Out for delivery':
+                        return ['Delivered'];
+                    case 'Delivered':
+                        return ['Returned'];
+                    case 'Returned':
+                        return ['Refunded']; a
+                    case 'Cancelled':
+                    case 'Refunded':
+                    default:
+                        return [];
+                }
+            };
+
+            if (status && status !== oldStatus) {
+                const allowed = getAllowedTransitions(oldStatus);
+                if (!allowed.includes(status)) {
+                    return res.status(400).json({
+                        message: `Invalid status transition from "${oldStatus}" to "${status}". Allowed next states are: ${allowed.join(', ')}`
+                    });
+                }
+            }
+
             order.status = status || order.status;
 
             // Update timestamps based on status

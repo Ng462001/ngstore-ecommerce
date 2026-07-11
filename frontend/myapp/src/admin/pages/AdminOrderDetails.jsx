@@ -232,6 +232,44 @@ const AdminOrderDetails = () => {
         fetchActivityLog();
     }, [fetchOrderDetails, fetchActivityLog]);
 
+    const getAllowedTransitions = (currentStatus) => {
+        const s = currentStatus || 'Pending';
+        switch (s) {
+            case 'Pending':
+            case 'Confirmed':
+                return ['Processing', 'Cancelled'];
+            case 'Processing':
+                return ['Shipped'];
+            case 'Shipped':
+                return ['Out for delivery'];
+            case 'Out for delivery':
+                return ['Delivered'];
+            case 'Delivered':
+                return ['Returned'];
+            case 'Returned':
+                return ['Refunded'];
+            case 'Cancelled':
+            case 'Refunded':
+            default:
+                return [];
+        }
+    };
+
+    const getAllowedPaymentTransitions = (currentStatus) => {
+        const s = (currentStatus || 'Pending').toLowerCase();
+        switch (s) {
+            case 'pending':
+                return ['Paid'];
+            case 'failed':
+                return ['Pending'];
+            case 'paid':
+                return ['Refunded'];
+            case 'refunded':
+            default:
+                return [];
+        }
+    };
+
     const showSnackbar = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
     };
@@ -1363,19 +1401,21 @@ const AdminOrderDetails = () => {
                                 label="Status"
                                 onChange={(e) => setSelectedStatus(e.target.value)}
                             >
-                                {statusOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Box sx={{
-                                                width: 10,
-                                                height: 10,
-                                                borderRadius: '50%',
-                                                bgcolor: option.color
-                                            }} />
-                                            {option.label}
-                                        </Box>
-                                    </MenuItem>
-                                ))}
+                                {statusOptions
+                                    .filter((option) => option.value === order?.status || getAllowedTransitions(order?.status).includes(option.value))
+                                    .map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <Box sx={{
+                                                    width: 10,
+                                                    height: 10,
+                                                    borderRadius: '50%',
+                                                    bgcolor: option.color
+                                                }} />
+                                                {option.label}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
                             </Select>
                         </FormControl>
 
@@ -1439,14 +1479,19 @@ const AdminOrderDetails = () => {
                                 label="Payment Status"
                                 onChange={(e) => setSelectedPaymentStatus(e.target.value)}
                             >
-                                {paymentStatusOptions.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <option.icon fontSize="small" />
-                                            {option.label}
-                                        </Box>
-                                    </MenuItem>
-                                ))}
+                                {paymentStatusOptions
+                                    .filter((option) =>
+                                        option.value.toLowerCase() === (order?.paymentStatus || '').toLowerCase() ||
+                                        getAllowedPaymentTransitions(order?.paymentStatus).map(s => s.toLowerCase()).includes(option.value.toLowerCase())
+                                    )
+                                    .map((option) => (
+                                        <MenuItem key={option.value} value={option.value}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <option.icon fontSize="small" />
+                                                {option.label}
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
                             </Select>
                         </FormControl>
 
