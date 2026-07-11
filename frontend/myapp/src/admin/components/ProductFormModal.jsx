@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -17,25 +17,13 @@ import {
     InputAdornment,
     Chip,
     Paper,
-    Divider,
     Alert,
     LinearProgress,
     Fade,
     Zoom,
-    Tooltip,
-    Avatar,
-    Card,
-    CardContent,
     Stepper,
     Step,
     StepLabel,
-    StepConnector,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    Tab,
-    Tabs
 } from '@mui/material';
 import {
     Close,
@@ -43,47 +31,22 @@ import {
     Add,
     Delete,
     Inventory,
-    Category,
     LocalOffer,
     PhotoLibrary,
     ColorLens,
     Straighten,
     Style,
     CheckCircle,
-    Warning,
     Info,
-    TrendingUp,
     Star,
     AttachMoney,
     Discount,
     Save,
-    Edit,
-    ShoppingBag,
-    Receipt,
-    TrackChanges,
-    AccountCircle,
-    Security,
-    Block,
-    Person,
-    Email,
-    Phone,
-    LocationOn,
-    CalendarToday,
-    Payment,
-    VerifiedUser,
-    Mail,
-    LocalShipping,
-    Home,
     ArrowBack,
-    Download,
-    Print,
-    Grade,
-    History,
-    Favorite
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -180,29 +143,6 @@ const StatsCard = styled(Paper)(({ theme }) => ({
     },
 }));
 
-const ProductAvatar = styled(Avatar)(({ theme }) => ({
-    width: 100,
-    height: 100,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    fontSize: '2.5rem',
-    border: '4px solid white',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-}));
-
-const InfoItem = styled(Box)(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1.5),
-    padding: theme.spacing(1.5),
-    borderRadius: 8,
-    backgroundColor: '#f8fafc',
-    transition: 'background-color 0.2s',
-    '&:hover': {
-        backgroundColor: '#f1f5f9',
-    },
-}));
-
 const ImageUploadArea = styled(Box)(({ theme }) => ({
     border: '2px dashed #cbd5e1',
     borderRadius: 12,
@@ -243,8 +183,9 @@ const ImagePreview = styled(Box)(({ theme }) => ({
 
 // Main Product Form Modal
 const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
-    const [activeTab, setActiveTab] = useState(0);
-    const [activeSection, setActiveSection] = useState('basic');
+    const [activeStep, setActiveStep] = useState(0);
+    const stepSections = ['basic', 'pricing', 'media', 'variants', 'details'];
+    const activeSection = stepSections[activeStep];
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -384,13 +325,150 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
         setAdditionalImages([]);
         setError(null);
         setSuccess(null);
-        setActiveTab(0);
-        setActiveSection('basic');
+        setActiveStep(0);
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'discount') {
+            const discountVal = Math.min(100, Math.max(0, parseInt(value) || 0));
+            const originalPrice = parseFloat(formData.originalPrice) || 0;
+            if (originalPrice && discountVal >= 0 && discountVal <= 100) {
+                const calculatedPrice = Math.round(originalPrice * (1 - discountVal / 100) * 100) / 100;
+                setFormData(prev => ({
+                    ...prev,
+                    discount: discountVal,
+                    discountedPrice: calculatedPrice,
+                    price: calculatedPrice
+                }));
+            } else {
+                setFormData(prev => ({ ...prev, discount: discountVal }));
+            }
+            return;
+        }
+
+        if (name === 'originalPrice') {
+            const originalPrice = Math.max(0, parseFloat(value) || 0);
+            const discountVal = parseInt(formData.discount) || 0;
+            if (originalPrice && discountVal >= 0 && discountVal <= 100) {
+                const calculatedPrice = Math.round(originalPrice * (1 - discountVal / 100) * 100) / 100;
+                setFormData(prev => ({
+                    ...prev,
+                    originalPrice: value,
+                    discountedPrice: calculatedPrice,
+                    price: calculatedPrice
+                }));
+            } else {
+                setFormData(prev => ({ ...prev, originalPrice: value }));
+            }
+            return;
+        }
+
+        if (name === 'discountedPrice') {
+            const discountedPrice = Math.max(0, parseFloat(value) || 0);
+            const originalPrice = parseFloat(formData.originalPrice) || 0;
+            if (originalPrice && discountedPrice > 0) {
+                const calculatedDiscount = Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
+                setFormData(prev => ({
+                    ...prev,
+                    discountedPrice: value,
+                    price: value,
+                    discount: calculatedDiscount >= 0 && calculatedDiscount <= 100 ? calculatedDiscount : 0
+                }));
+            } else {
+                setFormData(prev => ({ ...prev, discountedPrice: value, price: value }));
+            }
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const validateStep = (step) => {
+        setError(null);
+
+        switch (step) {
+            case 0: // Basic Info
+                if (!formData.name || formData.name.trim().length < 2) {
+                    setError('Product Name must be at least 2 characters long');
+                    return false;
+                }
+                if (!formData.category) {
+                    setError('Category is required');
+                    return false;
+                }
+                if (!formData.description || formData.description.trim().length < 10) {
+                    setError('Description must be at least 10 characters long');
+                    return false;
+                }
+                return true;
+
+            case 1: // Pricing
+                const mrp = Number(formData.originalPrice);
+                const sellingPrice = Number(formData.discountedPrice || formData.price);
+                const qty = Number(formData.quantity);
+
+                if (!formData.originalPrice || mrp <= 0) {
+                    setError('MRP (original price) must be a positive number');
+                    return false;
+                }
+                if (sellingPrice && sellingPrice < 0) {
+                    setError('Selling Price cannot be negative');
+                    return false;
+                }
+                if (sellingPrice && sellingPrice > mrp) {
+                    setError('Selling Price cannot exceed MRP (original price)');
+                    return false;
+                }
+                if (formData.quantity === '' || isNaN(qty) || qty < 0 || !Number.isInteger(qty)) {
+                    setError('Quantity in Stock must be a non-negative integer');
+                    return false;
+                }
+                return true;
+
+            case 2: // Media
+                // If adding product, main image is required
+                if (!product && !formData.image) {
+                    setError('Main product image is required');
+                    return false;
+                }
+                // If editing, make sure we have either a new image file or a preview (existing image)
+                if (product && !formData.image && !imagePreview) {
+                    setError('Product must have a main image');
+                    return false;
+                }
+                if (additionalImages.length + formData.images.length > 10) {
+                    setError('Product cannot have more than 10 images in total');
+                    return false;
+                }
+                return true;
+
+            case 3: // Variants (Optional)
+                return true;
+
+            case 4: // Details (Optional)
+                return true;
+
+            default:
+                return true;
+        }
+    };
+
+    const handleStepClick = (stepIndex) => {
+        // If clicking a prior step, allow directly
+        if (stepIndex < activeStep) {
+            setActiveStep(stepIndex);
+            return;
+        }
+        // If clicking a future step, validate all steps up to that stepIndex
+        for (let i = activeStep; i < stepIndex; i++) {
+            if (!validateStep(i)) {
+                setActiveStep(i);
+                return;
+            }
+        }
+        setActiveStep(stepIndex);
     };
 
     const handleCategoryChange = (e) => {
@@ -498,9 +576,17 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
 
+        // Validate all steps from 0 to 4 before final submission
+        for (let i = 0; i <= 4; i++) {
+            if (!validateStep(i)) {
+                setActiveStep(i);
+                return;
+            }
+        }
+
+        setLoading(true);
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -509,13 +595,15 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
             }
 
             const submitData = new FormData();
+            const finalPrice = formData.discountedPrice || formData.originalPrice;
 
             Object.keys(formData).forEach(key => {
-                if (key !== 'image' && key !== 'images' && key !== 'colors' && key !== 'sizes' && key !== 'highlights' && key !== 'tags') {
+                if (key !== 'image' && key !== 'images' && key !== 'colors' && key !== 'sizes' && key !== 'highlights' && key !== 'tags' && key !== 'price') {
                     submitData.append(key, formData[key] || '');
                 }
             });
 
+            submitData.append('price', finalPrice);
             submitData.append('colors', JSON.stringify(formData.colors));
             submitData.append('sizes', JSON.stringify(formData.sizes));
             submitData.append('highlights', JSON.stringify(formData.highlights));
@@ -552,21 +640,18 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                 });
 
             if (response.data.success) {
-                setSuccess(product ? 'Product updated successfully!' : 'Product added successfully!');
                 setTimeout(() => {
+                    setLoading(false);
+                    toast.success(product ? 'Product updated successfully!' : 'Product added successfully!');
                     if (onSuccess) onSuccess();
                     onClose();
-                }, 1500);
+                }, 500);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save product');
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleTabChange = (event, newValue) => {
-        setActiveTab(newValue);
     };
 
     const QuickStats = () => (
@@ -966,12 +1051,10 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                                             {colorPresets.map((c) => (
                                                 <MenuItem key={c.name} value={c.name}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Box sx={{
-                                                            width: 16,
-                                                            height: 16,
+                                                        <Box className={c.class} sx={{
+                                                            width: 20,
+                                                            height: 20,
                                                             borderRadius: '50%',
-                                                            border: '1px solid #ccc',
-                                                            bgcolor: c.class.replace('bg-', '')
                                                         }} />
                                                         {c.name}
                                                     </Box>
@@ -1194,6 +1277,44 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                 <StyledDialogContent>
                     {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
+                    {/* Quick Stats */}
+                    {product && <QuickStats />}
+
+                    {/* Stepper Navigation */}
+                    <Box sx={{
+                        bgcolor: 'white',
+                        p: 2.5,
+                        borderRadius: 3,
+                        mb: 3,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                        border: '1px solid rgba(0,0,0,0.04)'
+                    }}>
+                        <Stepper activeStep={activeStep} alternativeLabel>
+                            {[
+                                { label: 'Basic Info', icon: <Info /> },
+                                { label: 'Pricing', icon: <AttachMoney /> },
+                                { label: 'Media', icon: <PhotoLibrary /> },
+                                { label: 'Variants', icon: <ColorLens /> },
+                                { label: 'Details', icon: <Star /> }
+                            ].map((step, index) => (
+                                <Step key={step.label}>
+                                    <StepLabel
+                                        onClick={() => handleStepClick(index)}
+                                        style={{ cursor: 'pointer' }}
+                                        StepIconProps={{
+                                            sx: {
+                                                '&.Mui-active': { color: '#667eea' },
+                                                '&.Mui-completed': { color: '#10b981' }
+                                            }
+                                        }}
+                                    >
+                                        {step.label}
+                                    </StepLabel>
+                                </Step>
+                            ))}
+                        </Stepper>
+                    </Box>
+
                     {error && (
                         <Fade in>
                             <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError(null)}>
@@ -1210,39 +1331,6 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                         </Fade>
                     )}
 
-                    {/* Quick Stats */}
-                    {product && <QuickStats />}
-
-                    {/* Navigation Tabs */}
-                    <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-                        {[
-                            { id: 'basic', label: 'Basic Info', icon: <Info /> },
-                            { id: 'pricing', label: 'Pricing', icon: <AttachMoney /> },
-                            { id: 'media', label: 'Media', icon: <PhotoLibrary /> },
-                            { id: 'variants', label: 'Variants', icon: <ColorLens /> },
-                            { id: 'details', label: 'Details', icon: <Star /> }
-                        ].map((section) => (
-                            <Button
-                                key={section.id}
-                                variant={activeSection === section.id ? 'contained' : 'outlined'}
-                                onClick={() => setActiveSection(section.id)}
-                                startIcon={section.icon}
-                                sx={{
-                                    borderRadius: 8,
-                                    textTransform: 'capitalize',
-                                    background: activeSection === section.id ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
-                                    borderColor: activeSection === section.id ? 'transparent' : '#cbd5e1',
-                                    color: activeSection === section.id ? 'white' : '#64748b',
-                                    '&:hover': {
-                                        background: activeSection === section.id ? 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)' : '#f1f5f9',
-                                    }
-                                }}
-                            >
-                                {section.label}
-                            </Button>
-                        ))}
-                    </Box>
-
                     {/* Section Content */}
                     {activeSection === 'basic' && renderBasicInfo()}
                     {activeSection === 'pricing' && renderPricing()}
@@ -1251,31 +1339,66 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                     {activeSection === 'details' && renderDetails()}
                 </StyledDialogContent>
 
-                <StyledDialogActions>
-                    <Button
-                        onClick={onClose}
-                        disabled={loading}
-                        sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={loading}
-                        startIcon={<Save />}
-                        sx={{
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            px: 4,
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            '&:hover': {
-                                background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                            }
-                        }}
-                    >
-                        {loading ? 'Saving...' : (product ? 'Update Product' : 'Add Product')}
-                    </Button>
+                <StyledDialogActions sx={{ justifyContent: 'space-between' }}>
+                    {activeStep > 0 ? (
+                        <Button
+                            onClick={() => setActiveStep(prev => prev - 1)}
+                            disabled={loading}
+                            startIcon={<ArrowBack />}
+                            sx={{ borderRadius: 2, textTransform: 'none', px: 3, color: '#64748b' }}
+                        >
+                            Back
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={onClose}
+                            disabled={loading}
+                            sx={{ borderRadius: 2, textTransform: 'none', px: 3, color: '#64748b' }}
+                        >
+                            Cancel
+                        </Button>
+                    )}
+
+                    {activeStep < 4 ? (
+                        <Button
+                            variant="contained"
+                            disabled={loading}
+                            onClick={() => {
+                                if (validateStep(activeStep)) {
+                                    setActiveStep(prev => prev + 1);
+                                }
+                            }}
+                            sx={{
+                                borderRadius: 2,
+                                textTransform: 'none',
+                                px: 4,
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                }
+                            }}
+                        >
+                            Next
+                        </Button>
+                    ) : (
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={loading}
+                            startIcon={<Save />}
+                            sx={{
+                                borderRadius: 2,
+                                textTransform: 'none',
+                                px: 4,
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                }
+                            }}
+                        >
+                            {loading ? 'Saving...' : (product ? 'Update Product' : 'Add Product')}
+                        </Button>
+                    )}
                 </StyledDialogActions>
             </form>
         </StyledDialog>

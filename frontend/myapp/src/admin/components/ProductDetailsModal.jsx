@@ -27,7 +27,8 @@ import {
     TableContainer,
     TableRow,
     Breadcrumbs,
-    Link
+    Link,
+    Rating
 } from '@mui/material';
 import {
     Close,
@@ -122,6 +123,16 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
     };
 
     const images = product.images || [];
+    // Filter duplicates by source URL to avoid repeating image thumbnails
+    const uniqueImages = [];
+    const seenSrcs = new Set();
+    images.forEach((img, index) => {
+        const src = img.src || product.image;
+        if (src && !seenSrcs.has(src)) {
+            seenSrcs.add(src);
+            uniqueImages.push({ ...img, originalIndex: index });
+        }
+    });
 
     const handleCopyId = () => {
         navigator.clipboard.writeText(product._id.toUpperCase());
@@ -162,37 +173,51 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                         position: 'relative',
                         zIndex: 1
                     }}>
-                        <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, flexWrap: 'wrap' }}>
-                                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                                    {product.name}
-                                </Typography>
-                                <Chip
-                                    label={getStatusText()}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: 'white',
-                                        color: getStatusColor(product.status),
-                                        fontWeight: 'bold',
-                                        fontSize: '0.75rem'
-                                    }}
-                                />
-                                {product.isFeatured && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
+                            <Avatar
+                                src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/48'}
+                                variant="rounded"
+                                sx={{
+                                    width: 52,
+                                    height: 52,
+                                    border: '2px solid white',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    flexShrink: 0
+                                }}
+                            />
+                            <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5, flexWrap: 'wrap' }}>
+                                    <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                        {product.name}
+                                    </Typography>
                                     <Chip
-                                        label="Featured"
+                                        label={getStatusText()}
                                         size="small"
                                         sx={{
-                                            bgcolor: 'rgba(255,193,7,0.2)',
-                                            color: '#ffc107',
-                                            fontWeight: 'bold'
+                                            bgcolor: 'white',
+                                            color: getStatusColor(product.status),
+                                            fontWeight: 'bold',
+                                            fontSize: '0.75rem'
                                         }}
                                     />
-                                )}
+                                    {product.isFeatured && (
+                                        <Chip
+                                            label="Featured"
+                                            size="small"
+                                            sx={{
+                                                bgcolor: 'rgba(255,193,7,0.2)',
+                                                color: '#ffc107',
+                                                fontWeight: 'bold'
+                                            }}
+                                        />
+                                    )}
+                                </Box>
+                                <Typography variant="body2" sx={{ opacity: 0.9, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <CalendarToday sx={{ fontSize: 16 }} />
+                                    Created: {formatDate(product.createdAt)}
+                                </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ opacity: 0.9, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CalendarToday sx={{ fontSize: 16 }} />
-                                Created: {formatDate(product.createdAt)}
-                            </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <Tooltip title="Copy Product ID">
@@ -240,8 +265,8 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                         iconPosition="start"
                     />
                     <Tab
-                        label="Inventory"
-                        icon={<Inventory />}
+                        label="Reviews"
+                        icon={<Star />}
                         iconPosition="start"
                     />
                 </Tabs>
@@ -255,179 +280,155 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                             animate={{ opacity: 1 }}
                         >
                             <Grid container spacing={3}>
-                                {/* Left Column - Image */}
-                                <Grid item xs={12} md={6}>
-                                    <Paper sx={{ p: 2, borderRadius: 2, mb: 3 }}>
-                                        <Box
-                                            component="img"
-                                            src={getMainImage()}
-                                            alt={product.name}
-                                            sx={{
-                                                width: '100%',
-                                                height: '300px',
-                                                objectFit: 'contain',
-                                                borderRadius: 1
-                                            }}
-                                        />
-                                    </Paper>
-
-                                    {/* Thumbnails */}
-                                    {images.length > 1 && (
-                                        <Paper sx={{ p: 2, borderRadius: 2 }}>
-                                            <Typography variant="subtitle2" gutterBottom>
-                                                Product Images
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
-                                                {images.map((img, index) => (
-                                                    <Box
-                                                        key={index}
-                                                        onClick={() => setSelectedImage(index)}
-                                                        sx={{
-                                                            width: 60,
-                                                            height: 60,
-                                                            borderRadius: 1,
-                                                            overflow: 'hidden',
-                                                            cursor: 'pointer',
-                                                            border: selectedImage === index ? '2px solid #667eea' : '1px solid #e0e0e0',
-                                                            flexShrink: 0
-                                                        }}
-                                                    >
-                                                        <img
-                                                            src={img.src ? (img.src.startsWith('http') ? img.src : `${API_URL.replace('/api', '')}${img.src}`) : 'https://via.placeholder.com/60'}
-                                                            alt={`${product.name} ${index + 1}`}
-                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                        />
-                                                    </Box>
-                                                ))}
-                                            </Box>
-                                        </Paper>
-                                    )}
-                                </Grid>
-
-                                {/* Right Column - Details */}
-                                <Grid item xs={12} md={6}>
+                                {/* Left Column - Summary & Description */}
+                                <Grid item xs={12} md={7}>
                                     {/* Price Section */}
-                                    <Paper sx={{ p: 2, borderRadius: 2, mb: 3 }}>
+                                    <Paper sx={{
+                                        p: 3,
+                                        borderRadius: 3,
+                                        mb: 3,
+                                        background: 'linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%)',
+                                        border: '1px solid rgba(102, 126, 234, 0.12)',
+                                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.05)'
+                                    }}>
                                         <Stack spacing={2}>
-                                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                                                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a237e', tracking: '-0.5px' }}>
                                                     {formatCurrency(product.price)}
                                                 </Typography>
                                                 {product.originalPrice > product.price && (
                                                     <>
-                                                        <Typography variant="h6" sx={{ color: '#757575', textDecoration: 'line-through' }}>
+                                                        <Typography variant="h6" sx={{ color: '#94a3b8', textDecoration: 'line-through', fontWeight: 500 }}>
                                                             {formatCurrency(product.originalPrice)}
                                                         </Typography>
                                                         <Chip
                                                             label={`${Math.round((1 - product.price / product.originalPrice) * 100)}% OFF`}
-                                                            color="error"
+                                                            sx={{
+                                                                background: 'linear-gradient(135deg, #ff5630 0%, #ff8e53 100%)',
+                                                                color: 'white',
+                                                                fontWeight: 'bold',
+                                                                fontSize: '0.75rem',
+                                                                boxShadow: '0 2px 8px rgba(255,86,48,0.2)'
+                                                            }}
                                                             size="small"
                                                         />
                                                     </>
                                                 )}
                                             </Box>
 
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <Badge
-                                                    badgeContent={product.quantity}
-                                                    color={product.quantity > 10 ? "success" : product.quantity > 0 ? "warning" : "error"}
-                                                >
-                                                    <Inventory />
-                                                </Badge>
-                                                <Typography variant="body2">
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                <Box sx={{
+                                                    width: 10,
+                                                    height: 10,
+                                                    borderRadius: '50%',
+                                                    bgcolor: product.quantity > 10 ? '#36B37E' : product.quantity > 0 ? '#FFB020' : '#FF5630',
+                                                    boxShadow: `0 0 8px ${product.quantity > 10 ? '#36B37E' : product.quantity > 0 ? '#FFB020' : '#FF5630'}`,
+                                                    animation: 'pulse 2s infinite',
+                                                    '@keyframes pulse': {
+                                                        '0%': { transform: 'scale(0.9)', opacity: 0.6, boxShadow: `0 0 0 0px ${product.quantity > 10 ? 'rgba(54,179,126,0.4)' : product.quantity > 0 ? 'rgba(255,176,32,0.4)' : 'rgba(255,86,48,0.4)'}` },
+                                                        '70%': { transform: 'scale(1)', opacity: 1, boxShadow: `0 0 0 6px ${product.quantity > 10 ? 'rgba(54,179,126,0)' : product.quantity > 0 ? 'rgba(255,176,32,0)' : 'rgba(255,86,48,0)'}` },
+                                                        '100%': { transform: 'scale(0.9)', opacity: 0.6, boxShadow: `0 0 0 0px ${product.quantity > 10 ? 'rgba(54,179,126,0)' : product.quantity > 0 ? 'rgba(255,176,32,0)' : 'rgba(255,86,48,0)'}` }
+                                                    }
+                                                }} />
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
                                                     {product.quantity > 0
-                                                        ? `${product.quantity} units in stock`
-                                                        : 'Out of stock'}
+                                                        ? `${product.quantity} units available in stock`
+                                                        : 'Currently Out of stock'}
                                                 </Typography>
                                             </Box>
                                         </Stack>
                                     </Paper>
 
-                                    {/* Quick Info */}
-                                    <Grid container spacing={2} sx={{ mb: 3 }}>
-                                        <Grid item xs={6}>
-                                            <Paper sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                                                <Stack spacing={1}>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Category
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Category sx={{ color: '#667eea', fontSize: 20 }} />
-                                                        <Typography variant="body2" fontWeight="medium">
-                                                            {product.category || 'N/A'}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                            </Paper>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Paper sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                                                <Stack spacing={1}>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Brand
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Store sx={{ color: '#9C27B0', fontSize: 20 }} />
-                                                        <Typography variant="body2" fontWeight="medium">
-                                                            {product.brand || 'No brand'}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                            </Paper>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Paper sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                                                <Stack spacing={1}>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Rating
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Star sx={{ color: '#FFB020', fontSize: 20 }} />
-                                                        <Typography variant="body2" fontWeight="medium">
-                                                            {product.rating?.average?.toFixed(1) || '0.0'}
-                                                            <Typography component="span" variant="caption" color="text.secondary">
-                                                                {' '}({product.rating?.count || 0})
-                                                            </Typography>
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                            </Paper>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Paper sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                                                <Stack spacing={1}>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Status
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Verified sx={{
-                                                            color: product.status === 'active' ? '#36B37E' :
-                                                                product.status === 'inactive' ? '#FFB020' : '#FF5630',
-                                                            fontSize: 20
-                                                        }} />
-                                                        <Typography variant="body2" fontWeight="medium">
-                                                            {product.status?.charAt(0).toUpperCase() + product.status?.slice(1)}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
-                                            </Paper>
-                                        </Grid>
-                                    </Grid>
+                                    {/* Short Description */}
+                                    {product.short_description && (
+                                        <Paper sx={{
+                                            p: 2.5,
+                                            borderRadius: 3,
+                                            mb: 3,
+                                            bgcolor: '#fafaff',
+                                            borderLeft: '4px solid #4f46e5',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                        }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#312e81', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Description sx={{ fontSize: 18, color: '#4f46e5' }} /> Quick Summary
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.6, fontStyle: 'italic' }}>
+                                                "{product.short_description}"
+                                            </Typography>
+                                        </Paper>
+                                    )}
 
                                     {/* Description */}
-                                    <Paper sx={{ p: 2, borderRadius: 2, mb: 3 }}>
-                                        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                                            Description
+                                    <Paper sx={{
+                                        p: 2.5,
+                                        borderRadius: 3,
+                                        bgcolor: '#fcfcfc',
+                                        borderLeft: '4px solid #475569',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                    }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#1e293b' }}>
+                                            Detailed Description
                                         </Typography>
-                                        <Typography variant="body2" paragraph>
+                                        <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.6 }}>
                                             {product.description || 'No description available.'}
                                         </Typography>
                                     </Paper>
+                                </Grid>
+
+                                {/* Right Column - Quick Info & Tags */}
+                                <Grid item xs={12} md={5}>
+                                    {/* Quick Info Grid */}
+                                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                                        {[
+                                            { label: 'Category', value: product.category || 'N/A', icon: <Category sx={{ color: '#4f46e5' }} />, bg: 'rgba(79, 70, 229, 0.08)' },
+                                            { label: 'Brand', value: product.brand || 'No Brand', icon: <Store sx={{ color: '#9333ea' }} />, bg: 'rgba(147, 51, 234, 0.08)' },
+                                            { label: 'Rating', value: `${product.rating?.average?.toFixed(1) || '0.0'} (${product.rating?.count || 0})`, icon: <Star sx={{ color: '#ca8a04' }} />, bg: 'rgba(202, 138, 4, 0.08)' },
+                                            { label: 'Status', value: product.status?.charAt(0).toUpperCase() + product.status?.slice(1), icon: <Verified sx={{ color: product.status === 'active' ? '#16a34a' : '#ea580c' }} />, bg: product.status === 'active' ? 'rgba(22, 163, 74, 0.08)' : 'rgba(234, 88, 12, 0.08)' }
+                                        ].map((item, index) => (
+                                            <Grid item xs={12} key={index}>
+                                                <Paper sx={{
+                                                    p: 2,
+                                                    borderRadius: 3,
+                                                    border: '1px solid rgba(0,0,0,0.04)',
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 8px 20px rgba(0,0,0,0.06)',
+                                                        borderColor: 'rgba(0,0,0,0.08)'
+                                                    }
+                                                }}>
+                                                    <Stack direction="row" spacing={2} alignItems="center">
+                                                        <Box sx={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            borderRadius: 2,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            bgcolor: item.bg,
+                                                            flexShrink: 0
+                                                        }}>
+                                                            {item.icon}
+                                                        </Box>
+                                                        <Stack spacing={0.2}>
+                                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                                {item.label}
+                                                            </Typography>
+                                                            <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                                                {item.value}
+                                                            </Typography>
+                                                        </Stack>
+                                                    </Stack>
+                                                </Paper>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
 
                                     {/* Tags */}
                                     {product.tags && product.tags.length > 0 && (
-                                        <Paper sx={{ p: 2, borderRadius: 2 }}>
-                                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                        <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#1e293b' }}>
                                                 Tags
                                             </Typography>
                                             <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
@@ -436,7 +437,17 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                         key={index}
                                                         label={tag}
                                                         size="small"
-                                                        variant="outlined"
+                                                        sx={{
+                                                            bgcolor: '#f1f5f9',
+                                                            color: '#475569',
+                                                            border: '1px solid #e2e8f0',
+                                                            fontWeight: 500,
+                                                            transition: 'all 0.2s',
+                                                            '&:hover': {
+                                                                bgcolor: '#e2e8f0',
+                                                                transform: 'translateY(-1px)'
+                                                            }
+                                                        }}
                                                     />
                                                 ))}
                                             </Stack>
@@ -455,56 +466,75 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                             <Grid container spacing={3}>
                                 <Grid item xs={12} md={8}>
                                     {/* Product Details */}
-                                    <Paper sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Description /> Product Details
+                                    <Paper sx={{
+                                        p: 3,
+                                        borderRadius: 3,
+                                        mb: 3,
+                                        border: '1px solid rgba(0,0,0,0.04)',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.02)'
+                                    }}>
+                                        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, fontWeight: 700, color: '#1e293b' }}>
+                                            <Description sx={{ color: '#4f46e5' }} /> Product Details
                                         </Typography>
-                                        <Typography variant="body2">
+                                        <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.6 }}>
                                             {product.details || 'No additional details provided.'}
                                         </Typography>
                                     </Paper>
 
                                     {/* Highlights */}
                                     {product.highlights && product.highlights.length > 0 && (
-                                        <Paper sx={{ p: 3, borderRadius: 2 }}>
-                                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <PriorityHigh /> Key Features
+                                        <Paper sx={{
+                                            p: 3,
+                                            borderRadius: 3,
+                                            border: '1px solid rgba(0,0,0,0.04)',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.02)'
+                                        }}>
+                                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, fontWeight: 700, color: '#1e293b' }}>
+                                                <CheckCircle sx={{ color: '#16a34a' }} /> Key Features & Highlights
                                             </Typography>
-                                            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                                            <Grid container spacing={2}>
                                                 {product.highlights.map((highlight, index) => (
-                                                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                                                        <Typography variant="body2">
-                                                            {highlight}
-                                                        </Typography>
-                                                    </Box>
+                                                    <Grid item xs={12} sm={6} key={index}>
+                                                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                                                            <CheckCircle sx={{ color: '#16a34a', fontSize: 18, mt: 0.2 }} />
+                                                            <Typography variant="body2" sx={{ color: '#475569', lineHeight: 1.5 }}>
+                                                                {highlight}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
                                                 ))}
-                                            </Box>
+                                            </Grid>
                                         </Paper>
                                     )}
                                 </Grid>
 
                                 <Grid item xs={12} md={4}>
                                     {/* Specifications */}
-                                    <Paper sx={{ p: 3, borderRadius: 2 }}>
-                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Assignment /> Specifications
+                                    <Paper sx={{
+                                        p: 3,
+                                        borderRadius: 3,
+                                        border: '1px solid rgba(0,0,0,0.04)',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.02)'
+                                    }}>
+                                        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, fontWeight: 700, color: '#1e293b' }}>
+                                            <Assignment sx={{ color: '#9333ea' }} /> Technical Specs
                                         </Typography>
-                                        <Stack spacing={2}>
+                                        <Stack spacing={2.5}>
                                             <Box>
-                                                <Typography variant="caption" color="text.secondary">
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                     Product ID
                                                 </Typography>
-                                                <Typography variant="body2" fontWeight="medium">
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', fontFamily: 'monospace' }}>
                                                     #{product._id.toUpperCase()}
                                                 </Typography>
                                             </Box>
                                             <Divider />
 
                                             <Box>
-                                                <Typography variant="caption" color="text.secondary">
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                     Last Updated
                                                 </Typography>
-                                                <Typography variant="body2" fontWeight="medium">
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
                                                     {formatDate(product.updatedAt)}
                                                 </Typography>
                                             </Box>
@@ -513,20 +543,25 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                             {/* Colors */}
                                             {product.colors && product.colors.length > 0 && (
                                                 <Box>
-                                                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                                                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', mb: 1, display: 'block' }}>
                                                         Available Colors
                                                     </Typography>
-                                                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                                    <Stack direction="row" spacing={1.5} flexWrap="wrap" gap={1}>
                                                         {product.colors.map((color, index) => (
                                                             <Tooltip key={index} title={color.name}>
                                                                 <Box className={color.class}
                                                                     sx={{
-                                                                        width: 24,
-                                                                        height: 24,
+                                                                        width: 28,
+                                                                        height: 28,
                                                                         borderRadius: '50%',
-                                                                        border: '2px solid #fff',
-                                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-
+                                                                        border: '2.5px solid #fff',
+                                                                        boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
+                                                                        cursor: 'pointer',
+                                                                        transition: 'all 0.2s ease',
+                                                                        '&:hover': {
+                                                                            transform: 'scale(1.2)',
+                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.25)'
+                                                                        }
                                                                     }}
                                                                 />
                                                             </Tooltip>
@@ -534,11 +569,12 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                     </Stack>
                                                 </Box>
                                             )}
+                                            {product.colors && product.colors.length > 0 && <Divider />}
 
                                             {/* Sizes */}
                                             {product.sizes && product.sizes.length > 0 && (
                                                 <Box>
-                                                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                                                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', mb: 1, display: 'block' }}>
                                                         Available Sizes
                                                     </Typography>
                                                     <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
@@ -547,8 +583,18 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                                 key={index}
                                                                 label={size.name}
                                                                 size="small"
-                                                                color={size.inStock ? "primary" : "default"}
-                                                                variant={size.inStock ? "filled" : "outlined"}
+                                                                sx={{
+                                                                    bgcolor: size.inStock ? '#eff6ff' : '#f1f5f9',
+                                                                    color: size.inStock ? '#2563eb' : '#94a3b8',
+                                                                    border: size.inStock ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+                                                                    fontWeight: 600,
+                                                                    textDecoration: size.inStock ? 'none' : 'line-through',
+                                                                    transition: 'all 0.2s',
+                                                                    '&:hover': size.inStock ? {
+                                                                        bgcolor: '#dbeafe',
+                                                                        transform: 'translateY(-1px)'
+                                                                    } : {}
+                                                                }}
                                                             />
                                                         ))}
                                                     </Stack>
@@ -571,27 +617,27 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                     <ImageIcon /> Product Main Image
                                 </Typography>
                                 {product.image ? (
-                                    <Grid item xs={6} sm={4} md={3}>
-                                        <Paper sx={{
-                                            borderRadius: 2,
-                                            width: '20%',
-                                            height: '20%',
-                                            overflow: 'hidden',
-                                            transition: 'transform 0.2s',
-                                            '&:hover': { transform: 'translateY(-4px)' }
-                                        }}>
-                                            <Box
-                                                component="img"
-                                                src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/300'}
-                                                alt={`${product.name}`}
-                                                sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                            <Box sx={{ p: 1, textAlign: 'center' }}>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Main Image
-                                                </Typography>
-                                            </Box>
-                                        </Paper>
+                                    <Grid container>
+                                        <Grid item xs={6} sm={4} md={3}>
+                                            <Paper sx={{
+                                                borderRadius: 2,
+                                                overflow: 'hidden',
+                                                transition: 'transform 0.2s',
+                                                '&:hover': { transform: 'translateY(-4px)' }
+                                            }}>
+                                                <Box
+                                                    component="img"
+                                                    src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/300'}
+                                                    alt={`${product.name}`}
+                                                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                                <Box sx={{ p: 1, textAlign: 'center' }}>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Main Image
+                                                    </Typography>
+                                                </Box>
+                                            </Paper>
+                                        </Grid>
                                     </Grid>
                                 ) : (
                                     <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -648,77 +694,100 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                         >
-                            <Paper sx={{ p: 3, borderRadius: 2 }}>
-                                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Inventory /> Inventory Details
-                                </Typography>
-                                <TableContainer>
-                                    <Table size="small">
-                                        <TableBody>
-                                            <TableRow>
-                                                <TableCell><strong>Current Stock</strong></TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={product.quantity}
-                                                        size="small"
-                                                        color={product.quantity > 10 ? "success" : product.quantity > 0 ? "warning" : "error"}
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell><strong>Stock Status</strong></TableCell>
-                                                <TableCell>
-                                                    {product.quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                                                </TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell><strong>Brand</strong></TableCell>
-                                                <TableCell>{product.brand || 'N/A'}</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell><strong>Color</strong></TableCell>
-                                                <TableCell>
-                                                    {product.colors.map((color, index) => (
-                                                        <Chip
-                                                            key={index}
-                                                            label={color.name}
-                                                            size="small"
-                                                            sx={{ mr: 1 }}
-                                                        />
+                            <Grid container spacing={3}>
+                                {/* Reviews Summary */}
+                                <Grid item xs={12} md={4}>
+                                    <Paper sx={{ p: 3, borderRadius: 2, textAlign: 'center', height: '100%' }}>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                                            Rating Summary
+                                        </Typography>
+                                        <Typography variant="h2" sx={{ fontWeight: 700, color: '#FFB020', my: 1 }}>
+                                            {product.rating?.average?.toFixed(1) || '0.0'}
+                                        </Typography>
+                                        <Rating
+                                            value={product.rating?.average || 0}
+                                            precision={0.5}
+                                            readOnly
+                                            sx={{ mb: 1 }}
+                                        />
+                                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                                            Based on {product.rating?.count || 0} reviews
+                                        </Typography>
 
-                                                    ))}
-                                                </TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell><strong>Size</strong></TableCell>
-                                                <TableCell>
-                                                    {product.sizes.map((size, index) => (
-                                                        <Chip
-                                                            key={index}
-                                                            label={size.name}
-                                                            size="small"
-                                                            sx={{ mr: 1 }}
-                                                        />
+                                        {product.rating?.breakdown && (
+                                            <Box sx={{ mt: 3, textAlign: 'left' }}>
+                                                {[5, 4, 3, 2, 1].map((stars) => {
+                                                    const count = product.rating.breakdown[stars] || 0;
+                                                    const total = product.rating.count || 1;
+                                                    const percentage = Math.round((count / total) * 100);
+                                                    return (
+                                                        <Box key={stars} sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                                                            <Typography variant="body2" sx={{ width: 15, fontWeight: 'medium' }}>
+                                                                {stars}
+                                                            </Typography>
+                                                            <Star sx={{ color: '#FFB020', fontSize: 16 }} />
+                                                            <Box sx={{ flexGrow: 1, mx: 1, bgcolor: '#e0e0e0', height: 8, borderRadius: 4, overflow: 'hidden' }}>
+                                                                <Box sx={{ bgcolor: '#FFB020', height: '100%', width: `${percentage}%` }} />
+                                                            </Box>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ width: 35, textAlign: 'right' }}>
+                                                                {count}
+                                                            </Typography>
+                                                        </Box>
+                                                    );
+                                                })}
+                                            </Box>
+                                        )}
+                                    </Paper>
+                                </Grid>
 
-                                                    ))}
-                                                </TableCell>
-                                            </TableRow>
-                                            {product.weight && (
-                                                <TableRow>
-                                                    <TableCell><strong>Weight</strong></TableCell>
-                                                    <TableCell>{product.weight} kg</TableCell>
-                                                </TableRow>
-                                            )}
-                                            {product.dimensions && (
-                                                <TableRow>
-                                                    <TableCell><strong>Dimensions</strong></TableCell>
-                                                    <TableCell>{product.dimensions}</TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </Paper>
+                                {/* Reviews List */}
+                                <Grid item xs={12} md={8}>
+                                    <Paper sx={{ p: 3, borderRadius: 2, maxHeight: '55vh', overflowY: 'auto' }}>
+                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, fontWeight: 600 }}>
+                                            <Star sx={{ color: '#FFB020' }} /> Reviews ({product.reviews?.length || 0})
+                                        </Typography>
+
+                                        {!product.reviews || product.reviews.length === 0 ? (
+                                            <Box sx={{ textAlign: 'center', py: 4 }}>
+                                                <Typography variant="body1" color="text.secondary">
+                                                    No reviews yet for this product.
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <Stack spacing={3}>
+                                                {product.reviews.map((review, idx) => (
+                                                    <Box key={review._id || idx}>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                                <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, fontSize: '0.875rem' }}>
+                                                                    {review.name ? review.name.charAt(0).toUpperCase() : 'A'}
+                                                                </Avatar>
+                                                                <Box>
+                                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                                                        {review.name}
+                                                                    </Typography>
+                                                                    <Rating
+                                                                        value={review.rating}
+                                                                        size="small"
+                                                                        readOnly
+                                                                    />
+                                                                </Box>
+                                                            </Box>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {formatDate(review.date)}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ pl: 6.5 }}>
+                                                            {review.comment}
+                                                        </Typography>
+                                                        {idx < product.reviews.length - 1 && <Divider sx={{ mt: 2 }} />}
+                                                    </Box>
+                                                ))}
+                                            </Stack>
+                                        )}
+                                    </Paper>
+                                </Grid>
+                            </Grid>
                         </motion.div>
                     )}
                 </Box>
