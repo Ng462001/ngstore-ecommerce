@@ -13,11 +13,6 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedUser, setEditedUser] = useState({})
     const [isLoading, setIsLoading] = useState(false)
-    const [orderStats, setOrderStats] = useState({
-        totalOrders: 0,
-        completedOrders: 0,
-        pendingOrders: 0
-    })
     const navigate = useNavigate()
     const location = useLocation()
     const userInfo = useSelector(state => state.productReducer.userInfo)
@@ -38,7 +33,6 @@ const Profile = () => {
             return
         }
         fetchProfile()
-        fetchOrderStats()
     }, [userInfo, navigate])
 
     const fetchProfile = async () => {
@@ -66,24 +60,6 @@ const Profile = () => {
             toast.error('Error loading profile')
         } finally {
             setIsLoading(false)
-        }
-    }
-
-    const fetchOrderStats = async () => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/stats`, {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            })
-            console.log(response)
-            if (response.ok) {
-                const data = await response.json()
-                console.log(data)
-                setOrderStats(data)
-            }
-        } catch (error) {
-            console.error('Error fetching order stats:', error)
         }
     }
 
@@ -564,51 +540,6 @@ const Profile = () => {
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <div className="flex items-center">
-                            <div className="p-3 bg-blue-50 rounded-xl mr-4">
-                                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Total Orders</p>
-                                <p className="text-2xl font-bold text-gray-900">{orderStats.totalOrders}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <div className="flex items-center">
-                            <div className="p-3 bg-green-50 rounded-xl mr-4">
-                                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Completed</p>
-                                <p className="text-2xl font-bold text-gray-900">{orderStats.completedOrders}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <div className="flex items-center">
-                            <div className="p-3 bg-purple-50 rounded-xl mr-4">
-                                <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Pending</p>
-                                <p className="text-2xl font-bold text-gray-900">{orderStats.pendingOrders}</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

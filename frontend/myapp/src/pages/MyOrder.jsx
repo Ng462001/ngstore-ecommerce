@@ -1,13 +1,11 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import OrderTracking from '../components/OrderTracking'
 import { useDispatch } from 'react-redux'
 import { clearCart } from '../Redux/action/action'
 
 export default function OrderHistory() {
     const [orders, setOrders] = useState([])
-    const [expandedOrder, setExpandedOrder] = useState(null)
     const [statusFilter, setStatusFilter] = useState('All')
     const [searchQuery, setSearchQuery] = useState('')
     const [startDate, setStartDate] = useState('')
@@ -349,7 +347,7 @@ export default function OrderHistory() {
                                                                 <img src={item.image && item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL}${item.image || ''}`} className="w-full h-full object-cover" alt={item.name} />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                                                                <p className="text-sm font-medium text-gray-900 truncate cursor-pointer" onClick={() => navigate(`/product/${item.product}`)}>{item.name}</p>
                                                                 <p className="text-xs text-gray-500">Qty: {item.quantity} × ₹{item.price}</p>
                                                             </div>
                                                         </div>
@@ -382,28 +380,7 @@ export default function OrderHistory() {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="p-4 bg-gray-50 flex justify-between items-center">
-                                        <button
-                                            onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
-                                            className="flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                                        >
-                                            {expandedOrder === order._id ? (
-                                                <>
-                                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                                    </svg>
-                                                    Hide Tracking
-                                                </>
-                                            ) : (
-                                                <>
-
-                                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                    View Tracking
-                                                </>
-                                            )}
-                                        </button>
+                                    <div className="p-4 bg-gray-50 flex justify-end">
                                         <button
                                             onClick={() => navigate(`/order-details/${order._id}`)}
                                             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:bg-blue-500/80 transition-all duration-200"
@@ -411,13 +388,6 @@ export default function OrderHistory() {
                                             View Details
                                         </button>
                                     </div>
-
-                                    {/* Expanded Tracking Details */}
-                                    {expandedOrder === order._id && (
-                                        <div className="p-6 bg-gray-50 border-t border-gray-200">
-                                            <OrderTracking order={order} returnRequest={returnRequests[order._id]} />
-                                        </div>
-                                    )}
                                 </div>
                             ))
                         )}
