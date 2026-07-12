@@ -1,5 +1,4 @@
-// components/ProductDetailsModal.js
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -13,49 +12,26 @@ import {
     Divider,
     Grid,
     Avatar,
-    Card,
-    CardContent,
     Tooltip,
     Tabs,
     Tab,
     Stack,
-    Badge,
     Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableRow,
-    Breadcrumbs,
-    Link,
     Rating
 } from '@mui/material';
 import {
     Close,
-    ShoppingCart,
-    Favorite,
-    Share,
     Visibility,
-    Inventory,
-    LocalOffer,
     Star,
     Category,
     Store,
     CalendarToday,
     Verified,
-    Edit,
-    Refresh,
     Assignment,
-    AttachMoney,
     Description,
-    Tag,
-    PriorityHigh,
     CopyAll,
-    Print,
     Image as ImageIcon,
     CheckCircle,
-    Cancel,
-    Error
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';

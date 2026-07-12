@@ -236,19 +236,21 @@ const AdminOrderDetails = () => {
         const s = currentStatus || 'Pending';
         switch (s) {
             case 'Pending':
+                return ['Confirmed', 'Processing', 'Cancelled'];
             case 'Confirmed':
-                return ['Processing', 'Cancelled'];
+                return ['Pending', 'Processing', 'Cancelled'];
             case 'Processing':
-                return ['Shipped'];
+                return ['Pending', 'Shipped', 'Cancelled'];
             case 'Shipped':
-                return ['Out for delivery'];
+                return ['Processing', 'Out for delivery', 'Cancelled'];
             case 'Out for delivery':
-                return ['Delivered'];
+                return ['Shipped', 'Delivered', 'Cancelled'];
             case 'Delivered':
                 return ['Returned'];
             case 'Returned':
                 return ['Refunded'];
             case 'Cancelled':
+                return ['Pending'];
             case 'Refunded':
             default:
                 return [];
@@ -357,6 +359,7 @@ const AdminOrderDetails = () => {
 
             showSnackbar('Notes saved successfully', 'success');
             setEditDialogOpen(false);
+            fetchOrderDetails();
         } catch (err) {
             handleApiError(err, 'Failed to save notes');
         } finally {
@@ -730,13 +733,6 @@ const AdminOrderDetails = () => {
                                         sx={{ bgcolor: 'rgba(255,193,7,0.2)', color: '#ffc107' }}
                                     />
                                 )}
-                                <Chip
-                                    label={`Payment: ${order.paymentStatus}`}
-                                    size="small"
-                                    color={order.paymentStatus === 'Paid' ? 'success' :
-                                        order.paymentStatus === 'Pending' ? 'warning' : 'error'}
-                                    sx={{ color: 'white' }}
-                                />
                             </Stack>
                         </Box>
 
@@ -968,7 +964,7 @@ const AdminOrderDetails = () => {
                                                                             <Avatar sx={{ width: 24, height: 24 }}>
                                                                                 {customerStats?.name?.charAt(0) || '?'}
                                                                             </Avatar>
-                                                                            {customerStats?.name || 'N/A'} ({customerStats?.email || 'N/A'})
+                                                                            {customerStats?.name || 'N/A'}
                                                                         </Box>
                                                                     </TableCell>
                                                                 </TableRow>
@@ -1265,33 +1261,11 @@ const AdminOrderDetails = () => {
                                         </Box>
                                     </Box>
 
-                                    <Divider />
-
-                                    <Box>
-                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                            Contact Information
-                                        </Typography>
-                                        <Stack spacing={1}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Phone fontSize="small" color="action" />
-                                                <Typography variant="body2">
-                                                    {order.shippingAddress?.mobile || customerStats?.phone || 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Email fontSize="small" color="action" />
-                                                <Typography variant="body2">
-                                                    {customerStats?.email || 'N/A'}
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                    </Box>
-
                                     {customerStats && (customerStats.totalOrders || customerStats.totalSpent) && (
                                         <>
                                             <Divider />
                                             <Box>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                <Typography style={{ marginBottom: '15px' }} variant="subtitle2" color="text.secondary" gutterBottom>
                                                     Customer Stats
                                                 </Typography>
                                                 <Grid container spacing={1}>

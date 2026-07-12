@@ -412,6 +412,278 @@ ${contactData.message}
             html: htmlMessage
         });
     }
+
+    /**
+     * Send order status update email to the customer.
+     */
+    async sendOrderStatusEmail(order, oldStatus, newStatus, notes) {
+        // Map status to user friendly titles, messages, and colors/gradients
+        const statusDetails = {
+            'Pending': {
+                title: 'Order Received 📦',
+                subtitle: 'We have received your order',
+                message: 'Thank you for your order! We have received your request and it is currently pending confirmation. We will notify you as soon as your order status changes.',
+                color: '#FFB020',
+                gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+            },
+            'Confirmed': {
+                title: 'Order Confirmed 🎉',
+                subtitle: 'Your order has been confirmed',
+                message: 'Great news! Your order has been confirmed and we are getting it ready for processing. You will receive another update when it ships.',
+                color: '#3b82f6',
+                gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+            },
+            'Processing': {
+                title: 'Order Processing ⚙️',
+                subtitle: 'Your order is being prepared',
+                message: 'Your order is currently being processed and prepared by our warehouse team. We are working hard to ship it out to you as quickly as possible.',
+                color: '#5048E5',
+                gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)'
+            },
+            'Shipped': {
+                title: 'Order Shipped! 🚚',
+                subtitle: 'Your package is on its way',
+                message: 'Exciting news! Your order has been shipped and is on its way. You can track your shipment using the tracking information below.',
+                color: '#2196F3',
+                gradient: 'linear-gradient(135deg, #3b82f6 0%, #0284c7 100%)'
+            },
+            'Out for delivery': {
+                title: 'Out for Delivery 🛵',
+                subtitle: 'Your order will arrive today',
+                message: 'Get ready! Your order is out for delivery with our courier partner and will reach your address today.',
+                color: '#FF6B6B',
+                gradient: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)'
+            },
+            'Delivered': {
+                title: 'Order Delivered! 🎁',
+                subtitle: 'Your order has arrived',
+                message: 'Success! Your order has been successfully delivered to your shipping address. We hope you love your new items! Thank you for shopping with us.',
+                color: '#36B37E',
+                gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)'
+            },
+            'Cancelled': {
+                title: 'Order Cancelled ❌',
+                subtitle: 'Your order has been cancelled',
+                message: 'We regret to inform you that your order has been cancelled. If this was a mistake or you have any questions, please contact our support team.',
+                color: '#FF5630',
+                gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)'
+            },
+            'Returned': {
+                title: 'Order Returned ↩️',
+                subtitle: 'We received your return package',
+                message: 'This email is to confirm that we have received the return package for your order. We are reviewing the returned items and will process any applicable refund shortly.',
+                color: '#6554C0',
+                gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
+            },
+            'Refunded': {
+                title: 'Refund Processed 💰',
+                subtitle: 'Your refund has been issued',
+                message: 'We have processed a refund for your order. The refunded amount will be credited back to your original payment method. Depending on your financial institution, this may take 5-10 business days to appear in your account.',
+                color: '#00B8D9',
+                gradient: 'linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)'
+            }
+        };
+
+        const details = statusDetails[newStatus] || {
+            title: `Order Update: ${newStatus}`,
+            subtitle: `Status changed to ${newStatus}`,
+            message: `Your order status has been updated to ${newStatus}.`,
+            color: '#667eea',
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        };
+
+        const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
+        const getImageUrl = (imagePath) => {
+            if (!imagePath) return '';
+            if (imagePath.startsWith('http')) return imagePath;
+            return `${backendUrl.replace(/\/$/, '')}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+        };
+
+        // Construct items table HTML
+        let itemsHtml = '';
+        if (order.orderItems && order.orderItems.length > 0) {
+            itemsHtml = `
+            <div style="margin: 30px 0;">
+                <h3 style="color: #2d3748; font-size: 16px; margin-bottom: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px;">Order Summary</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #edf2f7; text-align: left;">
+                            <th style="padding: 10px 5px; color: #718096; font-size: 13px; font-weight: 600;">Product</th>
+                            <th style="padding: 10px 5px; color: #718096; font-size: 13px; font-weight: 600; text-align: center;">Qty</th>
+                            <th style="padding: 10px 5px; color: #718096; font-size: 13px; font-weight: 600; text-align: right;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.orderItems.map(item => `
+                            <tr style="border-bottom: 1px solid #edf2f7;">
+                                <td style="padding: 12px 5px; vertical-align: middle;">
+                                    <div style="display: flex; align-items: center;">
+                                        <img src="${getImageUrl(item.image)}" alt="${item.name}" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover; margin-right: 12px; border: 1px solid #e2e8f0;" />
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 14px; color: #2d3748;">${item.name}</div>
+                                            ${item.selectedColor || item.selectedSize ? `
+                                                <div style="font-size: 12px; color: #718096; margin-top: 2px;">
+                                                    ${item.selectedColor ? `<span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Color: ${item.selectedColor}</span>` : ''} 
+                                                    ${item.selectedSize ? `<span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Size: ${item.selectedSize}</span>` : ''}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 12px 5px; text-align: center; font-size: 14px; color: #4a5568; vertical-align: middle;">
+                                    ${item.quantity}
+                                </td>
+                                <td style="padding: 12px 5px; text-align: right; font-weight: 600; font-size: 14px; color: #2d3748; vertical-align: middle;">
+                                    ₹${item.price}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            `;
+        }
+
+        // Construct pricing summary HTML
+        const subtotal = order.subtotalPrice || (order.orderItems || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const pricingHtml = `
+        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-top: 20px;">
+            <table style="width: 100%; font-size: 14px; color: #4a5568; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 4px 0; color: #718096;">Subtotal</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: 500; color: #2d3748;">₹${subtotal}</td>
+                </tr>
+                ${order.shippingPrice ? `
+                <tr>
+                    <td style="padding: 4px 0; color: #718096;">Shipping</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: 500; color: #2d3748;">₹${order.shippingPrice}</td>
+                </tr>
+                ` : ''}
+                ${order.taxPrice ? `
+                <tr>
+                    <td style="padding: 4px 0; color: #718096;">Tax</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: 500; color: #2d3748;">₹${order.taxPrice}</td>
+                </tr>
+                ` : ''}
+                ${order.discountPrice ? `
+                <tr>
+                    <td style="padding: 4px 0; color: #718096;">Discount</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: 500; color: #e53e3e;">-₹${order.discountPrice}</td>
+                </tr>
+                ` : ''}
+                <tr style="border-top: 1px solid #edf2f7;">
+                    <td style="padding: 10px 0 0; font-size: 16px; font-weight: 700; color: #2d3748;">Total</td>
+                    <td style="padding: 10px 0 0; text-align: right; font-size: 18px; font-weight: 700; color: #667eea;">₹${order.totalPrice}</td>
+                </tr>
+            </table>
+        </div>
+        `;
+
+        // Tracking URL Section
+        let shippingHtml = '';
+        if (newStatus === 'Shipped' && (order.trackingNumber || order.shippingCarrier)) {
+            shippingHtml = `
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 25px 0;">
+                <h4 style="color: #166534; font-size: 15px; margin: 0 0 10px; font-weight: 600;">📦 Shipment & Tracking Information</h4>
+                ${order.shippingCarrier ? `<p style="margin: 0 0 5px; font-size: 14px; color: #14532d;"><strong>Carrier:</strong> ${order.shippingCarrier}</p>` : ''}
+                ${order.trackingNumber ? `<p style="margin: 0 0 10px; font-size: 14px; color: #14532d;"><strong>Tracking Number:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">${order.trackingNumber}</code></p>` : ''}
+                ${order.trackingUrl ? `
+                <div style="margin-top: 15px;">
+                    <a href="${order.trackingUrl}" target="_blank" style="display: inline-block; background: #166534; color: white !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                        🔗 Track Shipment
+                    </a>
+                </div>
+                ` : ''}
+            </div>
+            `;
+        }
+
+        // Shipping Address Section
+        let addressHtml = '';
+        if (order.shippingAddress) {
+            addressHtml = `
+            <div style="margin-top: 25px; border-top: 1px solid #edf2f7; padding-top: 20px;">
+                <h4 style="color: #2d3748; font-size: 14px; margin-bottom: 8px; font-weight: 600;">📍 Delivery Details</h4>
+                <p style="color: #4a5568; font-size: 14px; margin: 0; line-height: 1.5;">
+                    <strong>Address:</strong> ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}, ${order.shippingAddress.country}<br/>
+                    <strong>Phone:</strong> ${order.shippingAddress.mobile}
+                </p>
+            </div>
+            `;
+        }
+
+        // Notes / Instructions section
+        let notesHtml = '';
+        if (notes) {
+            notesHtml = `
+            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                <strong>💡 Note from Support:</strong><br/>
+                ${notes}
+            </div>
+            `;
+        }
+
+        const plainMessage = `
+Hello ${order.user.name},
+
+${details.message}
+
+Order Details:
+- Order ID: #${order._id.toString().toUpperCase()}
+- Current Status: ${newStatus}
+${notes ? `- Note: ${notes}\n` : ''}
+- Total Price: ₹${order.totalPrice}
+
+Track your order details here:
+${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-details/${order._id}
+        `;
+
+        const htmlMessage = getBaseTemplate(
+            details.title,
+            details.subtitle,
+            `
+            <div style="text-align: center; margin-bottom: 25px;">
+                <span style="display: inline-block; padding: 8px 18px; background-color: ${details.color}15; color: ${details.color}; font-weight: 700; border-radius: 50px; font-size: 13px; border: 1px solid ${details.color}30; text-transform: uppercase; letter-spacing: 0.8px;">
+                    ${newStatus}
+                </span>
+            </div>
+            
+            <div style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">
+                Hello ${order.user.name}! 👋
+            </div>
+            <p style="color: #4a5568; font-size: 15px; margin-bottom: 25px; line-height: 1.6;">
+                ${details.message}
+            </p>
+            
+            ${notesHtml}
+            ${shippingHtml}
+            
+            <div style="background: #ffffff; border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 1px solid #edf2f7;">
+                <div style="margin-bottom: 8px; font-size: 14px; color: #4a5568;"><strong style="color: #2d3748;">Order ID:</strong> #${order._id.toString().toUpperCase()}</div>
+                <div style="margin-bottom: 8px; font-size: 14px; color: #4a5568;"><strong style="color: #2d3748;">Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN', { dateStyle: 'long' })}</div>
+                <div style="margin-bottom: 8px; font-size: 14px; color: #4a5568;"><strong style="color: #2d3748;">Payment:</strong> ${order.paymentMethod} (${order.paymentStatus})</div>
+                ${addressHtml}
+            </div>
+            
+            ${itemsHtml}
+            ${pricingHtml}
+            
+            <div style="text-align: center; margin: 35px 0 10px;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-details/${order._id}" style="display: inline-block; background: ${details.gradient}; color: white !important; text-decoration: none; padding: 15px 35px; border-radius: 50px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 15px ${details.color}40; letter-spacing: -0.2px;">
+                    📦 View Order Details
+                </a>
+            </div>
+            `,
+            details.gradient
+        );
+
+        return this.sendEmail({
+            email: order.user.email,
+            subject: `Update on Order #${order._id.toString().substring(0, 8).toUpperCase()}: ${newStatus}`,
+            message: plainMessage,
+            html: htmlMessage
+        });
+    }
 }
 
 module.exports = new EmailService();

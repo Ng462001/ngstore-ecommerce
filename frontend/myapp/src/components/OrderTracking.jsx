@@ -21,13 +21,12 @@ function CustomStepIcon(props) {
   const { active, completed, icon } = props;
 
   const stepIcons = [
-    <AssignmentIcon sx={{ fontSize: 16 }} />,
-    <CheckCircleIcon sx={{ fontSize: 16 }} />,
-    <StoreIcon sx={{ fontSize: 16 }} />,
-    <ShippingIcon sx={{ fontSize: 16 }} />,
-    <BikeIcon sx={{ fontSize: 16 }} />,
-    <HomeIcon sx={{ fontSize: 16 }} />,
-    <ReturnIcon sx={{ fontSize: 16 }} />
+    <AssignmentIcon sx={{ fontSize: 16 }} />, // 1: Order Placed
+    <StoreIcon sx={{ fontSize: 16 }} />,      // 2: Processing
+    <ShippingIcon sx={{ fontSize: 16 }} />,   // 3: Shipped
+    <BikeIcon sx={{ fontSize: 16 }} />,       // 4: Out for Delivery
+    <HomeIcon sx={{ fontSize: 16 }} />,       // 5: Delivered
+    <ReturnIcon sx={{ fontSize: 16 }} />      // 6: Returned
   ]
 
   return (
@@ -67,6 +66,7 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
       case 'Delivered': return 4;
       case 'Out for delivery': return 3;
       case 'Shipped': return 2;
+      case 'Confirmed':
       case 'Processing': return 1;
       case 'Cancelled': return -1;
       default: return 0;

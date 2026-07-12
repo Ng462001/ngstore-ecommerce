@@ -3,6 +3,7 @@ const User = require('../model/User');
 const Product = require('../model/Product');
 const ActivityLog = require('../model/ActivityLog');
 const mongoose = require('mongoose');
+const emailService = require('../services/emailService');
 
 class AdminController {
 
@@ -60,24 +61,26 @@ class AdminController {
 
             const oldStatus = order.status;
 
-            // Validate strict 1-to-1 sequential transitions
+            // Validate sequential transitions (allowing backwards movement for adjustments)
             const getAllowedTransitions = (currentStatus) => {
                 const s = currentStatus || 'Pending';
                 switch (s) {
                     case 'Pending':
+                        return ['Confirmed', 'Processing', 'Cancelled'];
                     case 'Confirmed':
-                        return ['Processing', 'Cancelled'];
+                        return ['Pending', 'Processing', 'Cancelled'];
                     case 'Processing':
-                        return ['Shipped'];
+                        return ['Pending', 'Shipped', 'Cancelled'];
                     case 'Shipped':
-                        return ['Out for delivery'];
+                        return ['Processing', 'Out for delivery', 'Cancelled'];
                     case 'Out for delivery':
-                        return ['Delivered'];
+                        return ['Shipped', 'Delivered', 'Cancelled'];
                     case 'Delivered':
                         return ['Returned'];
                     case 'Returned':
-                        return ['Refunded']; a
+                        return ['Refunded'];
                     case 'Cancelled':
+                        return ['Pending'];
                     case 'Refunded':
                     default:
                         return [];
@@ -147,6 +150,18 @@ class AdminController {
             }
 
             const updatedOrder = await order.save();
+
+            // If notifyCustomer is true, send email to the customer
+            if (notifyCustomer) {
+                try {
+                    await order.populate('user', 'name email');
+                    if (order.user && order.user.email) {
+                        await emailService.sendOrderStatusEmail(order, oldStatus, status, notes);
+                    }
+                } catch (emailErr) {
+                    console.error('Failed to send status update email:', emailErr);
+                }
+            }
 
             // Log the activity
             await ActivityLog.create({

@@ -1227,7 +1227,7 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
                             fullWidth
                             multiline
                             rows={4}
-                            label="Product Details (HTML supported)"
+                            label="Product Details"
                             name="details"
                             value={formData.details}
                             onChange={handleChange}
