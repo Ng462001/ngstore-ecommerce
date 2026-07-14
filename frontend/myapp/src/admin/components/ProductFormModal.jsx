@@ -46,7 +46,7 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import { useOutletContext } from 'react-router-dom';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -183,6 +183,7 @@ const ImagePreview = styled(Box)(({ theme }) => ({
 
 // Main Product Form Modal
 const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
+    const { showSnackbar } = useOutletContext();
     const [activeStep, setActiveStep] = useState(0);
     const stepSections = ['basic', 'pricing', 'media', 'variants', 'details'];
     const activeSection = stepSections[activeStep];
@@ -642,7 +643,7 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
             if (response.data.success) {
                 setTimeout(() => {
                     setLoading(false);
-                    toast.success(product ? 'Product updated successfully!' : 'Product added successfully!');
+                    showSnackbar(product ? 'Product updated successfully!' : 'Product added successfully!', 'success');
                     if (onSuccess) onSuccess();
                     onClose();
                 }, 500);

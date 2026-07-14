@@ -37,8 +37,8 @@ import {
     LocalShipping,
     AssignmentReturn
 } from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import { useOutletContext } from 'react-router-dom';
 import ReturnRequestDetailsModal from '../components/ReturnRequestDetailsModal';
 
 // Custom hook for debouncing
@@ -95,6 +95,7 @@ const getStatusIcon = (status) => {
 const ITEMS_PER_PAGE = 10;
 
 const AdminReturns = () => {
+    const { showSnackbar } = useOutletContext();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState({
@@ -143,7 +144,7 @@ const AdminReturns = () => {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
-            toast.error('Failed to load requests');
+            showSnackbar('Failed to load requests', 'error');
         } finally {
             setLoading(false);
             setActionLoading(prev => ({ ...prev, refresh: false }));
@@ -164,17 +165,17 @@ const AdminReturns = () => {
 
             const data = await response.json();
             if (data.success) {
-                toast.success(`Request updated successfully`);
+                showSnackbar(`Request updated successfully`, 'success');
                 fetchRequests();
                 // setDetailsOpen(false); // Optional: keep open if just saving
                 if (selectedRequest && selectedRequest._id === requestId) {
                     setSelectedRequest(data.request); // Update local selected request
                 }
             } else {
-                toast.error(data.message || 'Failed to update request');
+                showSnackbar(data.message || 'Failed to update request', 'error');
             }
         } catch (error) {
-            toast.error('Failed to update status');
+            showSnackbar('Failed to update status', 'error');
         } finally {
             setActionLoading(prev => ({ ...prev, update: false }));
         }

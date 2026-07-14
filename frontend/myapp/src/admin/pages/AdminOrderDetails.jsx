@@ -134,16 +134,16 @@ const AdminOrderDetails = () => {
         if (!order) return [];
 
         const defaultSteps = [
-            { status: 'Pending', action: 'Order placed' },
-            { status: 'Processing', action: 'Order confirmed' },
-            { status: 'Shipped', action: 'Shipped to carrier' },
-            { status: 'Out for delivery', action: 'Out for delivery' },
+            { status: 'Pending', action: 'Order Placed' },
+            { status: 'Processing', action: 'Order Processing' },
+            { status: 'Shipped', action: 'Order Shipped' },
+            { status: 'Out for delivery', action: 'Out for Delivery' },
             { status: 'Delivered', action: 'Delivered' }
         ];
 
         if (order.status === 'Cancelled') {
             return [
-                { status: 'Pending', action: 'Order placed' },
+                { status: 'Pending', action: 'Order Placed' },
                 { status: 'Cancelled', action: 'Order Cancelled', isError: true }
             ];
         }
@@ -236,21 +236,18 @@ const AdminOrderDetails = () => {
         const s = currentStatus || 'Pending';
         switch (s) {
             case 'Pending':
-                return ['Confirmed', 'Processing', 'Cancelled'];
-            case 'Confirmed':
-                return ['Pending', 'Processing', 'Cancelled'];
+                return ['Processing', 'Cancelled'];
             case 'Processing':
-                return ['Pending', 'Shipped', 'Cancelled'];
+                return ['Shipped', 'Cancelled'];
             case 'Shipped':
-                return ['Processing', 'Out for delivery', 'Cancelled'];
+                return ['Out for delivery'];
             case 'Out for delivery':
-                return ['Shipped', 'Delivered', 'Cancelled'];
+                return ['Delivered'];
             case 'Delivered':
                 return ['Returned'];
             case 'Returned':
                 return ['Refunded'];
             case 'Cancelled':
-                return ['Pending'];
             case 'Refunded':
             default:
                 return [];
@@ -262,11 +259,8 @@ const AdminOrderDetails = () => {
         switch (s) {
             case 'pending':
                 return ['Paid'];
-            case 'failed':
-                return ['Pending'];
             case 'paid':
                 return ['Refunded'];
-            case 'refunded':
             default:
                 return [];
         }
@@ -1429,7 +1423,7 @@ const AdminOrderDetails = () => {
                     <Button
                         onClick={handleStatusUpdate}
                         variant="contained"
-                        disabled={loadingAction}
+                        disabled={loadingAction || selectedStatus === order?.status}
                         startIcon={loadingAction ? <CircularProgress size={20} /> : null}
                     >
                         {loadingAction ? 'Updating...' : 'Update Status'}
@@ -1484,7 +1478,7 @@ const AdminOrderDetails = () => {
                         onClick={handlePaymentStatusUpdate}
                         variant="contained"
                         color="primary"
-                        disabled={loadingAction}
+                        disabled={loadingAction || selectedPaymentStatus === order?.paymentStatus}
                         startIcon={loadingAction ? <CircularProgress size={20} /> : null}
                     >
                         {loadingAction ? 'Updating...' : 'Update Payment'}

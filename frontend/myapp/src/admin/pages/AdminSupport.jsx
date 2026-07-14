@@ -39,14 +39,15 @@ import {
     ArrowDownward,
     Remove
 } from '@mui/icons-material';
-import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import { useOutletContext } from 'react-router-dom';
 import SupportTicketDetailsModal from '../components/SupportTicketDetailsModal';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const ITEMS_PER_PAGE = 10;
 
 const AdminSupport = () => {
+    const { showSnackbar } = useOutletContext();
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -87,7 +88,7 @@ const AdminSupport = () => {
         } catch (error) {
             console.error('Error fetching tickets:', error);
             setError(error.message);
-            toast.error('Failed to load tickets');
+            showSnackbar('Failed to load tickets', 'error');
         } finally {
             setLoading(false);
         }
@@ -107,7 +108,7 @@ const AdminSupport = () => {
 
             const data = await response.json();
             if (data.success) {
-                toast.success(`Status updated to ${status}`);
+                showSnackbar(`Status updated to ${status}`, 'success');
                 // Update the ticket in state
                 setTickets(prevTickets =>
                     prevTickets.map(ticket =>
@@ -123,7 +124,7 @@ const AdminSupport = () => {
             }
         } catch (error) {
             console.error('Error updating status:', error);
-            toast.error('Failed to update status');
+            showSnackbar('Failed to update status', 'error');
             throw error;
         } finally {
             setActionLoading(false);
@@ -147,7 +148,7 @@ const AdminSupport = () => {
 
     const handleSendResponse = async () => {
         if (!responseMessage.trim()) {
-            toast.error('Please enter a response message');
+            showSnackbar('Please enter a response message', 'error');
             return;
         }
 
@@ -164,7 +165,7 @@ const AdminSupport = () => {
 
             const data = await response.json();
             if (data.success) {
-                toast.success('Response sent successfully');
+                showSnackbar('Response sent successfully', 'success');
                 setResponseMessage('');
                 setSelectedTicket(data.ticket);
                 // Update tickets list as well to show new response count or status
@@ -174,7 +175,7 @@ const AdminSupport = () => {
             }
         } catch (error) {
             console.error('Error sending response:', error);
-            toast.error('Failed to send response');
+            showSnackbar('Failed to send response', 'error');
         } finally {
             setActionLoading(false);
         }

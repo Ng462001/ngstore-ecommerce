@@ -10,7 +10,9 @@ import {
     CssBaseline,
     Drawer,
     useMediaQuery,
-    useTheme
+    useTheme,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import Sidebar from './Sidebar';
@@ -23,6 +25,22 @@ const AdminLayout = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [activeSection, setActiveSection] = useState('dashboard');
+
+    // Snackbar state
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+    const showSnackbar = (message, severity = 'success') => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') return;
+        setSnackbarOpen(false);
+    };
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -119,8 +137,25 @@ const AdminLayout = () => {
                 }}
             >
                 <Toolbar /> {/* Spacing for AppBar */}
-                <Outlet context={{ activeSection, setActiveSection }} />
+                <Outlet context={{ activeSection, setActiveSection, showSnackbar }} />
             </Box>
+
+            {/* Unified Snackbar */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    variant="filled"
+                    sx={{ width: '100%', borderRadius: 2 }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

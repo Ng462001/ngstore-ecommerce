@@ -61,26 +61,22 @@ class AdminController {
 
             const oldStatus = order.status;
 
-            // Validate sequential transitions (allowing backwards movement for adjustments)
             const getAllowedTransitions = (currentStatus) => {
                 const s = currentStatus || 'Pending';
                 switch (s) {
                     case 'Pending':
-                        return ['Confirmed', 'Processing', 'Cancelled'];
-                    case 'Confirmed':
-                        return ['Pending', 'Processing', 'Cancelled'];
+                        return ['Processing', 'Cancelled'];
                     case 'Processing':
-                        return ['Pending', 'Shipped', 'Cancelled'];
+                        return ['Shipped', 'Cancelled'];
                     case 'Shipped':
-                        return ['Processing', 'Out for delivery', 'Cancelled'];
+                        return ['Out for delivery', 'Cancelled'];
                     case 'Out for delivery':
-                        return ['Shipped', 'Delivered', 'Cancelled'];
+                        return ['Delivered'];
                     case 'Delivered':
                         return ['Returned'];
                     case 'Returned':
                         return ['Refunded'];
                     case 'Cancelled':
-                        return ['Pending'];
                     case 'Refunded':
                     default:
                         return [];
@@ -109,8 +105,7 @@ class AdminController {
                     isPaid: true
                 },
                 'Cancelled': {
-                    cancelledAt: Date.now(),
-                    paymentStatus: 'Failed'
+                    cancelledAt: Date.now()
                 },
                 'Returned': { returnedAt: Date.now() },
                 'Refunded': { refundedAt: Date.now() }
@@ -401,6 +396,7 @@ class AdminController {
 
             // Recent orders
             const recentOrders = await Order.find({})
+                .populate('user', 'name email')
                 .sort({ createdAt: -1 })
                 .limit(10);
 

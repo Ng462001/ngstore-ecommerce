@@ -41,7 +41,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true,
         default: 'Card',
-        enum: ['Card', 'CashOnDelivery', 'UPI', 'NetBanking', 'Wallet']
+        enum: ['Card', 'CashOnDelivery']
     },
     paymentResult: {
         id: { type: String },
@@ -50,8 +50,6 @@ const orderSchema = new mongoose.Schema({
         email_address: { type: String },
         paymentMethod: { type: String }
     },
-
-    // New Payment Fields
     paymentStatus: {
         type: String,
         enum: ['Pending', 'Paid', 'Failed', 'Refunded'],
@@ -91,7 +89,6 @@ const orderSchema = new mongoose.Schema({
     couponCode: {
         type: String
     },
-
     isPaid: {
         type: Boolean,
         required: true,
@@ -107,7 +104,6 @@ const orderSchema = new mongoose.Schema({
     },
 
     // Status Timestamps
-    confirmedAt: { type: Date },
     processingAt: { type: Date },
     shippedAt: { type: Date },
     outForDeliveryAt: { type: Date },
@@ -121,7 +117,6 @@ const orderSchema = new mongoose.Schema({
         type: String,
         enum: [
             'Pending',
-            'Confirmed',
             'Processing',
             'Shipped',
             'Out for delivery',
@@ -289,8 +284,6 @@ orderSchema.methods.canReturn = function () {
 
 orderSchema.methods.getStatusTimeline = function () {
     const timeline = [];
-
-    if (this.confirmedAt) timeline.push({ status: 'Confirmed', date: this.confirmedAt });
     if (this.processingAt) timeline.push({ status: 'Processing', date: this.processingAt });
     if (this.shippedAt) timeline.push({ status: 'Shipped', date: this.shippedAt });
     if (this.outForDeliveryAt) timeline.push({ status: 'Out for delivery', date: this.outForDeliveryAt });

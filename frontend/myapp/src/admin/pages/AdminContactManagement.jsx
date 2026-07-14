@@ -59,8 +59,8 @@ import {
     Print
 } from '@mui/icons-material';
 import { format, formatDistanceToNow } from 'date-fns';
-import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import { useOutletContext } from 'react-router-dom';
 
 // Custom hook for debouncing
 const useDebounce = (value, delay) => {
@@ -202,6 +202,7 @@ const ContactTimeline = ({ statusUpdates, currentStatus }) => {
 
 // Contact Details Modal Component
 const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, onDelete, actionLoading }) => {
+    const { showSnackbar } = useOutletContext();
     const [activeTab, setActiveTab] = useState(0);
     const [replyMessage, setReplyMessage] = useState('');
     const [adminNote, setAdminNote] = useState('');
@@ -215,25 +216,25 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
 
     const handleSendReply = async () => {
         if (!replyMessage.trim()) {
-            toast.error('Please enter a reply message');
+            showSnackbar('Please enter a reply message', 'error');
             return;
         }
 
         try {
             await onReply(contact._id, replyMessage);
             setReplyMessage('');
-            toast.success('Reply sent successfully!');
+            showSnackbar('Reply sent successfully!', 'success');
         } catch (error) {
-            toast.error(error.message || 'Failed to send reply');
+            showSnackbar(error.message || 'Failed to send reply', 'error');
         }
     };
 
     const handleStatusUpdate = async (status) => {
         try {
             await onStatusUpdate(contact._id, status, adminNote);
-            toast.success(`Status updated to ${status}`);
+            showSnackbar(`Status updated to ${status}`, 'success');
         } catch (error) {
-            toast.error('Failed to update status');
+            showSnackbar('Failed to update status', 'error');
         }
     };
 
@@ -243,7 +244,7 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
                 await onDelete(contact._id);
                 onClose();
             } catch (error) {
-                toast.error('Failed to delete contact');
+                showSnackbar('Failed to delete contact', 'error');
             }
         }
     };
@@ -707,6 +708,7 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
 };
 
 const AdminContactManagement = () => {
+    const { showSnackbar } = useOutletContext();
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState({
@@ -757,7 +759,7 @@ const AdminContactManagement = () => {
             }
         } catch (error) {
             console.error('Error fetching contacts:', error);
-            toast.error('Failed to load contacts');
+            showSnackbar('Failed to load contacts', 'error');
         } finally {
             setLoading(false);
             setActionLoading(prev => ({ ...prev, refresh: false }));
@@ -830,7 +832,7 @@ const AdminContactManagement = () => {
             });
             const data = await response.json();
             if (data.success) {
-                toast.success('Contact deleted successfully');
+                showSnackbar('Contact deleted successfully', 'success');
                 fetchContacts();
             }
             return data;

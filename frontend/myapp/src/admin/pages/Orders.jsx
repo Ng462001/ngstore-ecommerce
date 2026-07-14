@@ -40,13 +40,13 @@ import {
     Search
 } from '@mui/icons-material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 const Orders = () => {
     const navigate = useNavigate();
+    const { showSnackbar } = useOutletContext();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -72,7 +72,6 @@ const Orders = () => {
 
     // Filter Logic
     const filteredOrders = orders.filter(order => {
-        // 1. Search Query filter (checks Order ID, customer name, customer email, and product names in orderItems)
         const q = searchQuery.toLowerCase().trim();
         if (q) {
             const orderIdMatches = order._id.toLowerCase().includes(q);
@@ -85,21 +84,21 @@ const Orders = () => {
             }
         }
 
-        // 2. Order Status filter
+        // Order Status filter
         if (statusFilter !== 'All') {
             if ((order.status || 'Pending').toLowerCase() !== statusFilter.toLowerCase()) {
                 return false;
             }
         }
 
-        // 3. Payment Status filter
+        // Payment Status filter
         if (paymentFilter !== 'All') {
             const isPaid = order.paymentStatus === 'Paid' || order.isPaid === true;
             if (paymentFilter === 'Paid' && !isPaid) return false;
             if (paymentFilter === 'Unpaid' && isPaid) return false;
         }
 
-        // 4. Date Range filter
+        // Date Range filter
         if (startDate) {
             const orderDate = new Date(order.createdAt);
             const start = new Date(startDate);
@@ -120,10 +119,9 @@ const Orders = () => {
         const s = currentStatus || 'Pending';
         switch (s) {
             case 'Pending':
-            case 'Confirmed':
                 return ['Processing', 'Cancelled'];
             case 'Processing':
-                return ['Shipped'];
+                return ['Shipped', 'Cancelled'];
             case 'Shipped':
                 return ['Out for delivery'];
             case 'Out for delivery':
@@ -185,25 +183,30 @@ const Orders = () => {
     const handleStatusUpdate = async (newStatus) => {
         if (!selectedOrder) return;
 
+        const orderToUpdate = selectedOrder;
+        handleStatusClose();
+
         try {
+            setLoading(true);
             const token = localStorage.getItem('token');
             await axios.put(
-                `${API_URL}/admin/orders/${selectedOrder._id}/status`,
-                { status: newStatus, isPaid: newStatus === 'Delivered' ? true : false },
+                `${API_URL}/admin/orders/${orderToUpdate._id}/status`,
+                { status: newStatus, notifyCustomer: true, isPaid: newStatus === 'Delivered' ? true : false },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             // Update local state
             setOrders(orders.map(order =>
-                order._id === selectedOrder._id
+                order._id === orderToUpdate._id
                     ? { ...order, status: newStatus, isDelivered: newStatus === 'Delivered' ? true : order.isDelivered, isPaid: newStatus === 'Delivered' ? true : false }
                     : order
             ));
-            toast.success(`Successfully updated status to ${newStatus}`);
-            handleStatusClose();
+            setLoading(false);
+            showSnackbar(`Successfully updated status to ${newStatus}`, 'success');
         } catch (err) {
+            setLoading(false);
             console.error('Error updating status:', err);
-            toast.error('Failed to update status');
+            showSnackbar('Failed to update status', 'error');
         }
     };
 
