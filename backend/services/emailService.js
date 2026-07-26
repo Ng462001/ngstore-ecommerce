@@ -109,12 +109,24 @@ class EmailService {
     constructor() {
         // Create reusable transporter
         this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
             secure: false,
+            family: 4,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASSWORD
+            },
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 15000,
+        });
+
+        this.transporter.verify((err, success) => {
+            if (err) {
+                console.log("SMTP Error:", err);
+            } else {
+                console.log("SMTP Server is ready");
             }
         });
     }

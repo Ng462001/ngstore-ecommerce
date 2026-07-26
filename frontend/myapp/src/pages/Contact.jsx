@@ -16,7 +16,7 @@ import {
   LocationOn as LocationIcon,
   Send as SendIcon
 } from '@mui/icons-material'
-import { toast } from 'react-toastify'
+import { toast } from 'react-hot-toast'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -91,7 +91,7 @@ const Contact = () => {
           message: ''
         })
       } else {
-        toast.error(result.message || 'Failed to send message. Please try again.')
+        toast.error(result.errors[0] || result.message || 'Failed to send message. Please try again.')
       }
     } catch (error) {
       console.error('Contact form error:', error)
