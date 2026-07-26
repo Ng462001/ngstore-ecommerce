@@ -4,6 +4,7 @@ import AddressCard from '../components/AddressCard'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { loginUser, logoutUser } from '../Redux/action/action'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 import UserRequests from '../components/UserRequests'
 
@@ -13,6 +14,9 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedUser, setEditedUser] = useState({})
     const [isLoading, setIsLoading] = useState(false)
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+    const [showNewPassword, setShowNewPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const navigate = useNavigate()
     const location = useLocation()
     const userInfo = useSelector(state => state.productReducer.userInfo)
@@ -477,35 +481,74 @@ const Profile = () => {
                                         <div className="space-y-6">
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-gray-700">Current Password</label>
-                                                <input
-                                                    type="password"
-                                                    name="currentPassword"
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                                    required
-                                                />
+                                                <div className="relative">
+                                                    <input
+                                                        type={showCurrentPassword ? "text" : "password"}
+                                                        name="currentPassword"
+                                                        className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                                        required
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                    >
+                                                        {showCurrentPassword ? (
+                                                            <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+                                                        ) : (
+                                                            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-gray-700">New Password</label>
-                                                <input
-                                                    type="password"
-                                                    name="newPassword"
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                                    required
-                                                    minLength="6"
-                                                />
+                                                <div className="relative">
+                                                    <input
+                                                        type={showNewPassword ? "text" : "password"}
+                                                        name="newPassword"
+                                                        className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                                        required
+                                                        minLength="6"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                    >
+                                                        {showNewPassword ? (
+                                                            <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+                                                        ) : (
+                                                            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                                 <p className="text-xs text-gray-500">Minimum 6 characters</p>
                                             </div>
 
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-gray-700">Confirm New Password</label>
-                                                <input
-                                                    type="password"
-                                                    name="confirmPassword"
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                                                    required
-                                                    minLength="6"
-                                                />
+                                                <div className="relative">
+                                                    <input
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        name="confirmPassword"
+                                                        className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                                                        required
+                                                        minLength="6"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    >
+                                                        {showConfirmPassword ? (
+                                                            <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+                                                        ) : (
+                                                            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="flex justify-end pt-4">
