@@ -142,40 +142,8 @@ class EmailService {
      */
     async sendEmail(options) {
         try {
-            // Option 1: Brevo HTTP API Fallback
-            if (process.env.BREVO_API_KEY) {
-                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-                    method: 'POST',
-                    headers: {
-                        'accept': 'application/json',
-                        'api-key': process.env.BREVO_API_KEY,
-                        'content-type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender: {
-                            name: process.env.COMPANY_NAME || 'NGSTORE',
-                            email: process.env.EMAIL_USER
-                        },
-                        to: [
-                            {
-                                email: options.email
-                            }
-                        ],
-                        subject: options.subject,
-                        textContent: options.message,
-                        htmlContent: options.html
-                    })
-                });
 
-                const responseData = await response.json();
-                if (!response.ok) {
-                    throw new Error(responseData.message || `Brevo HTTP Error: ${response.status}`);
-                }
-                console.log('Message sent via Brevo: %s', responseData.messageId || 'Success');
-                return { success: true, messageId: responseData.messageId || 'Success' };
-            }
-
-            // Option 2: Resend HTTP API Fallback
+            // Resend HTTP API Fallback
             if (process.env.RESEND_API_KEY) {
                 const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
                 const fromAddress = `"${process.env.COMPANY_NAME || 'NGSTORE'}" <${resendFromEmail}>`;
