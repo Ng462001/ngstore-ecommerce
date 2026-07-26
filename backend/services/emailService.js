@@ -112,7 +112,8 @@ class EmailService {
             host: process.env.EMAIL_HOST,
             port: process.env.EMAIL_PORT,
             secure: false,
-            family: 4,
+            localAddress: '0.0.0.0',
+            requireTLS: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASSWORD
@@ -122,13 +123,17 @@ class EmailService {
             socketTimeout: 30000,
         });
 
-        this.transporter.verify((err, success) => {
-            if (err) {
-                console.log("SMTP Error:", err);
-            } else {
-                console.log("SMTP Server is ready");
-            }
-        });
+        if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY) {
+            this.transporter.verify((err, success) => {
+                if (err) {
+                    console.log("SMTP Error:", err);
+                } else {
+                    console.log("SMTP Server is ready");
+                }
+            });
+        } else {
+            console.log(`Email Service using HTTP API fallback: ${process.env.BREVO_API_KEY ? 'Brevo' : 'Resend'}`);
+        }
     }
 
     /**
@@ -137,6 +142,67 @@ class EmailService {
      */
     async sendEmail(options) {
         try {
+            // Option 1: Brevo HTTP API Fallback
+            if (process.env.BREVO_API_KEY) {
+                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'api-key': process.env.BREVO_API_KEY,
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender: {
+                            name: process.env.COMPANY_NAME || 'NGSTORE',
+                            email: process.env.EMAIL_USER
+                        },
+                        to: [
+                            {
+                                email: options.email
+                            }
+                        ],
+                        subject: options.subject,
+                        textContent: options.message,
+                        htmlContent: options.html
+                    })
+                });
+
+                const responseData = await response.json();
+                if (!response.ok) {
+                    throw new Error(responseData.message || `Brevo HTTP Error: ${response.status}`);
+                }
+                console.log('Message sent via Brevo: %s', responseData.messageId || 'Success');
+                return { success: true, messageId: responseData.messageId || 'Success' };
+            }
+
+            // Option 2: Resend HTTP API Fallback
+            if (process.env.RESEND_API_KEY) {
+                const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+                const fromAddress = `"${process.env.COMPANY_NAME || 'NGSTORE'}" <${resendFromEmail}>`;
+                const response = await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from: fromAddress,
+                        to: options.email,
+                        subject: options.subject,
+                        text: options.message,
+                        html: options.html
+                    })
+                });
+
+                const responseData = await response.json();
+                if (!response.ok) {
+                    throw new Error(responseData.message || `Resend HTTP Error: ${response.status}`);
+                }
+                console.log('Message sent via Resend: %s', responseData.id || 'Success');
+                return { success: true, messageId: responseData.id || 'Success' };
+            }
+
+            // Option 3: Standard SMTP Fallback
             const mailOptions = {
                 from: `"${process.env.COMPANY_NAME || 'NGSTORE'}" <${process.env.EMAIL_USER}>`,
                 to: options.email,
