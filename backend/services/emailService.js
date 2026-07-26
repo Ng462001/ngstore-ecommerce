@@ -121,54 +121,49 @@ class EmailService {
             connectionTimeout: 30000,
             greetingTimeout: 30000,
             socketTimeout: 30000,
-        });
-
-        if (!process.env.BREVO_API_KEY && !process.env.RESEND_API_KEY) {
-            this.transporter.verify((err, success) => {
-                if (err) {
-                    console.log("SMTP Error:", err);
-                } else {
-                    console.log("SMTP Server is ready");
-                }
-            });
-        } else {
-            console.log(`Email Service using HTTP API fallback: ${process.env.BREVO_API_KEY ? 'Brevo' : 'Resend'}`);
-        }
+        })
     }
 
-    /**
-     * General utility method for sending emails.
-     * Backwards-compatible replacement for the old sendEmail.js helper.
-     */
+    // Send Mail
     async sendEmail(options) {
         try {
+            if (process.env.BREVO_API_KEY) {
+                try {
+                    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                        method: 'POST',
+                        headers: {
+                            'accept': 'application/json',
+                            'api-key': process.env.BREVO_API_KEY,
+                            'content-type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sender: {
+                                name: process.env.COMPANY_NAME,
+                                email: process.env.EMAIL_USER
+                            },
+                            to: [
+                                {
+                                    email: options.email
+                                }
+                            ],
+                            subject: options.subject,
+                            textContent: options.message,
+                            htmlContent: options.html
+                        })
+                    });
 
-            // Resend HTTP API Fallback
-            if (process.env.RESEND_API_KEY) {
-                const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-                const fromAddress = `"${process.env.COMPANY_NAME || 'NGSTORE'}" <${resendFromEmail}>`;
-                const response = await fetch('https://api.resend.com/emails', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        from: fromAddress,
-                        to: options.email,
-                        subject: options.subject,
-                        text: options.message,
-                        html: options.html
-                    })
-                });
-
-                const responseData = await response.json();
-                if (!response.ok) {
-                    throw new Error(responseData.message || `Resend HTTP Error: ${response.status}`);
+                    const responseData = await response.json();
+                    console.log(responseData);
+                    if (!response.ok) {
+                        throw new Error(responseData.message || `Brevo HTTP Error: ${response.status}`);
+                    }
+                    console.log('Message sent via Brevo: %s', responseData.messageId || 'Success');
+                    return { success: true, messageId: responseData.messageId || 'Success' };
+                } catch (brevoError) {
+                    console.warn('Brevo API failed, falling back to SMTP:', brevoError.message);
                 }
-                console.log('Message sent via Resend: %s', responseData.id || 'Success');
-                return { success: true, messageId: responseData.id || 'Success' };
             }
+
 
             // Option 3: Standard SMTP Fallback
             const mailOptions = {
@@ -180,7 +175,7 @@ class EmailService {
             };
 
             const info = await this.transporter.sendMail(mailOptions);
-            console.log('Message sent: %s', info.messageId);
+            console.log('Message sent via SMTP: %s', info.messageId);
             return { success: true, messageId: info.messageId };
         } catch (error) {
             console.error('Error sending email:', error);
