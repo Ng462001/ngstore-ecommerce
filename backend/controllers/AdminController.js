@@ -324,7 +324,7 @@ class AdminController {
     //Get all users
     static getAllUsers = async (req, res) => {
         try {
-            const users = await User.find({}).select('-password');
+            const users = await User.find({ role: 'user' }).select('-password');
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 20;
             const skip = (page - 1) * limit;
@@ -976,6 +976,38 @@ class AdminController {
             res.json(orders);
         } catch (error) {
             res.status(500).json({ message: 'Error fetching user orders', error: error.message });
+        }
+    };
+
+    //Delete user
+    static deleteUser = async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            if (user._id.toString() === req.user._id.toString()) {
+                return res.status(400).json({ message: 'You cannot delete your own admin account' });
+            }
+            await User.findByIdAndDelete(req.params.id);
+            res.json({ success: true, message: 'User deleted successfully' });
+        } catch (error) {
+            res.status(500).json({ message: 'Error deleting user', error: error.message });
+        }
+    };
+
+    //Delete order
+    static deleteOrder = async (req, res) => {
+        try {
+            const order = await Order.findById(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+            await Order.findByIdAndDelete(req.params.id);
+            await ActivityLog.deleteMany({ orderId: req.params.id });
+            res.json({ success: true, message: 'Order deleted successfully' });
+        } catch (error) {
+            res.status(500).json({ message: 'Error deleting order', error: error.message });
         }
     };
 }

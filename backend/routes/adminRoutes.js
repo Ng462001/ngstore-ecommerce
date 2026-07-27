@@ -14,6 +14,7 @@ router.get('/orders/:id/activity', protect, admin, AdminController.getOrderActiv
 router.get('/orders/search', protect, admin, AdminController.searchOrders);
 router.post('/orders/:id/tags', protect, admin, AdminController.addOrderTags);
 router.put('/orders/:id/priority', protect, admin, AdminController.updateOrderPriority);
+router.delete('/orders/:id', protect, admin, AdminController.deleteOrder);
 
 // Review Management Routes
 router.get('/reviews/stats', protect, admin, AdminController.getReviewStats);
@@ -27,6 +28,7 @@ router.get('/users', protect, admin, AdminController.getAllUsers);
 router.get('/users/:id', protect, admin, AdminController.getUserDetails);
 router.put('/users/:id', protect, admin, AdminController.updateUser);
 router.get('/users/:id/orders', protect, admin, AdminController.getUserOrders);
+router.delete('/users/:id', protect, admin, AdminController.deleteUser);
 
 // Dashboard Routes
 router.get('/stats', protect, admin, AdminController.getDashboardStats);

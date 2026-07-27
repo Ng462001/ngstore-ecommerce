@@ -35,7 +35,8 @@ import {
     Visibility,
     Schedule,
     LocalShipping,
-    AssignmentReturn
+    AssignmentReturn,
+    Delete
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useOutletContext } from 'react-router-dom';
@@ -111,6 +112,41 @@ const AdminReturns = () => {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [adminNote, setAdminNote] = useState('');
     const userInfo = useSelector(state => state.productReducer.userInfo);
+
+    // Delete Request State
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState(null);
+
+    const handleDeleteClick = (requestId) => {
+        setRequestToDelete(requestId);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/return-exchange/admin/${requestToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${userInfo.token}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSnackbar('Return/Exchange request deleted successfully', 'success');
+                setRequests(requests.filter(request => request._id !== requestToDelete));
+            } else {
+                showSnackbar(data.message || 'Failed to delete request', 'error');
+            }
+            setDeleteDialogOpen(false);
+            setRequestToDelete(null);
+        } catch (error) {
+            console.error('Error deleting request:', error);
+            showSnackbar('Failed to delete request', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -410,6 +446,15 @@ const AdminReturns = () => {
                                                                 <Visibility fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
+                                                        <Tooltip title="Delete Return/Exchange Request">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleDeleteClick(request._id)}
+                                                            >
+                                                                <Delete fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -442,6 +487,33 @@ const AdminReturns = () => {
                 request={selectedRequest}
                 onRequestUpdate={handleUpdateStatus}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Return/Exchange Request
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this return/exchange request? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

@@ -37,7 +37,8 @@ import {
     AttachFile,
     ArrowUpward,
     ArrowDownward,
-    Remove
+    Remove,
+    Delete
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useOutletContext } from 'react-router-dom';
@@ -56,6 +57,41 @@ const AdminSupport = () => {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [responseMessage, setResponseMessage] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
+
+    // Delete Ticket State
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [ticketToDelete, setTicketToDelete] = useState(null);
+
+    const handleDeleteClick = (ticketId) => {
+        setTicketToDelete(ticketId);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_URL}/api/support/admin/${ticketToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${userInfo?.token}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSnackbar('Support ticket deleted successfully', 'success');
+                setTickets(tickets.filter(ticket => ticket._id !== ticketToDelete));
+            } else {
+                showSnackbar(data.message || 'Failed to delete ticket', 'error');
+            }
+            setDeleteDialogOpen(false);
+            setTicketToDelete(null);
+        } catch (error) {
+            console.error('Error deleting ticket:', error);
+            showSnackbar('Failed to delete ticket', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
     const [statusFilter, setStatusFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -399,14 +435,25 @@ const AdminSupport = () => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Tooltip title="View ticket details">
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleViewDetails(ticket)}
-                                                        >
-                                                            <Visibility fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
+                                                    <div className="flex space-x-2">
+                                                        <Tooltip title="View ticket details">
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => handleViewDetails(ticket)}
+                                                            >
+                                                                <Visibility fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete ticket">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleDeleteClick(ticket._id)}
+                                                            >
+                                                                <Delete fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -431,13 +478,41 @@ const AdminSupport = () => {
                     )}
                 </CardContent>
             </Card>
+
             <SupportTicketDetailsModal
                 open={detailsOpen}
                 onClose={handleCloseDetails}
                 ticket={selectedTicket}
-                onSendResponse={handleSendResponse} // Note: This might need to be wrapped or the modal should use the passed prop properly.
+                onSendResponse={handleSendResponse}
                 onTicketUpdate={handleTicketUpdate}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Support Ticket
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this support ticket? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

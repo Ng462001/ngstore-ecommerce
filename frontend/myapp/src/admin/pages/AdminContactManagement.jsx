@@ -238,14 +238,15 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
         }
     };
 
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this contact message?')) {
-            try {
-                await onDelete(contact._id);
-                onClose();
-            } catch (error) {
-                showSnackbar('Failed to delete contact', 'error');
-            }
+        try {
+            await onDelete(contact._id);
+            setDeleteConfirmOpen(false);
+            onClose();
+        } catch (error) {
+            showSnackbar('Failed to delete contact', 'error');
         }
     };
 
@@ -667,7 +668,7 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
                         color="error"
                         variant="outlined"
                         startIcon={isDeleting ? <CircularProgress size={20} /> : <Delete />}
-                        onClick={handleDelete}
+                        onClick={() => setDeleteConfirmOpen(true)}
                         disabled={isDeleting}
                     >
                         {isDeleting ? 'Deleting...' : 'Delete'}
@@ -703,6 +704,33 @@ const ContactDetailsModal = ({ open, onClose, contact, onReply, onStatusUpdate, 
                     </Button>
                 </Box>
             </DialogActions>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={() => setDeleteConfirmOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Contact Message
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this contact message? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteConfirmOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     );
 };
@@ -724,6 +752,20 @@ const AdminContactManagement = () => {
     const [priorityFilter, setPriorityFilter] = useState('');
     const [selectedContact, setSelectedContact] = useState(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [contactToDelete, setContactToDelete] = useState(null);
+
+    const handleDeleteClick = (contactId) => {
+        setContactToDelete(contactId);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!contactToDelete) return;
+        await handleDelete(contactToDelete);
+        setDeleteDialogOpen(false);
+        setContactToDelete(null);
+    };
     const userInfo = useSelector(state => state.productReducer.userInfo);
 
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -1064,6 +1106,16 @@ const AdminContactManagement = () => {
                                                                 <Visibility fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
+                                                        <Tooltip title="Delete contact">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleDeleteClick(contact._id)}
+                                                                aria-label={`Delete contact ${contact._id}`}
+                                                            >
+                                                                <Delete fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -1099,6 +1151,33 @@ const AdminContactManagement = () => {
                 onDelete={handleDelete}
                 actionLoading={actionLoading}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Contact Message
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this contact message? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

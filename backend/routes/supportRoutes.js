@@ -11,5 +11,6 @@ router.post('/:id/response', protect, SupportController.addResponse);
 // Admin routes
 router.get('/admin/all', protect, admin, SupportController.getAllTickets);
 router.put('/admin/:id/status', protect, admin, SupportController.updateTicketStatus);
+router.delete('/admin/:id', protect, admin, SupportController.deleteTicket);
 
 module.exports = router;

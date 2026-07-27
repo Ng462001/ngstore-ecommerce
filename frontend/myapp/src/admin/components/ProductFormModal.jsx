@@ -223,7 +223,7 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
     const sizeCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'sports'];
 
     // Categories that have colors
-    const colorCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'accessories', 'sports'];
+    const colorCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'accessories', 'sports', 'mobile'];
 
     // Categories that have both sizes and colors
     const variantCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'sports'];

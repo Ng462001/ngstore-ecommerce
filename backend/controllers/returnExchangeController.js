@@ -141,6 +141,19 @@ class ReturnExchangeController {
             res.status(500).json({ success: false, message: error.message });
         }
     };
+
+    // Admin: Delete Request
+    static deleteRequest = async (req, res) => {
+        try {
+            const request = await ReturnExchange.findByIdAndDelete(req.params.id);
+            if (!request) {
+                return res.status(404).json({ success: false, message: 'Request not found' });
+            }
+            res.status(200).json({ success: true, message: 'Return/Exchange request deleted successfully' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    };
 }
 
 module.exports = ReturnExchangeController;

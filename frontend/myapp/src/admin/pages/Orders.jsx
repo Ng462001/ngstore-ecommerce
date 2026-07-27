@@ -37,7 +37,8 @@ import {
     Close,
     Receipt,
     ArrowDropDown,
-    Search
+    Search,
+    Delete
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -58,6 +59,34 @@ const Orders = () => {
     // Order Details Modal State
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [viewOrder, setViewOrder] = useState(null);
+
+    // Delete Order State
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState(null);
+
+    const handleDeleteClick = (orderId) => {
+        setOrderToDelete(orderId);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/admin/orders/${orderToDelete}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(orders.filter(order => order._id !== orderToDelete));
+            setLoading(false);
+            setDeleteDialogOpen(false);
+            setOrderToDelete(null);
+            showSnackbar('Order deleted successfully', 'success');
+        } catch (err) {
+            setLoading(false);
+            console.error('Error deleting order:', err);
+            showSnackbar(err.response?.data?.message || 'Failed to delete order', 'error');
+        }
+    };
 
     // Filters State
     const [searchQuery, setSearchQuery] = useState('');
@@ -459,6 +488,15 @@ const Orders = () => {
                                                             <Receipt fontSize="small" />
                                                         </IconButton>
                                                     </Tooltip>
+                                                    <Tooltip title="Delete Order">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDeleteClick(order._id)}
+                                                        >
+                                                            <Delete fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -611,8 +649,35 @@ const Orders = () => {
                         </Grid>
                     )}
                 </DialogContent>
-                <DialogActions>
+                 <DialogActions>
                     <Button onClick={handleCloseDetails}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Order
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this order? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
                 </DialogActions>
             </Dialog>
         </div>

@@ -250,6 +250,49 @@ class SupportController {
             });
         }
     };
+
+    // Admin: Delete ticket
+    static deleteTicket = async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // Check admin authorization
+            if (req.user.role !== 'admin') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Admin access required'
+                });
+            }
+
+            // Validate ID format
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid ticket ID format'
+                });
+            }
+
+            const ticket = await Support.findByIdAndDelete(id);
+
+            if (!ticket) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Ticket not found'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Ticket deleted successfully'
+            });
+        } catch (error) {
+            console.error('Delete ticket error:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Server error deleting ticket'
+            });
+        }
+    };
 }
 
 module.exports = SupportController;

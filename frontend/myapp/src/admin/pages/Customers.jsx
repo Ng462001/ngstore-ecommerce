@@ -15,10 +15,15 @@ import {
     CircularProgress,
     Button,
     Tooltip,
-    IconButton
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
-import { Refresh, Visibility } from '@mui/icons-material';
+import { Refresh, Visibility, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import CustomerDetailsModal from '../components/CustomerDetailsModal';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -29,6 +34,31 @@ const Customers = () => {
     const [error, setError] = useState(null);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [customerToDelete, setCustomerToDelete] = useState(null);
+
+    const handleDeleteCustomer = (id) => {
+        setCustomerToDelete(id);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_URL}/api/admin/users/${customerToDelete}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchCustomers();
+            setDeleteDialogOpen(false);
+            setCustomerToDelete(null);
+            toast.success('Customer deleted successfully');
+        } catch (err) {
+            console.error('Error deleting customer:', err);
+            toast.error(err.response?.data?.message || err.message);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchCustomers();
@@ -155,14 +185,25 @@ const Customers = () => {
                                                 />
                                             </TableCell>
                                             <TableCell>
-                                                <Tooltip title="View Customer Details">
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleViewCustomer(customer)}
-                                                    >
-                                                        <Visibility fontSize='small' />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                <div className="flex space-x-2">
+                                                    <Tooltip title="View Customer Details">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleViewCustomer(customer)}
+                                                        >
+                                                            <Visibility fontSize='small' />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Delete Customer">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDeleteCustomer(customer._id)}
+                                                        >
+                                                            <Delete fontSize='small' />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -178,6 +219,33 @@ const Customers = () => {
                 onClose={handleCloseDetails}
                 customer={selectedCustomer}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle className="font-bold">
+                    Delete Customer
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this customer? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmDelete}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

@@ -11,5 +11,6 @@ router.get('/order/:orderId', protect, ReturnExchangeController.getRequestsByOrd
 // Admin routes
 router.get('/admin/all', protect, admin, ReturnExchangeController.getAllRequests);
 router.put('/admin/:id/status', protect, admin, ReturnExchangeController.updateRequestStatus);
+router.delete('/admin/:id', protect, admin, ReturnExchangeController.deleteRequest);
 
 module.exports = router;

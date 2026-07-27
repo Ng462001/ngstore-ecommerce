@@ -707,7 +707,7 @@ const CustomerDetailsModal = ({ open, onClose, customer, onCustomerUpdate }) => 
 
                                 <Chip
                                     icon={displayCustomer.role === 'admin' ? <Security /> : <Person />}
-                                    label={displayCustomer.role || 'user'}
+                                    label={displayCustomer.role === 'admin' ? 'Admin' : 'User'}
                                     color={displayCustomer.role === 'admin' ? 'error' : 'primary'}
                                     size="small"
                                     variant="outlined"
