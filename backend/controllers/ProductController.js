@@ -50,7 +50,11 @@ class ProductController {
 
             // Category filter
             if (category) {
-                filter.category = { $regex: category, $options: 'i' };
+                if (category.includes(',')) {
+                    filter.category = { $in: category.split(',').map(cat => cat.trim().toLowerCase()) };
+                } else {
+                    filter.category = { $regex: `^${category.trim()}$`, $options: 'i' };
+                }
             }
 
             // Price range filter (in rupees)
@@ -72,13 +76,30 @@ class ProductController {
 
             // Size filter
             if (size) {
-                filter['sizes.name'] = size.toUpperCase();
-                filter['sizes.inStock'] = true;
+                if (size.includes(',')) {
+                    filter.sizes = {
+                        $elemMatch: {
+                            name: { $in: size.split(',').map(s => s.trim().toUpperCase()) },
+                            inStock: true
+                        }
+                    };
+                } else {
+                    filter.sizes = {
+                        $elemMatch: {
+                            name: size.trim().toUpperCase(),
+                            inStock: true
+                        }
+                    };
+                }
             }
 
             // Color filter
             if (color) {
-                filter['colors.name'] = { $regex: color, $options: 'i' };
+                if (color.includes(',')) {
+                    filter['colors.name'] = { $in: color.split(',').map(col => new RegExp(`^${col.trim()}$`, 'i')) };
+                } else {
+                    filter['colors.name'] = { $regex: `^${color.trim()}$`, $options: 'i' };
+                }
             }
 
             // Tags filter

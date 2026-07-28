@@ -17,6 +17,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon } from '@heroicons/react/20/solid'
 import ProductCard from '../components/ProductCard'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Pagination } from '@mui/material'
 
 const sortOptions = [
     { name: 'Most Popular', href: '#', current: true, value: 'createdAt' },
@@ -33,10 +34,12 @@ const filters = [
         options: [
             { value: 'men', label: 'Men' },
             { value: 'women', label: 'Women' },
-            { value: 'kids', label: 'Kids' },
-            { value: 'clothing', label: 'Clothing' },
             { value: 'accessories', label: 'Accessories' },
-            { value: 'electronics', label: 'Electronics' },
+            { value: 'electronic device', label: 'Electronics' },
+            { value: 'mobile', label: 'Mobile' },
+            { value: 'sports', label: 'Sports' },
+            { value: 'home', label: 'Home' },
+            { value: 'cloths', label: 'Cloths' },
         ],
     },
     {
@@ -292,6 +295,122 @@ export default function Product() {
         return option?.label || value
     }
 
+    const renderFilterOptions = (section, isMobile = false) => {
+        const prefix = isMobile ? 'mobile-' : ''
+        
+        if (section.id === 'color') {
+            const colorMap = {
+                white: { bg: '#ffffff', border: 'border-gray-200' },
+                black: { bg: '#111827', border: 'border-transparent' },
+                gray: { bg: '#6B7280', border: 'border-transparent' },
+                blue: { bg: '#3B82F6', border: 'border-transparent' },
+                green: { bg: '#10B981', border: 'border-transparent' },
+                red: { bg: '#EF4444', border: 'border-transparent' }
+            }
+
+            return (
+                <div className="flex flex-wrap gap-3">
+                    {section.options.map((option) => {
+                        const isSelected = activeFilters[section.id]?.includes(option.value) || false
+                        const colorInfo = colorMap[option.value.toLowerCase()] || { bg: option.value, border: 'border-gray-300' }
+                        return (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => handleFilter(option.value, section.id)}
+                                title={option.label}
+                                className={classNames(
+                                    "size-8 rounded-full cursor-pointer relative focus:outline-hidden transition-all duration-200 hover:scale-110",
+                                    colorInfo.border,
+                                    isSelected ? "ring-2 ring-indigo-600 ring-offset-2 scale-105" : "border"
+                                )}
+                                style={{ backgroundColor: colorInfo.bg }}
+                                aria-label={`Filter by color ${option.label}`}
+                            >
+                                {isSelected && (
+                                    <span className={classNames(
+                                        "absolute inset-0 flex items-center justify-center text-xs font-bold pointer-events-none",
+                                        option.value.toLowerCase() === 'white' ? 'text-gray-900' : 'text-white'
+                                    )}>
+                                        ✓
+                                    </span>
+                                )}
+                            </button>
+                        )
+                    })}
+                </div>
+            )
+        }
+
+        if (section.id === 'size') {
+            return (
+                <div className="flex flex-wrap gap-2">
+                    {section.options.map((option) => {
+                        const isSelected = activeFilters[section.id]?.includes(option.value) || false
+                        return (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => handleFilter(option.value, section.id)}
+                                className={classNames(
+                                    "min-w-10 h-10 px-2 rounded-md text-xs font-semibold flex items-center justify-center border transition-all duration-200 hover:border-indigo-600 hover:text-indigo-600",
+                                    isSelected
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                                        : "bg-white text-gray-700 border-gray-200"
+                                )}
+                            >
+                                {option.label}
+                            </button>
+                        )
+                    })}
+                </div>
+            )
+        }
+
+        return (
+            <div className={isMobile ? "space-y-6" : "space-y-4"}>
+                {section.options.map((option, optionIdx) => (
+                    <div key={option.value} className="flex gap-3">
+                        <div className="flex h-5 shrink-0 items-center">
+                            <div className="group grid size-4 grid-cols-1">
+                                <input
+                                    checked={activeFilters[section.id]?.includes(option.value) || false}
+                                    onChange={() => handleFilter(option.value, section.id)}
+                                    id={`filter-${prefix}${section.id}-${optionIdx}`}
+                                    name={`${section.id}[]`}
+                                    type="checkbox"
+                                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto cursor-pointer"
+                                />
+                                <svg
+                                    fill="none"
+                                    viewBox="0 0 14 14"
+                                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                                >
+                                    <path
+                                        d="M3 8L6 11L11 3.5"
+                                        strokeWidth={2}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="opacity-0 group-has-checked:opacity-100 transition-opacity duration-200"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <label
+                            htmlFor={`filter-${prefix}${section.id}-${optionIdx}`}
+                            className={classNames(
+                                "cursor-pointer select-none transition-colors duration-200 hover:text-indigo-600",
+                                isMobile ? "min-w-0 flex-1 text-gray-500" : "text-sm text-gray-600"
+                            )}
+                        >
+                            {option.label}
+                        </label>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
     // Loading state
     if (loading && products.length === 0) {
         return (
@@ -365,43 +484,7 @@ export default function Product() {
                                             </DisclosureButton>
                                         </h3>
                                         <DisclosurePanel className="pt-6">
-                                            <div className="space-y-6">
-                                                {section.options.map((option, optionIdx) => (
-                                                    <div key={option.value} className="flex gap-3">
-                                                        <div className="flex h-5 shrink-0 items-center">
-                                                            <div className="group grid size-4 grid-cols-1">
-                                                                <input
-                                                                    checked={activeFilters[section.id]?.includes(option.value) || false}
-                                                                    onChange={() => handleFilter(option.value, section.id)}
-                                                                    id={`filter-mobile-${section.id}-${optionIdx}`}
-                                                                    name={`${section.id}[]`}
-                                                                    type="checkbox"
-                                                                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
-                                                                />
-                                                                <svg
-                                                                    fill="none"
-                                                                    viewBox="0 0 14 14"
-                                                                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
-                                                                >
-                                                                    <path
-                                                                        d="M3 8L6 11L11 3.5"
-                                                                        strokeWidth={2}
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        className="opacity-0 group-has-checked:opacity-100"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                        <label
-                                                            htmlFor={`filter-mobile-${section.id}-${optionIdx}`}
-                                                            className="min-w-0 flex-1 text-gray-500"
-                                                        >
-                                                            {option.label}
-                                                        </label>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            {renderFilterOptions(section, true)}
                                         </DisclosurePanel>
                                     </Disclosure>
                                 ))}
@@ -412,9 +495,16 @@ export default function Product() {
 
                 <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
-                        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-                            {searchQuery ? `Search Results for "${searchQuery}"` : 'New Arrivals'}
-                        </h1>
+                        <div>
+                            <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+                                {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+                            </h1>
+                            {pagination.total !== undefined && (
+                                <p className="mt-2 text-sm text-gray-500">
+                                    Showing {products.length} of {pagination.total} products
+                                </p>
+                            )}
+                        </div>
 
                         <div className="flex items-center">
                             <Menu as="div" className="relative inline-block text-left">
@@ -528,40 +618,7 @@ export default function Product() {
                                             </DisclosureButton>
                                         </h3>
                                         <DisclosurePanel className="pt-6">
-                                            <div className="space-y-4">
-                                                {section.options.map((option, optionIdx) => (
-                                                    <div key={option.value} className="flex gap-3">
-                                                        <div className="flex h-5 shrink-0 items-center">
-                                                            <div className="group grid size-4 grid-cols-1">
-                                                                <input
-                                                                    checked={activeFilters[section.id]?.includes(option.value) || false}
-                                                                    onChange={() => handleFilter(option.value, section.id)}
-                                                                    id={`filter-${section.id}-${optionIdx}`}
-                                                                    name={`${section.id}[]`}
-                                                                    type="checkbox"
-                                                                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
-                                                                />
-                                                                <svg
-                                                                    fill="none"
-                                                                    viewBox="0 0 14 14"
-                                                                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
-                                                                >
-                                                                    <path
-                                                                        d="M3 8L6 11L11 3.5"
-                                                                        strokeWidth={2}
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        className="opacity-0 group-has-checked:opacity-100"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                        <label htmlFor={`filter-${section.id}-${optionIdx}`} className="text-sm text-gray-600">
-                                                            {option.label}
-                                                        </label>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            {renderFilterOptions(section, false)}
                                         </DisclosurePanel>
                                     </Disclosure>
                                 ))}
@@ -606,51 +663,15 @@ export default function Product() {
                                         {/* Pagination */}
                                         {pagination && pagination.pages > 1 && (
                                             <div className="flex justify-center mt-8">
-                                                <nav className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => handlePageChange(pagination.current - 1)}
-                                                        disabled={!pagination.hasPrev}
-                                                        className={classNames(
-                                                            "px-3 py-2 rounded-md text-sm font-medium",
-                                                            pagination.hasPrev
-                                                                ? "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                                                                : "text-gray-400 bg-gray-100 cursor-not-allowed"
-                                                        )}
-                                                    >
-                                                        Previous
-                                                    </button>
-
-                                                    {[...Array(pagination.pages)].map((_, i) => {
-                                                        const page = i + 1
-                                                        return (
-                                                            <button
-                                                                key={page}
-                                                                onClick={() => handlePageChange(page)}
-                                                                className={classNames(
-                                                                    "px-3 py-2 rounded-md text-sm font-medium",
-                                                                    page === pagination.current
-                                                                        ? "bg-indigo-600 text-white"
-                                                                        : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                                                                )}
-                                                            >
-                                                                {page}
-                                                            </button>
-                                                        )
-                                                    })}
-
-                                                    <button
-                                                        onClick={() => handlePageChange(pagination.current + 1)}
-                                                        disabled={!pagination.hasNext}
-                                                        className={classNames(
-                                                            "px-3 py-2 rounded-md text-sm font-medium",
-                                                            pagination.hasNext
-                                                                ? "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                                                                : "text-gray-400 bg-gray-100 cursor-not-allowed"
-                                                        )}
-                                                    >
-                                                        Next
-                                                    </button>
-                                                </nav>
+                                                <Pagination
+                                                    count={pagination.pages}
+                                                    page={pagination.current}
+                                                    onChange={(e, value) => handlePageChange(value)}
+                                                    color="primary"
+                                                    size="large"
+                                                    showFirstButton
+                                                    showLastButton
+                                                />
                                             </div>
                                         )}
                                     </>

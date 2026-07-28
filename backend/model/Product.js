@@ -207,7 +207,7 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Category is required'],
         enum: {
-            values: ['men', 'women', 'kids', 'clothing', 'accessories', 'electronics', 'home', 'sports', 'electronic device', 'mobile', 'cloths'],
+            values: ['men', 'women', 'accessories', 'home', 'sports', 'electronic device', 'mobile', 'cloths'],
             message: 'Category must be one of: men, women, kids, clothing, accessories, electronics, home, sports, electronic device, mobile, cloths'
         },
         index: true

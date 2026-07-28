@@ -1,6 +1,6 @@
 // components/layout/AdminLayout.js
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import {
     AppBar,
     Toolbar,
@@ -21,6 +21,12 @@ import Sidebar from './Sidebar';
 const drawerWidth = 280;
 
 const AdminLayout = () => {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
+
     const [mobileOpen, setMobileOpen] = useState(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));

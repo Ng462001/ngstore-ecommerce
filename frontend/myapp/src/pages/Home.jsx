@@ -147,9 +147,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState(new Set())
 
-  // New filter states
-  const [page, setPage] = useState(1)
-  const itemsPerPage = 1
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const theme = useTheme()
@@ -189,7 +186,7 @@ const Home = () => {
   const fetchTopProducts = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products?limit=50`)
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products?limit=4&sort=createdAt&order=desc`)
       const result = await response.json()
       if (result.success && result.data) {
         setAllProducts(result.data)
@@ -251,12 +248,6 @@ const Home = () => {
     return src.startsWith('http') ? src : `${import.meta.env.VITE_API_URL}${src}`
   }
 
-  // Pagination
-  const totalPages = Math.ceil(allProducts.length / itemsPerPage)
-  const paginatedProducts = allProducts.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  )
 
   const ProductSkeleton = () => (
     <Grid item xs={6} sm={4} md={3} lg={3}>
@@ -367,7 +358,7 @@ const Home = () => {
       </Container>
 
       {/* All Products Section with Filters */}
-      <Container maxWidth="lg" sx={{ mb: 4 }}>
+      <Container maxWidth="lg" sx={{ mb: 10 }}>
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
@@ -377,8 +368,22 @@ const Home = () => {
           gap: 2
         }}>
           <Typography variant="h4" sx={{ fontWeight: 800 }}>
-            Products
+            Latest Products
           </Typography>
+          <Button
+            endIcon={<ArrowForwardIcon />}
+            onClick={() => navigate('/store')}
+            sx={{
+              alignItems: 'center',
+              borderRadius: 2.5,
+              textTransform: 'none',
+              fontWeight: 700,
+              px: 3,
+              py: 1,
+            }}
+          >
+            View All Products
+          </Button>
         </Box>
 
         {/* Products Grid */}
@@ -388,7 +393,7 @@ const Home = () => {
               <ProductSkeleton key={index} />
             ))}
           </Grid>
-        ) : paginatedProducts.length === 0 ? (
+        ) : allProducts.length === 0 ? (
           <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 2 }}>
             <Typography variant="h6" color="text.secondary">
               No products found
@@ -399,7 +404,7 @@ const Home = () => {
           </Paper>
         ) : (
           <Grid container spacing={2}>
-            {paginatedProducts.map((product) => (
+            {allProducts.map((product) => (
               <Grid item xs={6} sm={4} md={3} lg={3} key={product._id}>
                 <Card
                   sx={{
@@ -617,22 +622,6 @@ const Home = () => {
             ))}
           </Grid>
         )}
-
-        {/* Pagination */}
-        {!loading && totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(e, value) => setPage(value)}
-              color="primary"
-              size="large"
-              showFirstButton
-              showLastButton
-            />
-          </Box>
-        )}
-
       </Container>
 
       {/* Features Section */}

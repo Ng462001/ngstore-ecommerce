@@ -220,23 +220,20 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
     const [newSize, setNewSize] = useState('');
 
     // Categories that have sizes
-    const sizeCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'sports'];
+    const sizeCategories = ['cloths', 'men', 'women', 'sports'];
 
     // Categories that have colors
-    const colorCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'accessories', 'sports', 'mobile'];
+    const colorCategories = ['cloths', 'men', 'women', 'accessories', 'sports', 'mobile'];
 
     // Categories that have both sizes and colors
-    const variantCategories = ['cloths', 'clothing', 'men', 'women', 'kids', 'sports'];
+    const variantCategories = ['cloths', 'men', 'women', 'sports'];
 
     const categories = [
         { value: 'electronic device', label: '📱 Electronic Device', icon: '📱' },
         { value: 'mobile', label: '📱 Mobile', icon: '📱' },
-        { value: 'electronics', label: '💻 Electronics', icon: '💻' },
         { value: 'cloths', label: '👕 Cloths', icon: '👕' },
-        { value: 'clothing', label: '👗 Clothing', icon: '👗' },
         { value: 'men', label: '👔 Men', icon: '👔' },
         { value: 'women', label: '👚 Women', icon: '👚' },
-        { value: 'kids', label: '🧒 Kids', icon: '🧒' },
         { value: 'accessories', label: '💍 Accessories', icon: '💍' },
         { value: 'home', label: '🏠 Home & Living', icon: '🏠' },
         { value: 'sports', label: '⚽ Sports', icon: '⚽' },
