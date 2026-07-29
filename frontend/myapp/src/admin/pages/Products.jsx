@@ -248,7 +248,7 @@ const Products = () => {
                         onClick={handleRefresh}
                         disabled={actionLoading.refresh}
                     >
-                        {actionLoading.refresh ? <CircularProgress size={20} /> : 'Refresh'}
+                        Refresh
                     </Button>
                     <Button
                         variant="contained"

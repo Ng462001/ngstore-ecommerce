@@ -42,6 +42,7 @@ import {
     Star as StarIcon,
     StarBorder as StarBorderIcon,
     Category as CategoryIcon,
+    Refresh,
 } from '@mui/icons-material';
 import ClearIcon from '@mui/icons-material/Clear';
 import axios from 'axios';
@@ -260,15 +261,27 @@ const Reviews = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <Typography variant="h4" className="font-bold text-gray-800">
-                    Product Reviews Management
-                </Typography>
-                <Typography variant="body1" className="text-gray-600">
-                    Manage all customer reviews across all products
-                </Typography>
+
+            <div className="flex justify-between items-center">
+                <div>
+                    <Typography variant="h4" className="font-bold text-gray-800">
+                        Product Reviews Management
+                    </Typography>
+                    <Typography variant="body1" className="text-gray-600">
+                        Manage all customer reviews across all products
+                    </Typography>
+                </div>
+                <Button
+                    variant="outlined"
+                    startIcon={<Refresh />}
+                    onClick={fetchReviews}
+                    disabled={loading}
+                >
+                    Refresh
+                </Button>
             </div>
+            {/* Header */}
+
 
             {/* Stats Cards */}
             <Grid container spacing={3}>

@@ -122,6 +122,7 @@ const Customers = () => {
                     variant="outlined"
                     startIcon={<Refresh />}
                     onClick={fetchCustomers}
+                    disabled={loading}
                 >
                     Refresh
                 </Button>

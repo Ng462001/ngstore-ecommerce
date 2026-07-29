@@ -301,6 +301,7 @@ const AdminSupport = () => {
                     variant="outlined"
                     startIcon={<Refresh />}
                     onClick={fetchTickets}
+                    disabled={actionLoading}
                 >
                     Refresh
                 </Button>

@@ -276,7 +276,7 @@ const AdminReturns = () => {
                         onClick={handleRefresh}
                         disabled={actionLoading.refresh}
                     >
-                        {actionLoading.refresh ? <CircularProgress size={20} /> : 'Refresh'}
+                        Refresh
                     </Button>
                 </div>
             </div>
