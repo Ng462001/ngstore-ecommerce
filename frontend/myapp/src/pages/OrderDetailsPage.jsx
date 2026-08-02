@@ -535,12 +535,13 @@ const OrderDetailsPage = () => {
 
                 {/* Action Buttons */}
                 <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    {order.status === 'Delivered' && returnRequest === false && (
+                    {order.status === 'Delivered' && (
                         <Button
                             variant="contained"
                             color="secondary"
                             onClick={() => setReturnModalOpen(true)}
                             startIcon={<ReturnIcon />}
+                            disabled={returnRequest}
                         >
                             Return/Exchange
                         </Button>
