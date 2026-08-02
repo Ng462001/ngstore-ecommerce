@@ -26,3 +26,27 @@ export const loginUser = (userInfo) => ({
 export const logoutUser = () => ({
     type: 'LOGOUT_USER'
 })
+
+export const addToWishlist = (product) => ({
+    type: 'ADD_TO_WISHLIST',
+    payload: product
+})
+
+export const removeFromWishlist = (productId) => ({
+    type: 'REMOVE_FROM_WISHLIST',
+    payload: productId
+})
+
+export const toggleWishlist = (product) => ({
+    type: 'TOGGLE_WISHLIST',
+    payload: product
+})
+
+export const setWishlist = (wishlistItems) => ({
+    type: 'SET_WISHLIST',
+    payload: wishlistItems
+})
+
+export const clearWishlist = () => ({
+    type: 'CLEAR_WISHLIST'
+})

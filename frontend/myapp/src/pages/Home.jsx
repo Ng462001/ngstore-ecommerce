@@ -122,10 +122,10 @@ import {
   Clear,
 } from '@mui/icons-material'
 import Carousel from '../components/carousel/Carousel'
-import { useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-hot-toast'
 import { keyframes } from '@mui/system'
-import { addProduct } from '../Redux/action/action'
+import { addProduct, toggleWishlist } from '../Redux/action/action'
 
 // Animation keyframes
 
@@ -145,7 +145,22 @@ const Home = () => {
 
   const [allProducts, setAllProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [favorites, setFavorites] = useState(new Set())
+
+  const wishlistItems = useSelector(state => {
+    if (!state) return []
+    if (state.productReducer) {
+      return state.productReducer.wishlistItems || []
+    }
+    return state.wishlistItems || []
+  })
+
+  const isUserLoggedIn = useSelector(state => {
+    if (!state) return false
+    if (state.productReducer) {
+      return state.productReducer.isUserLoggedIn || false
+    }
+    return state.isUserLoggedIn || false
+  })
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -166,21 +181,6 @@ const Home = () => {
 
   useEffect(() => {
     fetchTopProducts()
-    // Timer for flash sale
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        const newSeconds = prev.seconds - 1
-        if (newSeconds < 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        }
-        if (prev.minutes < 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        }
-        return { ...prev, seconds: newSeconds }
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
   }, [])
 
   const fetchTopProducts = async () => {
@@ -212,34 +212,38 @@ const Home = () => {
       selectedSize: null,
     }
     dispatch(addProduct(cartItem))
-    toast.success('Added to cart! 🛒', {
-      position: "bottom-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      theme: "light",
-    })
+    toast.success('Added to cart! 🛒')
   }
 
-  const toggleFavorite = (productId) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev)
-      if (newFavorites.has(productId)) {
-        newFavorites.delete(productId)
-        toast.info('Removed from favorites 💔', {
-          position: "bottom-right",
-          autoClose: 1500,
-        })
-      } else {
-        newFavorites.add(productId)
-        toast.success('Added to favorites ❤️', {
-          position: "bottom-right",
-          autoClose: 1500,
-        })
+  const toggleFavorite = async (product) => {
+    const productId = product._id || product.id
+    const isWishlisted = wishlistItems.some(item => (item._id || item.id) === productId)
+
+    dispatch(toggleWishlist(product))
+
+    if (isWishlisted) {
+      toast.success('Removed from wishlist 💔')
+    } else {
+      toast.success('Added to wishlist ❤️')
+    }
+    const token = localStorage.getItem('token')
+    if (isUserLoggedIn && token) {
+      try {
+        if (isWishlisted) {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        } else {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        }
+      } catch (err) {
+        console.error('Error syncing wishlist with backend:', err)
       }
-      return newFavorites
-    })
+    }
   }
 
   const getProductImage = (product) => {
@@ -480,9 +484,9 @@ const Home = () => {
                         width: 28,
                         height: 28
                       }}
-                      onClick={() => toggleFavorite(product._id)}
+                      onClick={() => toggleFavorite(product)}
                     >
-                      {favorites.has(product._id) ? (
+                      {wishlistItems.some(item => (item._id || item.id) === product._id) ? (
                         <FavoriteIcon sx={{ fontSize: 16, color: '#FF5252' }} />
                       ) : (
                         <FavoriteBorderIcon sx={{ fontSize: 16 }} />

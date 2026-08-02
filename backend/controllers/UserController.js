@@ -321,6 +321,62 @@ class UserController {
         });
     };
 
+    // Get User Wishlist
+    static getWishlist = async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id).populate('wishlist');
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            res.status(200).json({ success: true, wishlist: user.wishlist || [] });
+        } catch (error) {
+            console.error('Error in getWishlist:', error);
+            res.status(500).json({ message: 'Failed to fetch wishlist' });
+        }
+    };
+
+    // Add Item to Wishlist
+    static addToWishlist = async (req, res) => {
+        try {
+            const { productId } = req.params;
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            if (!user.wishlist.includes(productId)) {
+                user.wishlist.push(productId);
+                await user.save();
+            }
+
+            const updatedUser = await User.findById(req.user.id).populate('wishlist');
+            res.status(200).json({ success: true, message: 'Added to wishlist', wishlist: updatedUser.wishlist });
+        } catch (error) {
+            console.error('Error in addToWishlist:', error);
+            res.status(500).json({ message: 'Failed to add item to wishlist' });
+        }
+    };
+
+    // Remove Item from Wishlist
+    static removeFromWishlist = async (req, res) => {
+        try {
+            const { productId } = req.params;
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            user.wishlist = user.wishlist.filter(id => id.toString() !== productId);
+            await user.save();
+
+            const updatedUser = await User.findById(req.user.id).populate('wishlist');
+            res.status(200).json({ success: true, message: 'Removed from wishlist', wishlist: updatedUser.wishlist });
+        } catch (error) {
+            console.error('Error in removeFromWishlist:', error);
+            res.status(500).json({ message: 'Failed to remove item from wishlist' });
+        }
+    };
+
 }
 
 module.exports = UserController;

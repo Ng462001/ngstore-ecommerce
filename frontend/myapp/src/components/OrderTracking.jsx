@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { Stepper, Step, StepLabel, Box, Typography, Paper, Container, Card, CardContent, Grid, Divider, Chip } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'

@@ -6,9 +6,69 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { NavLink } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleWishlist } from '../Redux/action/action';
+import { toast } from 'react-hot-toast';
 
 const ProductCard = ({ item }) => {
+    const dispatch = useDispatch();
+
+    const wishlistItems = useSelector(state => {
+        if (!state) return []
+        if (state.productReducer) {
+            return state.productReducer.wishlistItems || []
+        }
+        return state.wishlistItems || []
+    });
+
+    const isUserLoggedIn = useSelector(state => {
+        if (!state) return false
+        if (state.productReducer) {
+            return state.productReducer.isUserLoggedIn || false
+        }
+        return state.isUserLoggedIn || false
+    });
+
+    const itemId = item._id || item.id;
+    const isWishlisted = wishlistItems.some(w => (w._id || w.id) === itemId);
+
+    const handleWishlistToggle = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        dispatch(toggleWishlist(item));
+
+        if (isWishlisted) {
+            toast.success('Removed from wishlist 💔');
+        } else {
+            toast.success('Added to wishlist ❤️');
+        }
+
+        const token = localStorage.getItem('token');
+        if (isUserLoggedIn && token) {
+            try {
+                if (isWishlisted) {
+                    await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`, {
+                        method: 'DELETE',
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                } else {
+                    await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                }
+            } catch (err) {
+                console.error('Error syncing wishlist:', err);
+            }
+        }
+    };
+
     // Calculate discount percentage if not provided
     const calculateDiscount = () => {
         if (item.discount) return item.discount;
@@ -26,7 +86,7 @@ const ProductCard = ({ item }) => {
     const originalPrice = item.originalPrice || (item.discountedPrice ? item.price : null);
 
     return (
-        <NavLink to={`/product/${item.id || item._id}`} style={{ textDecoration: 'none' }}>
+        <NavLink to={`/product/${item.id || item._id}`} style={{ textDecoration: 'none', position: 'relative', display: 'block' }}>
             <Card sx={{
                 width: 280, // Fixed width for all cards
                 height: 400, // Fixed height for all cards
@@ -35,11 +95,38 @@ const ProductCard = ({ item }) => {
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex',
                 flexDirection: 'column',
+                position: 'relative',
                 '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
                 }
             }}>
+                {/* Wishlist Heart Icon Button Overlay */}
+                <Tooltip title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"} arrow>
+                    <IconButton
+                        size="small"
+                        onClick={handleWishlistToggle}
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            zIndex: 10,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(4px)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            '&:hover': {
+                                bgcolor: '#FFF5F5'
+                            }
+                        }}
+                    >
+                        {isWishlisted ? (
+                            <FavoriteIcon sx={{ fontSize: 20, color: '#FF4081' }} />
+                        ) : (
+                            <FavoriteBorderIcon sx={{ fontSize: 20, color: '#666' }} />
+                        )}
+                    </IconButton>
+                </Tooltip>
+
                 <CardActionArea sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     {/* Fixed size image container with proper cover */}
                     <Box sx={{

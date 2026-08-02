@@ -2,6 +2,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 
 const initialState = {
     cartItems: [],
+    wishlistItems: [],
     userInfo: null,
     isUserLoggedIn: false
 }
@@ -12,6 +13,11 @@ try {
     if (savedCart) {
         const parsed = JSON.parse(savedCart);
         initialState.cartItems = parsed.cartItems || [];
+    }
+
+    const savedWishlist = localStorage.getItem('wishlist');
+    if (savedWishlist) {
+        initialState.wishlistItems = JSON.parse(savedWishlist) || [];
     }
 
     const savedUserInfo = localStorage.getItem('userInfo');
@@ -54,7 +60,7 @@ const productReducer = (state = initialState, action) => {
             newState = {
                 ...state,
                 cartItems: state.cartItems.filter(item =>
-                    item.cartId !== action.payload && item.id !== action.payload
+                    item.cartId !== action.payload && item.id !== action.payload && item._id !== action.payload
                 )
             };
             break;
@@ -63,7 +69,7 @@ const productReducer = (state = initialState, action) => {
             newState = {
                 ...state,
                 cartItems: state.cartItems.map(item =>
-                    (item.cartId === action.payload.productId || item.id === action.payload.productId)
+                    (item.cartId === action.payload.productId || item.id === action.payload.productId || item._id === action.payload.productId)
                         ? { ...item, quantity: action.payload.quantity }
                         : item
                 )
@@ -74,6 +80,61 @@ const productReducer = (state = initialState, action) => {
             newState = {
                 ...state,
                 cartItems: []
+            };
+            break;
+
+        case 'ADD_TO_WISHLIST': {
+            const targetId = action.payload._id || action.payload.id;
+            const exists = state.wishlistItems.some(item => (item._id || item.id) === targetId);
+            if (!exists) {
+                newState = {
+                    ...state,
+                    wishlistItems: [...state.wishlistItems, action.payload]
+                };
+            } else {
+                newState = state;
+            }
+            break;
+        }
+
+        case 'REMOVE_FROM_WISHLIST': {
+            const removeId = action.payload;
+            newState = {
+                ...state,
+                wishlistItems: state.wishlistItems.filter(item => (item._id || item.id) !== removeId)
+            };
+            break;
+        }
+
+        case 'TOGGLE_WISHLIST': {
+            const itemToToggle = action.payload;
+            const toggleId = itemToToggle._id || itemToToggle.id;
+            const isPresent = state.wishlistItems.some(item => (item._id || item.id) === toggleId);
+            if (isPresent) {
+                newState = {
+                    ...state,
+                    wishlistItems: state.wishlistItems.filter(item => (item._id || item.id) !== toggleId)
+                };
+            } else {
+                newState = {
+                    ...state,
+                    wishlistItems: [...state.wishlistItems, itemToToggle]
+                };
+            }
+            break;
+        }
+
+        case 'SET_WISHLIST':
+            newState = {
+                ...state,
+                wishlistItems: action.payload || []
+            };
+            break;
+
+        case 'CLEAR_WISHLIST':
+            newState = {
+                ...state,
+                wishlistItems: []
             };
             break;
 
@@ -100,6 +161,7 @@ const productReducer = (state = initialState, action) => {
     // Save to localStorage after every state change
     try {
         localStorage.setItem('cart', JSON.stringify({ cartItems: newState.cartItems }));
+        localStorage.setItem('wishlist', JSON.stringify(newState.wishlistItems || []));
         if (newState.userInfo) {
             localStorage.setItem('userInfo', JSON.stringify(newState.userInfo));
             // Also save token separately for admin components

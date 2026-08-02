@@ -1,10 +1,10 @@
-'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { StarIcon } from '@heroicons/react/20/solid'
+import { HeartIcon } from '@heroicons/react/24/outline'
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { addProduct } from '../Redux/action/action'
+import { addProduct, toggleWishlist } from '../Redux/action/action'
 import { toast } from 'react-hot-toast'
 import ProductImageGallery from '../components/ProductImageGallery'
 
@@ -28,6 +28,48 @@ export default function ProductDetail() {
   const navigate = useNavigate()
 
   const { userInfo, isUserLoggedIn } = useSelector(state => state.productReducer || state)
+
+  const wishlistItems = useSelector(state => {
+    if (!state) return []
+    if (state.productReducer) {
+      return state.productReducer.wishlistItems || []
+    }
+    return state.wishlistItems || []
+  })
+
+  const isWishlisted = wishlistItems.some(item => (item._id || item.id) === (product?._id || id))
+
+  const handleWishlistToggle = async () => {
+    if (!product) return
+    const productId = product._id || id
+
+    dispatch(toggleWishlist(product))
+
+    if (isWishlisted) {
+      toast.success('Removed from wishlist 💔')
+    } else {
+      toast.success('Added to wishlist ❤️')
+    }
+
+    const token = localStorage.getItem('token')
+    if (isUserLoggedIn && token) {
+      try {
+        if (isWishlisted) {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        } else {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        }
+      } catch (err) {
+        console.error('Error syncing wishlist:', err)
+      }
+    }
+  }
 
   // Update review form name if logged in
   useEffect(() => {
@@ -155,11 +197,11 @@ export default function ProductDetail() {
 
     // Only require selection for products that actually have variants
     if (hasColors && !selectedColor) {
-      toast.warn('Please select a color', { autoClose: 2000 })
+      toast.error('Please select a color')
       return
     }
     if (hasSizes && !selectedSize) {
-      toast.warn('Please select a size', { autoClose: 2000 })
+      toast.error('Please select a size')
       return
     }
 
@@ -492,8 +534,8 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* Add to Cart Button */}
-              <div className="mt-6">
+              {/* Add to Cart & Wishlist Buttons */}
+              <div className="mt-6 flex gap-4">
                 <button
                   type="button"
                   onClick={handleAddToCart}
@@ -511,7 +553,7 @@ export default function ProductDetail() {
                         : (product.colors?.length > 0 && !selectedColor) || (product.sizes?.length > 0 && !selectedSize)
                           ? 'bg-gray-400 cursor-not-allowed'
                           : 'bg-indigo-600 hover:bg-indigo-700',
-                    'flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden transition-colors duration-200'
+                    'flex-1 flex items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden transition-colors duration-200'
                   )}
                 >
                   {product.quantity === 0
@@ -524,12 +566,30 @@ export default function ProductDetail() {
                   }
                 </button>
 
-                {addedToCart && (
-                  <p className="text-green-600 text-sm text-center mt-2 font-medium">
-                    ✓ Product added to your cart!
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={handleWishlistToggle}
+                  className={classNames(
+                    isWishlisted
+                      ? 'bg-pink-50 text-pink-600 border-pink-300 hover:bg-pink-100'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-pink-600',
+                    'flex items-center justify-center rounded-md border px-4 py-3 text-base font-medium transition-colors duration-200'
+                  )}
+                  title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                >
+                  {isWishlisted ? (
+                    <HeartIconSolid className="size-6 text-pink-600" />
+                  ) : (
+                    <HeartIcon className="size-6 text-gray-500 hover:text-pink-600" />
+                  )}
+                </button>
               </div>
+
+              {addedToCart && (
+                <p className="text-green-600 text-sm text-center mt-2 font-medium">
+                  ✓ Product added to your cart!
+                </p>
+              )}
             </form>
           </div>
 

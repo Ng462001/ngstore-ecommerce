@@ -1,5 +1,3 @@
-'use client'
-
 import { Fragment, useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Dialog,
@@ -15,7 +13,7 @@ import {
   TabPanel,
   TabPanels,
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { NavLink, useNavigate } from 'react-router-dom'
 import CartDetail from './CartDetail'
 import { Avatar, Box, Icon, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
@@ -54,6 +52,17 @@ export default function Navbar() {
 
   // Custom hook to safely get Redux state
   const useAppSelector = (selector) => useSelector(selector)
+
+  // Get wishlist items from Redux store
+  const wishlistItems = useAppSelector(state => {
+    if (!state) return []
+    if (state.productReducer) {
+      return state.productReducer.wishlistItems || []
+    }
+    return state.wishlistItems || []
+  })
+
+  const totalWishlistItems = wishlistItems.length
 
   // Get user login state from Redux
   const isUserLoggedIn = useAppSelector(state => {
@@ -342,8 +351,24 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Cart items count in mobile menu */}
-          <div className="border-t border-gray-200 px-4 py-6">
+          {/* Wishlist & Cart items count in mobile menu */}
+          <div className="border-t border-gray-200 px-4 py-6 space-y-4">
+            <div className="flow-root">
+              <NavLink
+                to="/wishlist"
+                onClick={() => setOpen(false)}
+                className="-m-2 flex w-full items-center p-2 hover:text-pink-600"
+                aria-label={`Open wishlist with ${totalWishlistItems} items`}
+              >
+                <HeartIcon
+                  aria-hidden="true"
+                  className="size-6 shrink-0 text-gray-400 group-hover:text-pink-500"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  {totalWishlistItems} {totalWishlistItems === 1 ? 'item' : 'items'} in wishlist
+                </span>
+              </NavLink>
+            </div>
             <div className="flow-root">
               <button
                 onClick={() => {
@@ -554,6 +579,29 @@ export default function Navbar() {
                       <span className="sr-only">Search</span>
                       <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
                     </button>
+                  </div>
+
+                  {/* Wishlist */}
+                  <div className="ml-4 flow-root lg:ml-6">
+                    <NavLink
+                      to="/wishlist"
+                      className="group -m-2 flex items-center p-2 relative"
+                      aria-label={`View wishlist with ${totalWishlistItems} items`}
+                    >
+                      <HeartIcon
+                        aria-hidden="true"
+                        className="size-6 shrink-0 text-gray-400 group-hover:text-pink-500 transition-colors"
+                      />
+                      {totalWishlistItems > 0 && (
+                        <span
+                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-medium text-white transition-transform group-hover:scale-110"
+                          aria-label={`${totalWishlistItems} items in wishlist`}
+                        >
+                          {totalWishlistItems}
+                        </span>
+                      )}
+                      <span className="sr-only">items in wishlist</span>
+                    </NavLink>
                   </div>
 
                   {/* Cart */}

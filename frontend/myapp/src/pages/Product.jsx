@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import {
     Dialog,
@@ -297,7 +295,7 @@ export default function Product() {
 
     const renderFilterOptions = (section, isMobile = false) => {
         const prefix = isMobile ? 'mobile-' : ''
-        
+
         if (section.id === 'color') {
             const colorMap = {
                 white: { bg: '#ffffff', border: 'border-gray-200' },

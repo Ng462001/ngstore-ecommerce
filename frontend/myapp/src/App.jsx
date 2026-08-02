@@ -30,6 +30,7 @@ import AdminSupport from './admin/pages/AdminSupport'
 import AdminReturns from './admin/pages/AdminReturns'
 import AdminContactManagement from './admin/pages/AdminContactManagement'
 import VerifyEmail from './pages/VerifyEmail'
+import Wishlist from './pages/Wishlist'
 
 // Private Route Wrapper
 const PrivateAdminRoute = ({ children }) => {
@@ -144,6 +145,10 @@ const App = () => {
         {
           path: '/profile',
           element: <PrivateUserRoute><Profile /></PrivateUserRoute>
+        },
+        {
+          path: '/wishlist',
+          element: <Wishlist />
         }
       ]
     },

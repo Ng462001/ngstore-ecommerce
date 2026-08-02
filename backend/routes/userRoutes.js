@@ -13,6 +13,8 @@ router.put('/address/:id', protect, UserController.updateAddress);
 router.delete('/address/:id', protect, UserController.deleteAddress);
 router.post('/forgot-password', UserController.forgotPassword);
 router.put('/reset-password/:token', UserController.resetPassword);
-router.put('/verifyemail/:token', UserController.verifyEmail);
+router.get('/wishlist', protect, UserController.getWishlist);
+router.post('/wishlist/:productId', protect, UserController.addToWishlist);
+router.delete('/wishlist/:productId', protect, UserController.removeFromWishlist);
 
 module.exports = router;
