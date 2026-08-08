@@ -367,7 +367,8 @@ class AdminController {
             // Basic counts
             const totalProducts = await Product.countDocuments({ status: 'active' });
             const totalOrders = await Order.countDocuments();
-            const totalUsers = await User.countDocuments();
+            const totalUsers = await User.countDocuments({ role: 'user' });
+
 
             // Revenue calculations
             const orders = await Order.find({});

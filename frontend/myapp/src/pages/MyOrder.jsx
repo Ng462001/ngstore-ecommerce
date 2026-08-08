@@ -143,8 +143,15 @@ export default function OrderHistory() {
 
     const filteredOrders = orders.filter(order => {
         // Status filter
-        if (statusFilter !== 'All' && order.status !== statusFilter) {
-            return false
+        if (statusFilter !== 'All') {
+            const hasReturn = returnRequests[order._id];
+            if (statusFilter === 'Returned') {
+                if (order.status !== 'Returned' && (!hasReturn || hasReturn.status === 'Rejected' || hasReturn.status === 'Cancelled')) {
+                    return false
+                }
+            } else if (order.status !== statusFilter) {
+                return false
+            }
         }
 
         // Search query filter (order no or product name)
@@ -336,6 +343,11 @@ export default function OrderHistory() {
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                                                         {order.status}
                                                     </span>
+                                                    {returnRequests[order._id] && (
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border text-purple-700 bg-purple-50 border-purple-200">
+                                                            {returnRequests[order._id].type}: {returnRequests[order._id].status}
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 {/* Order Items Preview */}

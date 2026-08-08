@@ -15,6 +15,12 @@ class ReturnExchangeController {
                 return res.status(403).json({ success: false, message: 'Unauthorized' });
             }
 
+            // Check if active return request already exists
+            const existingRequest = await ReturnExchange.findOne({ order: orderId, status: { $ne: 'Cancelled' } });
+            if (existingRequest) {
+                return res.status(400).json({ success: false, message: 'A return or exchange request already exists for this order.' });
+            }
+
             let images = [];
             if (req.files && req.files.length > 0) {
                 const uploadPromises = req.files.map(file => uploadToCloudinary(file.path, 'returns'));
@@ -54,6 +60,11 @@ class ReturnExchangeController {
                 exchangeDetails: type === 'Exchange' ? { requestedProduct: parsedExchangeDetails.newProduct } : undefined,
                 refundDetails: type === 'Return' ? { method: bankDetails ? 'Bank Transfer' : 'Original Payment' } : undefined
             });
+
+            // Update order status to 'Returned'
+            order.status = 'Returned';
+            order.returnedAt = Date.now();
+            await order.save();
 
             res.status(201).json({ success: true, request: newRequest });
         } catch (error) {
@@ -136,6 +147,27 @@ class ReturnExchangeController {
             }
 
             await request.save();
+
+            // Synchronize linked Order status and payment status
+            if (request.order) {
+                const order = await Order.findById(request.order);
+                if (order) {
+                    if (['Completed', 'Approved', 'Received', 'Pickup Scheduled', 'Picked Up'].includes(status)) {
+                        if (request.type === 'Return') {
+                            order.status = 'Returned';
+                            order.returnedAt = order.returnedAt || Date.now();
+                            if (status === 'Completed') {
+                                order.paymentStatus = 'Refunded';
+                                order.refundedAt = Date.now();
+                            }
+                        }
+                    } else if (status === 'Rejected' || status === 'Cancelled') {
+                        order.status = 'Delivered';
+                    }
+                    await order.save();
+                }
+            }
+
             res.status(200).json({ success: true, request });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

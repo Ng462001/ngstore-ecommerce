@@ -11,11 +11,12 @@ import {
     MenuItem,
     MenuItems,
 } from '@headlessui/react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon } from '@heroicons/react/20/solid'
 import ProductCard from '../components/ProductCard'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Pagination } from '@mui/material'
+import AISearchModal from '../components/AISearchModal'
 
 const sortOptions = [
     { name: 'Most Popular', href: '#', current: true, value: 'createdAt' },
@@ -80,6 +81,15 @@ function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
 }
 
+// Demo fallback images for products without image
+const demoImages = [
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=500&auto=format&fit=crop&q=60'
+];
+
 // Function to get a random demo image
 const getRandomDemoImage = () => {
     return demoImages[Math.floor(Math.random() * demoImages.length)]
@@ -112,6 +122,7 @@ export default function Product() {
     const [error, setError] = useState(null)
     const [pagination, setPagination] = useState({})
     const [searchQuery, setSearchQuery] = useState('')
+    const [aiMetadata, setAiMetadata] = useState(null)
     const location = useLocation()
     const navigate = useNavigate()
 
@@ -145,9 +156,52 @@ export default function Product() {
         }
     }, [])
 
+    // Fetch smart search results
+    const fetchSmartSearchResults = useCallback(async (smartSearchQuery, page = '1') => {
+        try {
+            setLoading(true)
+            setError(null)
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/smart-search?q=${encodeURIComponent(smartSearchQuery)}&page=${page}&limit=12`)
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch smart search products: ${response.status}`)
+            }
+
+            const result = await response.json()
+
+            if (result.success) {
+                const processedProducts = processProductData(result.data || [])
+                setProducts(processedProducts)
+                setPagination(result.pagination || {})
+                setAiMetadata(result.aiMetadata || null)
+            } else {
+                throw new Error(result.message || 'Smart search failed')
+            }
+        } catch (err) {
+            console.error('Error fetching smart search products:', err)
+            setError(err.message)
+            setProducts([])
+            setAiMetadata(null)
+        } finally {
+            setLoading(false)
+        }
+    }, [])
+
     // Apply filters from URL on component mount and when URL changes
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search)
+        const smartSearchQuery = searchParams.get('smartSearch')
+        const querySearch = searchParams.get('search') || ''
+
+        if (smartSearchQuery) {
+            setSearchQuery(smartSearchQuery)
+            const page = searchParams.get('page') || '1'
+            fetchSmartSearchResults(smartSearchQuery, page)
+            return
+        }
+
+        setAiMetadata(null)
         const newFilters = {}
 
         filters.forEach(section => {
@@ -164,8 +218,6 @@ export default function Product() {
             option.value === (orderFromUrl === 'desc' ? `-${sortFromUrl}` : sortFromUrl)
         ) || sortOptions[0]
 
-        // Get search from URL
-        const querySearch = searchParams.get('search') || ''
         setSearchQuery(querySearch)
 
         setSortOption(selectedSort)
@@ -206,7 +258,8 @@ export default function Product() {
         const queryString = apiQueryParams.toString()
         fetchProducts(queryString ? `?${queryString}` : '')
 
-    }, [location.search, fetchProducts])
+    }, [location.search, fetchProducts, fetchSmartSearchResults])
+
 
     const handleFilter = useCallback((value, sectionId) => {
         const newFilters = { ...activeFilters }
@@ -595,6 +648,44 @@ export default function Product() {
                             </button>
                         </div>
                     )}
+
+                    {/* AI Smart Search Insights Banner */}
+                    {aiMetadata && (
+                        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white shadow-xl border border-indigo-700/50">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <SparklesIcon className="h-6 w-6 text-amber-300 animate-pulse" />
+                                    <h3 className="font-bold text-base text-white tracking-wide">
+                                        ✨ AI Smart Search Active
+                                    </h3>
+                                </div>
+                                <span className="text-xs bg-white/20 text-white font-medium px-2.5 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                                    {aiMetadata.isAiPowered ? 'Gemini AI Engine' : 'Smart NLP Engine'}
+                                </span>
+                            </div>
+                            <p className="mt-2 text-sm text-indigo-100 italic font-medium">
+                                "{aiMetadata.explanation}"
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-3 text-xs">
+                                {aiMetadata.category && (
+                                    <span className="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-semibold">
+                                        Category: <span className="text-amber-300 uppercase">{aiMetadata.category}</span>
+                                    </span>
+                                )}
+                                {aiMetadata.color && (
+                                    <span className="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-semibold">
+                                        Color: <span className="text-amber-300 capitalize">{aiMetadata.color}</span>
+                                    </span>
+                                )}
+                                {(aiMetadata.maxPrice || aiMetadata.minPrice) && (
+                                    <span className="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-semibold">
+                                        Price: <span className="text-emerald-300">₹{aiMetadata.minPrice || 0} - {aiMetadata.maxPrice ? `₹${aiMetadata.maxPrice}` : 'Unlimited'}</span>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
 
                     <section aria-labelledby="products-heading" className="pt-6 pb-24">
                         <h2 id="products-heading" className="sr-only">

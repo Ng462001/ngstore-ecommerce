@@ -1,6 +1,7 @@
 const Product = require("../model/Product");
 const mongoose = require("mongoose");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../services/cloudinaryService");
+const { parseSmartSearchQuery } = require("../services/aiService");
 
 class ProductController {
     static getAllProducts = async (req, res) => {
@@ -551,6 +552,118 @@ class ProductController {
         }
     };
 
+    // AI Smart Search
+    static smartSearch = async (req, res) => {
+        try {
+            const { q, query, page = 1, limit = 12 } = req.query;
+            const searchPrompt = q || query || "";
+
+            if (!searchPrompt.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Search query string is required"
+                });
+            }
+
+            // Get distinct categories and colors from DB for context
+            const dbCategories = await Product.distinct('category', { status: 'active' });
+            const dbColors = await Product.distinct('colors.name', { status: 'active' });
+
+            // Call AI Service
+            const aiParsed = await parseSmartSearchQuery(searchPrompt, dbCategories, dbColors);
+
+            // Construct MongoDB filter based on AI parsed results
+            const filter = { status: 'active' };
+
+            // Category filter
+            if (aiParsed.category) {
+                filter.category = { $regex: `^${aiParsed.category.trim()}$`, $options: 'i' };
+            }
+
+            // Color filter
+            if (aiParsed.color) {
+                filter['colors.name'] = { $regex: `^${aiParsed.color.trim()}$`, $options: 'i' };
+            }
+
+            // Price filter
+            if (aiParsed.minPrice !== null || aiParsed.maxPrice !== null) {
+                filter.price = {};
+                if (aiParsed.minPrice !== null) filter.price.$gte = aiParsed.minPrice;
+                if (aiParsed.maxPrice !== null) filter.price.$lte = aiParsed.maxPrice;
+            }
+
+            // Keyword / text search filter
+            if (aiParsed.keywords && aiParsed.keywords.trim()) {
+                const cleanKw = aiParsed.keywords.trim();
+                filter.$or = [
+                    { name: { $regex: cleanKw, $options: 'i' } },
+                    { description: { $regex: cleanKw, $options: 'i' } },
+                    { short_description: { $regex: cleanKw, $options: 'i' } },
+                    { tags: { $in: [new RegExp(cleanKw, 'i')] } }
+                ];
+            }
+
+            // Sort configuration
+            const sortConfig = {};
+            if (aiParsed.sort) {
+                sortConfig[aiParsed.sort] = aiParsed.order === 'asc' ? 1 : -1;
+            } else {
+                sortConfig.createdAt = -1;
+            }
+
+            let products = await Product.find(filter)
+                .sort(sortConfig)
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .select('-__v');
+
+            // Fallback strategy: If 0 results found with strict filter, broaden search
+            let fallbackUsed = false;
+            if (products.length === 0) {
+                fallbackUsed = true;
+                const relaxedFilter = { status: 'active' };
+                if (searchPrompt.trim()) {
+                    const terms = searchPrompt.trim().split(/\s+/).filter(t => t.length > 2);
+                    if (terms.length > 0) {
+                        relaxedFilter.$or = terms.map(term => ({
+                            name: { $regex: term, $options: 'i' }
+                        }));
+                    }
+                }
+                products = await Product.find(relaxedFilter)
+                    .sort({ createdAt: -1 })
+                    .limit(limit * 1)
+                    .select('-__v');
+            }
+
+            const total = products.length;
+
+            res.json({
+                success: true,
+                data: products,
+                aiMetadata: {
+                    ...aiParsed,
+                    fallbackUsed
+                },
+                pagination: {
+                    current: parseInt(page),
+                    pages: Math.ceil(total / limit) || 1,
+                    total,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            });
+
+        } catch (error) {
+            console.error('Smart Search error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Smart search failed',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            });
+        }
+    };
+
 }
 
-module.exports = ProductController;
+module.exports = ProductController;

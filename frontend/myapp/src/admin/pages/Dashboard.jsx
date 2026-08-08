@@ -527,6 +527,7 @@ const Dashboard = () => {
 
             if (statsRes.data) {
                 const data = statsRes.data;
+                console.log(data);
 
                 setStats({
                     totalProducts: data.overview.totalProducts || 0,

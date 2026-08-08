@@ -324,7 +324,7 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
                     </Box>
                 )
 
-            case 1: // Select items
+            case 1: { // Select items
                 const selectedItem = getSelectedItemDetails()
                 const eligibleItemsExist = hasEligibleItems()
 
@@ -448,7 +448,8 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
                             </Button>
                         </Box>
                     </Box>
-                )
+                );
+            }
 
             case 2: // Select reason and details
                 return (

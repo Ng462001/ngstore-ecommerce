@@ -11,6 +11,7 @@ router.post("/", upload.fields([
 ]), ProductController.createProduct);
 
 // Featured and special collections
+router.get("/smart-search", ProductController.smartSearch);
 
 // Rating management
 router.patch("/:id/rating", ProductController.addRating);

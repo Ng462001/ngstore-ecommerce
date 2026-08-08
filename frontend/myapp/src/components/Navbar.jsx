@@ -13,9 +13,10 @@ import {
   TabPanel,
   TabPanels,
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { NavLink, useNavigate } from 'react-router-dom'
 import CartDetail from './CartDetail'
+import AISearchModal from './AISearchModal'
 import { Avatar, Box, Icon, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutUser } from '../Redux/action/action'
@@ -515,7 +516,7 @@ export default function Navbar() {
     <>
       <div className="border-b border-gray-300 sticky-header sticky top-0 z-40 bg-white-500 bg-opacity-95 backdrop-blur supports-[backdrop-filter]:bg-white/95">
         {renderMobileMenu()}
-        {renderSearchModal()}
+        <AISearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
         <header className="relative bg-white">
           <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
@@ -569,17 +570,19 @@ export default function Navbar() {
                     )}
                   </div>
 
-                  {/* Search */}
-                  <div className="flex lg:ml-6">
+                  {/* AI Smart Search Button */}
+                  <div className="flex ml-4 lg:ml-6 items-center">
                     <button
                       onClick={() => setSearchOpen(true)}
-                      className="p-2 text-gray-400 hover:text-gray-500"
-                      aria-label="Search products"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200 text-indigo-700 text-xs font-semibold shadow-xs transition-all hover:scale-105"
+                      aria-label="Open AI Smart Search"
                     >
-                      <span className="sr-only">Search</span>
-                      <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
+                      <SparklesIcon className="size-4 text-indigo-600 animate-pulse" />
+                      <span className="hidden sm:inline">✨ Smart Search</span>
+                      <span className="sm:hidden">✨ AI</span>
                     </button>
                   </div>
+
 
                   {/* Wishlist */}
                   <div className="ml-4 flow-root lg:ml-6">
