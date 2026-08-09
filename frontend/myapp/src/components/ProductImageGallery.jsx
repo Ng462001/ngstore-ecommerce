@@ -149,7 +149,7 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
 
     const mainImageClasses = fullscreen
         ? "fixed inset-0 z-50 bg-black p-8 flex items-center justify-center"
-        : "lg:col-span-4 mt-6 lg:mt-0";
+        : "w-full lg:col-span-4 mt-0";
 
     const mainImageContent = (
         <div
@@ -263,11 +263,11 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
             className="lg:grid lg:grid-cols-5 lg:gap-8"
             aria-label={`Product images for ${productName}`}
         >
-            {/* THUMBNAILS */}
-            <div className="lg:col-span-1">
+            {/* THUMBNAILS - Hidden on mobile, visible on desktop */}
+            <div className="hidden lg:block lg:col-span-1">
                 <div
                     ref={thumbnailRef}
-                    className="flex lg:flex-col gap-3 hover-scroll overflow-x-hidden lg:overflow-y-auto p-1"
+                    className="flex lg:flex-col gap-3 hover-scroll overflow-y-auto p-1"
                     style={{ height: mainImageHeight ? `${mainImageHeight}px` : '600px' }}
                     role="tablist"
                     aria-label="Product image thumbnails"
@@ -305,11 +305,6 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
                             )}
                         </button>
                     ))}
-                </div>
-
-                {/* Image count indicator for mobile */}
-                <div className="mt-2 text-sm text-gray-500 text-center lg:hidden">
-                    {selectedIndex + 1} / {allImages.length} images
                 </div>
             </div>
 

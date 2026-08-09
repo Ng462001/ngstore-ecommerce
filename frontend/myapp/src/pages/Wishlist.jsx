@@ -215,14 +215,14 @@ const Wishlist = () => {
             </Button>
           </Paper>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 1.5, sm: 3 }}>
             {wishlistItems.map((item) => {
               const productId = item._id || item.id
               const displayPrice = item.discountedPrice || item.price
               const originalPrice = item.price && item.discountedPrice ? item.price : item.originalPrice
 
               return (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={productId}>
+                <Grid item xs={6} sm={6} md={4} lg={3} key={productId}>
                   <Card
                     sx={{
                       height: '100%',

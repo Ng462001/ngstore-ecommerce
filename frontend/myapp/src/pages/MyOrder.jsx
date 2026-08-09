@@ -11,6 +11,7 @@ export default function OrderHistory() {
     const [endDate, setEndDate] = useState('')
     const [loading, setLoading] = useState(true)
     const [returnRequests, setReturnRequests] = useState({})
+    const [showMobileFilters, setShowMobileFilters] = useState(false)
     const navigate = useNavigate()
     const effectRan = useRef(false)
 
@@ -237,9 +238,17 @@ export default function OrderHistory() {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Filter Section */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-8 border border-gray-100">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-6">Filters</h2>
-                            <div className="space-y-6">
+                        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 sticky top-8 border border-gray-100">
+                            <div className="flex justify-between items-center mb-4 lg:mb-6">
+                                <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+                                <button
+                                    onClick={() => setShowMobileFilters(!showMobileFilters)}
+                                    className="lg:hidden text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                                >
+                                    {showMobileFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}
+                                </button>
+                            </div>
+                            <div className={`space-y-6 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
                                 {/* Search Filter */}
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-700 mb-3 uppercase">Search</h3>

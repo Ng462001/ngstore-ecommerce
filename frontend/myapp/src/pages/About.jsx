@@ -76,7 +76,8 @@ const About = () => {
             variant="h2"
             sx={{
               fontWeight: 800,
-              mb: 3,
+              fontSize: { xs: '2rem', sm: '2.75rem', md: '3.5rem' },
+              mb: 2,
               background: 'linear-gradient(45deg, #2196F3 30%, #9C27B0 90%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
@@ -85,16 +86,16 @@ const About = () => {
           >
             About NGStore
           </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.8 }}>
+          <Typography variant="h5" color="text.secondary" sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.8, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Your trusted partner in online shopping, delivering quality products and exceptional service since 2025.
           </Typography>
         </Box>
 
         {/* Our Story */}
-        <Box sx={{ mb: 10 }}>
+        <Box sx={{ mb: { xs: 6, md: 10 } }}>
           <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
-            <CardContent sx={{ p: 6 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main' }}>
+            <CardContent sx={{ p: { xs: 3, sm: 5, md: 6 } }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main', fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                 Our Story
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 2, mb: 2 }}>

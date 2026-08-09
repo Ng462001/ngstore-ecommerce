@@ -312,13 +312,13 @@ const Home = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {categories.map((category) => (
-            <Grid item xs={6} sm={3} md={3} key={category.id}>
+            <Grid item xs={6} sm={4} md={3} key={category.id}>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
+                  p: { xs: 1.5, sm: 2 },
                   borderRadius: 3,
                   textAlign: 'center',
                   bgcolor: category.bgColor,

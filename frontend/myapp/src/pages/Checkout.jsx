@@ -130,7 +130,7 @@ export default function HorizontalLinearStepper() {
             Complete your purchase in {steps.length - activeStep} simple {steps.length - activeStep === 1 ? 'step' : 'steps'}
           </Typography>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 4, overflowX: 'auto', py: 1, '& .MuiStep-root': { px: { xs: 0.5, sm: 2 } } }}>
             {steps.map((label, index) => (
               <Step key={label} completed={isStepComplete(index)}>
                 <StepLabel
@@ -139,9 +139,10 @@ export default function HorizontalLinearStepper() {
                   sx={{
                     cursor: index <= activeStep ? 'pointer' : 'default',
                     '& .MuiStepLabel-label': {
-                      fontSize: '0.875rem',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
                       fontWeight: index === activeStep ? 600 : 400,
-                      color: index === activeStep ? 'primary.main' : 'text.secondary'
+                      color: index === activeStep ? 'primary.main' : 'text.secondary',
+                      display: { xs: index === activeStep ? 'inline-block' : 'none', sm: 'inline-block' }
                     },
                     '& .MuiStepLabel-label.Mui-completed': {
                       color: 'text.secondary',

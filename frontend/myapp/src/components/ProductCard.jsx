@@ -86,16 +86,18 @@ const ProductCard = ({ item }) => {
     const originalPrice = item.originalPrice || (item.discountedPrice ? item.price : null);
 
     return (
-        <NavLink to={`/product/${item.id || item._id}`} style={{ textDecoration: 'none', position: 'relative', display: 'block' }}>
+        <NavLink to={`/product/${item.id || item._id}`} style={{ textDecoration: 'none', position: 'relative', display: 'block', width: '100%' }}>
             <Card sx={{
-                width: 280, // Fixed width for all cards
-                height: 400, // Fixed height for all cards
-                margin: '10px',
+                width: '100%',
+                maxWidth: { xs: '100%', sm: 280 },
+                height: { xs: 370, sm: 400 },
+                margin: '0 auto',
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                 transition: 'transform 0.2s, box-shadow 0.2s',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
+                borderRadius: 3,
                 '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
@@ -108,8 +110,8 @@ const ProductCard = ({ item }) => {
                         onClick={handleWishlistToggle}
                         sx={{
                             position: 'absolute',
-                            top: 10,
-                            right: 10,
+                            top: 8,
+                            right: 8,
                             zIndex: 10,
                             bgcolor: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(4px)',
@@ -120,9 +122,9 @@ const ProductCard = ({ item }) => {
                         }}
                     >
                         {isWishlisted ? (
-                            <FavoriteIcon sx={{ fontSize: 20, color: '#FF4081' }} />
+                            <FavoriteIcon sx={{ fontSize: 18, color: '#FF4081' }} />
                         ) : (
-                            <FavoriteBorderIcon sx={{ fontSize: 20, color: '#666' }} />
+                            <FavoriteBorderIcon sx={{ fontSize: 18, color: '#666' }} />
                         )}
                     </IconButton>
                 </Tooltip>
@@ -130,7 +132,7 @@ const ProductCard = ({ item }) => {
                 <CardActionArea sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     {/* Fixed size image container with proper cover */}
                     <Box sx={{
-                        height: 230,
+                        height: { xs: 190, sm: 230 },
                         width: '100%',
                         overflow: 'hidden',
                         backgroundColor: '#f5f5f5',

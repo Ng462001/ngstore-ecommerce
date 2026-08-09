@@ -477,9 +477,9 @@ export default function CategoryPage() {
                 </Dialog>
 
                 <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
+                    <div className="flex items-baseline justify-between border-b border-gray-200 pt-16 sm:pt-24 pb-6">
                         <div>
-                            <h1 className="text-4xl font-bold tracking-tight text-gray-900 capitalize">{categoryName}</h1>
+                            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-gray-900 capitalize">{categoryName}</h1>
                             {pagination.total !== undefined && (
                                 <p className="mt-2 text-sm text-gray-500">
                                     Showing {products.length} of {pagination.total} products
@@ -604,13 +604,13 @@ export default function CategoryPage() {
                                     </div>
                                 ) : (
                                     <>
-                                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-white py-5'>
+                                        <div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 bg-white py-5'>
                                             {products.length > 0 ? (
                                                 products.map((item) => (
                                                     <ProductCard key={item._id || item.id} item={item} />
                                                 ))
                                             ) : (
-                                                <div className="text-center py-12 w-full col-span-3">
+                                                <div className="text-center py-12 w-full col-span-2 sm:col-span-3">
                                                     <p className="text-gray-500 text-lg">No products found matching.</p>
                                                 </div>
                                             )}
