@@ -288,12 +288,12 @@ const AdminSupport = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
-                        Support Tickets
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                        Support Ticket Center
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Manage customer support requests ({filteredTickets.length} tickets)
                     </Typography>
                 </div>
@@ -302,6 +302,15 @@ const AdminSupport = () => {
                     startIcon={<Refresh />}
                     onClick={fetchTickets}
                     disabled={actionLoading}
+                    sx={{
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: '#E7E4DD',
+                        color: '#1C1B19',
+                        bgcolor: '#FFFFFF',
+                        '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                    }}
                 >
                     Refresh
                 </Button>
@@ -315,8 +324,8 @@ const AdminSupport = () => {
             )}
 
             {/* Filters */}
-            <Card className="shadow-md rounded-xl">
-                <CardContent>
+            <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                <CardContent sx={{ p: 3 }}>
                     <div className="flex gap-4 flex-wrap">
                         <TextField
                             select
@@ -347,7 +356,7 @@ const AdminSupport = () => {
                             style={{ minWidth: 250 }}
                             placeholder="Search by subject, customer, or ID..."
                             InputProps={{
-                                startAdornment: <Search color="action" sx={{ mr: 1 }} />
+                                startAdornment: <Search sx={{ color: '#6B6862', mr: 1 }} />
                             }}
                         />
                     </div>
@@ -355,15 +364,15 @@ const AdminSupport = () => {
             </Card>
 
             {/* Tickets Table */}
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', overflow: 'hidden' }}>
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
-                            <CircularProgress />
+                            <CircularProgress sx={{ color: '#B8925A' }} />
                         </div>
                     ) : filteredTickets.length === 0 ? (
                         <div className="text-center py-12">
-                            <Typography className="text-gray-500">
+                            <Typography sx={{ color: '#6B6862' }}>
                                 No support tickets found
                             </Typography>
                         </div>
@@ -371,42 +380,42 @@ const AdminSupport = () => {
                         <>
                             <TableContainer>
                                 <Table>
-                                    <TableHead className="bg-gray-50">
+                                    <TableHead sx={{ bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
                                         <TableRow>
-                                            <TableCell className="font-bold">Ticket ID</TableCell>
-                                            <TableCell className="font-bold">Customer</TableCell>
-                                            <TableCell className="font-bold">Subject</TableCell>
-                                            <TableCell className="font-bold">Priority</TableCell>
-                                            <TableCell className="font-bold">Status</TableCell>
-                                            <TableCell className="font-bold">Date</TableCell>
-                                            <TableCell className="font-bold">Actions</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Ticket ID</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Customer</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Subject</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Priority</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Status</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Date</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {paginatedTickets.map((ticket) => (
-                                            <TableRow key={ticket._id} className="hover:bg-gray-50">
+                                            <TableRow key={ticket._id} sx={{ '&:hover': { bgcolor: '#FAF9F6' }, borderBottom: '1px solid #E7E4DD' }}>
                                                 <TableCell>
-                                                    <Typography variant="body2" className="font-mono text-gray-700">
+                                                    <Typography variant="body2" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                                         #{ticket._id?.slice(0, 8).toUpperCase()}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center">
-                                                        <Avatar className="w-8 h-8 mr-3 bg-blue-500">
+                                                        <Avatar sx={{ width: 32, height: 32, mr: 1.5, bgcolor: '#B8925A', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600 }}>
                                                             {getUserInitials(ticket.user?.name)}
                                                         </Avatar>
                                                         <div>
-                                                            <Typography variant="body2" className="font-medium">
+                                                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1C1B19' }}>
                                                                 {ticket.user?.name || 'Unknown'}
                                                             </Typography>
-                                                            <Typography variant="caption" className="text-gray-500">
+                                                            <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                                                 {ticket.user?.email || 'N/A'}
                                                             </Typography>
                                                         </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography variant="body2" className="truncate max-w-xs">
+                                                    <Typography variant="body2" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }} className="truncate max-w-xs">
                                                         {ticket.subject}
                                                     </Typography>
                                                 </TableCell>

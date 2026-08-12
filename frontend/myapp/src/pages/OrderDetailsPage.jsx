@@ -1,178 +1,208 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-    Container,
-    Paper,
-    Typography,
-    Box,
-    Button,
-    Grid,
-    Chip,
-    Divider,
-    CircularProgress,
-    Alert,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemAvatar,
-    Avatar,
-    Card,
-    CardContent,
-    IconButton,
-    Tooltip,
-    Snackbar
-} from '@mui/material'
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Grid,
+  Chip,
+  Divider,
+  CircularProgress,
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Card,
+  CardContent,
+  IconButton,
+  Tooltip,
+  Snackbar,
+} from "@mui/material";
 import {
-    ArrowBack as ArrowBackIcon,
-    Home as HomeIcon,
-    ShoppingBag as ShoppingBagIcon,
-    LocationOn as LocationIcon,
-    Phone as PhoneIcon,
-    Email as EmailIcon,
-    CalendarToday as CalendarIcon,
-    Receipt as ReceiptIcon,
-    Print as PrintIcon,
-    CopyAll as CopyIcon,
-    AssignmentReturned as ReturnIcon
-} from '@mui/icons-material'
-import OrderTracking from '../components/OrderTracking'
-import { format, isValid } from 'date-fns'
-import SupportModal from '../components/SupportModal'
-import ReturnExchangeModal from '../components/ReturnExchangeModal'
+  ArrowBack as ArrowBackIcon,
+  Home as HomeIcon,
+  ShoppingBag as ShoppingBagIcon,
+  LocationOn as LocationIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon,
+  CalendarToday as CalendarIcon,
+  Receipt as ReceiptIcon,
+  Print as PrintIcon,
+  CopyAll as CopyIcon,
+  AssignmentReturned as ReturnIcon,
+} from "@mui/icons-material";
+import OrderTracking from "../components/OrderTracking";
+import { format, isValid } from "date-fns";
+import SupportModal from "../components/SupportModal";
+import ReturnExchangeModal from "../components/ReturnExchangeModal";
+const formatMoney = (val) => {
+  if (val === null || val === undefined || isNaN(val)) return "0";
+  const num = parseFloat(val);
+  return num.toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  });
+};
 
 const OrderDetailsPage = () => {
-    const { id } = useParams()
-    const navigate = useNavigate()
-    const [order, setOrder] = useState(null)
-    const [user, setUser] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [printing, setPrinting] = useState(false)
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
-    const [supportModalOpen, setSupportModalOpen] = useState(false)
-    const [returnModalOpen, setReturnModalOpen] = useState(false)
-    const [returnRequest, setReturnRequest] = useState(null)
-    const [loadingReturn, setLoadingReturn] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [order, setOrder] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [printing, setPrinting] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnRequest, setReturnRequest] = useState(null);
+  const [loadingReturn, setLoadingReturn] = useState(false);
 
-    useEffect(() => {
-        fetchOrderDetails(id)
-    }, [id])
+  useEffect(() => {
+    fetchOrderDetails(id);
+  }, [id]);
 
-    const fetchOrderDetails = async (id) => {
-        try {
-            setLoading(true)
-            const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+  const fetchOrderDetails = async (id) => {
+    try {
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
-            if (!userInfo) {
-                navigate('/login')
-                return
-            }
+      if (!userInfo) {
+        navigate("/login");
+        return;
+      }
 
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/api/orders/order-details/${id}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${userInfo.token}`
-                    }
-                }
-            )
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orders/order-details/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        },
+      );
 
-            if (!response.ok) {
-                throw new Error('Order not found')
-            }
+      if (!response.ok) {
+        throw new Error("Order not found");
+      }
 
-            const { order, user } = await response.json()
+      const { order, user } = await response.json();
 
-            const orderWithTimeline = {
-                ...order,
-                processingAt: order.processingAt || (['Processing', 'Shipped', 'Delivered'].includes(order.status) ? new Date(Date.now() - 43200000).toISOString() : null),
-                shippedAt: order.shippedAt || (['Shipped', 'Delivered'].includes(order.status) ? new Date(Date.now() - 21600000).toISOString() : null),
-                outForDeliveryAt: order.outForDeliveryAt || (order.status === 'Delivered' ? new Date(Date.now() - 7200000).toISOString() : null),
-                deliveredAt: order.deliveredAt || (order.status === 'Delivered' ? new Date().toISOString() : null)
-            }
+      const orderWithTimeline = {
+        ...order,
+        processingAt:
+          order.processingAt ||
+          (["Processing", "Shipped", "Delivered"].includes(order.status)
+            ? new Date(Date.now() - 43200000).toISOString()
+            : null),
+        shippedAt:
+          order.shippedAt ||
+          (["Shipped", "Delivered"].includes(order.status)
+            ? new Date(Date.now() - 21600000).toISOString()
+            : null),
+        outForDeliveryAt:
+          order.outForDeliveryAt ||
+          (order.status === "Delivered"
+            ? new Date(Date.now() - 7200000).toISOString()
+            : null),
+        deliveredAt:
+          order.deliveredAt ||
+          (order.status === "Delivered" ? new Date().toISOString() : null),
+      };
 
-            setOrder(orderWithTimeline)
-            setUser(user)
+      setOrder(orderWithTimeline);
+      setUser(user);
 
-            // Fetch return request if exists
-            fetchReturnRequest(id, userInfo.token)
-        } catch (err) {
-            setError(err.message)
-        } finally {
-            setLoading(false)
+      // Fetch return request if exists
+      fetchReturnRequest(id, userInfo.token);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReturnRequest = async (orderId, token) => {
+    try {
+      setLoadingReturn(true);
+      console.log("Fetching return request for order:", orderId);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/return-exchange/order/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Return request data:", data);
+        if (data.success && data.requests && data.requests.length > 0) {
+          setReturnRequest(data.requests[0]);
         }
+      }
+    } catch (err) {
+      console.error("Error fetching return request:", err);
+    } finally {
+      setLoadingReturn(false);
+    }
+  };
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCopyOrderId = () => {
+    if (order?._id) {
+      navigator.clipboard.writeText(order._id.substring(0, 8).toUpperCase());
+      showSnackbar("Order ID copied to clipboard", "info");
+    }
+  };
+
+  const handlePrintInvoice = () => {
+    if (!order) {
+      showSnackbar("Order data not available", "error");
+      return;
     }
 
-    const fetchReturnRequest = async (orderId, token) => {
-        try {
-            setLoadingReturn(true)
-            console.log('Fetching return request for order:', orderId)
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/api/return-exchange/order/${orderId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            )
+    setPrinting(true);
 
-            if (response.ok) {
-                const data = await response.json()
-                console.log('Return request data:', data)
-                if (data.success && data.requests && data.requests.length > 0) {
-                    setReturnRequest(data.requests[0])
-                }
-            }
-        } catch (err) {
-            console.error('Error fetching return request:', err)
-        } finally {
-            setLoadingReturn(false)
-        }
-    }
+    try {
+      // Format dates safely
+      const orderDate =
+        order.createdAt && isValid(new Date(order.createdAt))
+          ? format(new Date(order.createdAt), "dd/MM/yyyy")
+          : "N/A";
 
+      const currentDate = format(new Date(), "dd/MM/yyyy HH:mm");
 
-    const showSnackbar = (message, severity = 'success') => {
-        setSnackbar({ open: true, message, severity });
-    };
+      // Get shipping address
+      const shippingAddress = order.shippingAddress || {};
+      const addressLines = [
+        shippingAddress.street || "",
+        shippingAddress.city || "",
+        shippingAddress.state || "",
+        shippingAddress.zipCode || "",
+        shippingAddress.country || "",
+      ]
+        .filter((line) => line.trim() !== "")
+        .join(", ");
 
-    const handleCopyOrderId = () => {
-        if (order?._id) {
-            navigator.clipboard.writeText(order._id.substring(0, 8).toUpperCase());
-            showSnackbar('Order ID copied to clipboard', 'info');
-        }
-    };
+      // Calculate subtotal
+      const subtotal =
+        order.orderItems?.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0,
+        ) || 0;
 
-    const handlePrintInvoice = () => {
-        if (!order) {
-            showSnackbar('Order data not available', 'error');
-            return;
-        }
-
-        setPrinting(true);
-
-        try {
-            // Format dates safely
-            const orderDate = order.createdAt && isValid(new Date(order.createdAt))
-                ? format(new Date(order.createdAt), 'dd/MM/yyyy')
-                : 'N/A';
-
-            const currentDate = format(new Date(), 'dd/MM/yyyy HH:mm');
-
-            // Get shipping address
-            const shippingAddress = order.shippingAddress || {};
-            const addressLines = [
-                shippingAddress.street || '',
-                shippingAddress.city || '',
-                shippingAddress.state || '',
-                shippingAddress.zipCode || '',
-                shippingAddress.country || ''
-            ].filter(line => line.trim() !== '').join(', ');
-
-            // Calculate subtotal
-            const subtotal = order.orderItems?.reduce((total, item) =>
-                total + (item.price * item.quantity), 0) || 0;
-
-            const printContent = `
+      const printContent = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -201,10 +231,10 @@ const OrderDetailsPage = () => {
                     
                     <div class="company-info">
                         <h4>Billed To:</h4>
-                        <p>${user?.name || 'Customer'}</p>
-                        <p>${user?.email || 'N/A'}</p>
-                        <p>${shippingAddress.mobile || user?.phone || 'N/A'}</p>
-                        ${addressLines ? `<p>${addressLines}</p>` : ''}
+                        <p>${user?.name || "Customer"}</p>
+                        <p>${user?.email || "N/A"}</p>
+                        <p>${shippingAddress.mobile || user?.phone || "N/A"}</p>
+                        ${addressLines ? `<p>${addressLines}</p>` : ""}
                     </div>
                     
                     <div class="billing-info">
@@ -224,35 +254,43 @@ const OrderDetailsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            ${order.orderItems?.map(item => `
+                            ${order.orderItems
+                              ?.map(
+                                (item) => `
                                 <tr>
                                     <td>${item.name}</td>
                                     <td>${item.quantity}</td>
                                     <td>₹${item.price}</td>
                                     <td>₹${item.price * item.quantity}</td>
                                 </tr>
-                            `).join('')}
+                            `,
+                              )
+                              .join("")}
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Subtotal:</td>
-                                <td>₹${subtotal}</td>
+                                <td>₹${formatMoney(subtotal)}</td>
                             </tr>
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Shipping:</td>
-                                <td>₹${order.shippingPrice || 0}</td>
+                                <td>₹${formatMoney(order.shippingPrice || 0)}</td>
                             </tr>
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Tax:</td>
-                                <td>₹${order.taxPrice || 0}</td>
+                                <td>₹${formatMoney(order.taxPrice || 0)}</td>
                             </tr>
-                            ${order.discount && order.discount > 0 ? `
+                            ${
+                              order.discount && order.discount > 0
+                                ? `
                                 <tr class="total-row" style="color: #28a745;">
                                     <td colspan="3" style="text-align: right;">Discount:</td>
-                                    <td>-₹${order.discount}</td>
+                                    <td>-₹${formatMoney(order.discount)}</td>
                                 </tr>
-                            ` : ''}
+                            `
+                                : ""
+                            }
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Total:</td>
-                                <td>₹${order.totalPrice || 0}</td>
+                                <td>₹${formatMoney(order.totalPrice || 0)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -274,327 +312,558 @@ const OrderDetailsPage = () => {
                 </html>
             `;
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(printContent);
+      printWindow.document.close();
 
-            // Give time for content to load
-            setTimeout(() => {
-                printWindow.print();
-                setPrinting(false);
-            }, 500);
-        } catch (err) {
-            console.error('Print error:', err);
-            showSnackbar('Failed to print invoice', 'error');
-            setPrinting(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-                <CircularProgress />
-            </Box>
-        )
+      // Give time for content to load
+      setTimeout(() => {
+        printWindow.print();
+        setPrinting(false);
+      }, 500);
+    } catch (err) {
+      console.error("Print error:", err);
+      showSnackbar("Failed to print invoice", "error");
+      setPrinting(false);
     }
+  };
 
-    if (error) {
-        return (
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/my-orders')}>
-                    Back to Orders
-                </Button>
-            </Container>
-        )
-    }
-
-    if (!order) {
-        return (
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Alert severity="warning">Order not found</Alert>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/my-orders')} sx={{ mt: 2 }}>
-                    Back to Orders
-                </Button>
-            </Container>
-        )
-    }
-
+  if (loading) {
     return (
-        <>
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                {/* Header */}
-                <Box sx={{ mb: 4 }}>
-                    <Button
-                        startIcon={<ArrowBackIcon />}
-                        onClick={() => navigate('/my-orders')}
-                        sx={{ mb: 2 }}
-                        variant="outlined"
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "80vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/my-orders")}
+        >
+          Back to Orders
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!order) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="warning">Order not found</Alert>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/my-orders")}
+          sx={{ mt: 2 }}
+        >
+          Back to Orders
+        </Button>
+      </Container>
+    );
+  }
+
+  return (
+    <>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/my-orders")}
+            sx={{ mb: 2 }}
+            variant="outlined"
+          >
+            Back to Orders
+          </Button>
+
+          <Grid
+            container
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 3 }}
+          >
+            <Grid item>
+              <Typography variant="h4" component="h1" gutterBottom>
+                Order Details
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Chip
+                    label={`Order #${order._id.substring(0, 8).toUpperCase()}`}
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Tooltip title="Copy Order ID">
+                    <IconButton
+                      size="small"
+                      onClick={handleCopyOrderId}
+                      aria-label="Copy order ID"
                     >
-                        Back to Orders
-                    </Button>
-
-                    <Grid container justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                        <Grid item>
-                            <Typography variant="h4" component="h1" gutterBottom>
-                                Order Details
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Chip
-                                        label={`Order #${order._id.substring(0, 8).toUpperCase()}`}
-                                        color="primary"
-                                        variant="outlined"
-                                    />
-                                    <Tooltip title="Copy Order ID">
-                                        <IconButton
-                                            size="small"
-                                            onClick={handleCopyOrderId}
-                                            aria-label="Copy order ID"
-                                        >
-                                            <CopyIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Box>
-                                <Chip
-                                    label={order.status}
-                                    color={
-                                        order.status === 'Delivered' ? 'success' :
-                                            order.status === 'Out for delivery' ? 'info' :
-                                                order.status === 'Shipped' ? 'info' :
-                                                    order.status === 'Processing' ? 'warning' :
-                                                        order.status === 'Cancelled' ? 'error' : 'default'
-                                    }
-                                    sx={{ fontWeight: 'bold' }}
-                                />
-                                {returnRequest && (
-                                    <Chip
-                                        icon={<ReturnIcon />}
-                                        label={`${returnRequest.type}: ${returnRequest.status}`}
-                                        color={
-                                            returnRequest.status === 'Completed' ? 'success' :
-                                                returnRequest.status === 'Approved' ? 'info' :
-                                                    returnRequest.status === 'Rejected' ? 'error' : 'warning'
-                                        }
-                                        sx={{ fontWeight: 'bold' }}
-                                    />
-                                )}
-                                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <CalendarIcon fontSize="small" />
-                                    Placed on {new Date(order.createdAt).toLocaleDateString()}
-                                </Typography>
-                            </Box>
-                        </Grid>
-                        <Grid item>
-                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                                {returnRequest && (
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        startIcon={<ReturnIcon />}
-                                        onClick={() => navigate(`/profile?tab=requests&requestId=${returnRequest._id}`)}
-                                    >
-                                        View Return Request
-                                    </Button>
-                                )}
-                                {(order.status === 'Delivered' || order.status === 'Returned') && (
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={printing ? <CircularProgress size={20} /> : <PrintIcon />}
-                                        onClick={handlePrintInvoice}
-                                        disabled={printing}
-                                    >
-                                        {printing ? 'Printing...' : 'Print Invoice'}
-                                    </Button>
-                                )}
-                            </Box>
-                        </Grid>
-                    </Grid>
+                      <CopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
-
-                {/* Order Tracking Section */}
-                <OrderTracking order={order} isFullPage={true} returnRequest={returnRequest} />
-
-                {/* Order Items & Details Section */}
-                <Grid container spacing={3} sx={{ mt: 4 }}>
-                    {/* Left Column - Order Items */}
-                    <Grid item xs={12} lg={8}>
-                        <Paper elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: 'white', border: 1, borderColor: 'grey.200' }}>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                                <ShoppingBagIcon color="primary" />
-                                Order Items ({order.orderItems.length})
-                            </Typography>
-                            <List>
-                                {order.orderItems.map((item, index) => (
-                                    <Box key={item._id || index}>
-                                        <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                                            <ListItemAvatar>
-                                                <Avatar
-                                                    variant="rounded"
-                                                    src={item.image && item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL}${item.image || ''}`}
-                                                    alt={item.name}
-                                                    sx={{ width: 80, height: 80, mr: 2 }}
-                                                />
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={
-                                                    <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500 }}>
-                                                        {item.name}
-                                                    </Typography>
-                                                }
-                                                secondary={
-                                                    <Box sx={{ mt: 1 }}>
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            Color: {item.selectedColor} • Size: {item.selectedSize}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            Quantity: {item.quantity}
-                                                        </Typography>
-                                                        <Typography variant="body1" color="primary" sx={{ mt: 1, fontWeight: 500 }}>
-                                                            ₹{item.price} × {item.quantity} = ₹{item.price * item.quantity}
-                                                        </Typography>
-                                                    </Box>
-                                                }
-                                            />
-                                            <Button
-                                                variant="outlined"
-                                                size="small"
-                                                component={Link}
-                                                to={`/product/${item.product}`}
-                                                sx={{ ml: 2 }}
-                                            >
-                                                View Product
-                                            </Button>
-                                        </ListItem>
-                                        {index < order.orderItems.length - 1 && <Divider variant="inset" component="li" />}
-                                    </Box>
-                                ))}
-                            </List>
-                        </Paper>
-                    </Grid>
-
-                    {/* Right Column - Order Info */}
-                    <Grid item xs={12} lg={4}>
-                        {/* Order Summary Card */}
-                        <Card sx={{ mb: 3, border: 1, borderColor: 'grey.200' }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <ReceiptIcon color="primary" />
-                                    Order Summary
-                                </Typography>
-
-                                <Box sx={{ mb: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Subtotal:</Typography>
-                                        <Typography variant="body2" fontWeight={500}>₹{(order.totalPrice - order.taxPrice)}</Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Shipping:</Typography>
-                                        <Typography variant="body2" fontWeight={500}>₹{order.shippingPrice}</Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Tax:</Typography>
-                                        <Typography variant="body2" fontWeight={500}>₹{order.taxPrice}</Typography>
-                                    </Box>
-                                    <Divider sx={{ my: 2 }} />
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <Typography variant="h6">Total Amount</Typography>
-                                        <Typography variant="h6" color="primary">₹{order.totalPrice}</Typography>
-                                    </Box>
-                                </Box>
-
-                                <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
-                                        Payment Information
-                                    </Typography>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Method:</Typography>
-                                        <Typography variant="body2" fontWeight={500}>{order.paymentMethod}</Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Status:</Typography>
-                                        <Chip
-                                            label={order.paymentStatus}
-                                            color={order.paymentStatus === 'Paid' ? 'success' : 'warning'}
-                                            size="small"
-                                            sx={{ fontWeight: 500 }}
-                                        />
-                                    </Box>
-                                    {order.paidAt && order.paymentStatus === 'Paid' && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                                            Paid on: {new Date(order.paidAt).toLocaleDateString()}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-
-                {/* Action Buttons */}
-                <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    {order.status === 'Delivered' && (
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => setReturnModalOpen(true)}
-                            startIcon={<ReturnIcon />}
-                            disabled={returnRequest}
-                        >
-                            Return/Exchange
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<EmailIcon />}
-                        onClick={() => setSupportModalOpen(true)}
-                    >
-                        Contact Support
-                    </Button>
-                </Box>
-
-                {/* Snackbar for notifications */}
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={3000}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                <Chip
+                  label={order.status}
+                  color={
+                    order.status === "Delivered"
+                      ? "success"
+                      : order.status === "Out for delivery"
+                        ? "info"
+                        : order.status === "Shipped"
+                          ? "info"
+                          : order.status === "Processing"
+                            ? "warning"
+                            : order.status === "Cancelled"
+                              ? "error"
+                              : "default"
+                  }
+                  sx={{ fontWeight: "bold" }}
+                />
+                {returnRequest && (
+                  <Chip
+                    icon={<ReturnIcon />}
+                    label={`${returnRequest.type}: ${returnRequest.status}`}
+                    color={
+                      returnRequest.status === "Completed"
+                        ? "success"
+                        : returnRequest.status === "Approved"
+                          ? "info"
+                          : returnRequest.status === "Rejected"
+                            ? "error"
+                            : "warning"
+                    }
+                    sx={{ fontWeight: "bold" }}
+                  />
+                )}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                 >
-                    <div>
-                        {snackbar.severity === 'success' ? (
-                            <Alert severity="success" sx={{ width: '100%' }}>
-                                {snackbar.message}
-                            </Alert>
-                        ) : snackbar.severity === 'error' ? (
-                            <Alert severity="error" sx={{ width: '100%' }}>
-                                {snackbar.message}
-                            </Alert>
-                        ) : (
-                            <Alert severity="info" sx={{ width: '100%' }}>
-                                {snackbar.message}
-                            </Alert>
-                        )}
-                    </div>
-                </Snackbar>
-            </Container>
-            <SupportModal
-                open={supportModalOpen}
-                onClose={() => setSupportModalOpen(false)}
-                order={order}
-                user={user}
-            />
-            <ReturnExchangeModal
-                open={returnModalOpen}
-                onClose={() => setReturnModalOpen(false)}
-                order={order}
-                user={user}
-            />
+                  <CalendarIcon fontSize="small" />
+                  Placed on {new Date(order.createdAt).toLocaleDateString()}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item>
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                {returnRequest && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<ReturnIcon />}
+                    onClick={() =>
+                      navigate(
+                        `/profile?tab=requests&requestId=${returnRequest._id}`,
+                      )
+                    }
+                  >
+                    View Return Request
+                  </Button>
+                )}
+                {(order.status === "Delivered" ||
+                  order.status === "Returned") && (
+                  <Button
+                    variant="outlined"
+                    startIcon={
+                      printing ? <CircularProgress size={20} /> : <PrintIcon />
+                    }
+                    onClick={handlePrintInvoice}
+                    disabled={printing}
+                  >
+                    {printing ? "Printing..." : "Print Invoice"}
+                  </Button>
+                )}
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
 
-        </>
-    )
-}
+        {/* Order Tracking Section */}
+        <OrderTracking
+          order={order}
+          isFullPage={true}
+          returnRequest={returnRequest}
+        />
 
-export default OrderDetailsPage
+        {/* Order Items & Details Section */}
+        <Grid container spacing={3} sx={{ mt: 4 }}>
+          {/* Left Column - Order Items */}
+          <Grid item xs={12} lg={8}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                bgcolor: "white",
+                border: 1,
+                borderColor: "grey.200",
+              }}
+            >
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}
+              >
+                <ShoppingBagIcon color="primary" />
+                Order Items ({order.orderItems.length})
+              </Typography>
+              <List>
+                {order.orderItems.map((item, index) => (
+                  <Box key={item._id || index}>
+                    <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar
+                          variant="rounded"
+                          src={
+                            item.image && item.image.startsWith("http")
+                              ? item.image
+                              : `${import.meta.env.VITE_API_URL}${item.image || ""}`
+                          }
+                          alt={item.name}
+                          sx={{ width: 80, height: 80, mr: 2 }}
+                        />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            variant="subtitle1"
+                            component="div"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            {item.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              Color: {item.selectedColor} • Size:{" "}
+                              {item.selectedSize}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Quantity: {item.quantity}
+                            </Typography>
+                            <Typography
+                              variant="body1"
+                              color="primary"
+                              sx={{ mt: 1, fontWeight: 500 }}
+                            >
+                              ₹{item.price} × {item.quantity} = ₹
+                              {item.price * item.quantity}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        component={Link}
+                        to={`/product/${item.product}`}
+                        sx={{ ml: 2 }}
+                      >
+                        View Product
+                      </Button>
+                    </ListItem>
+                    {index < order.orderItems.length - 1 && (
+                      <Divider variant="inset" component="li" />
+                    )}
+                  </Box>
+                ))}
+              </List>
+            </Paper>
+          </Grid>
+
+          {/* Right Column - Order Info */}
+          <Grid item xs={12} lg={4}>
+            {/* Order Summary Card */}
+            <Card sx={{ mb: 3, border: 1, borderColor: "grey.200" }}>
+              <CardContent>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <ReceiptIcon color="primary" />
+                  Order Summary
+                </Typography>
+
+                <Box sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Subtotal:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      ₹
+                      {formatMoney(
+                        order.itemsPrice ||
+                          order.orderItems?.reduce(
+                            (sum, i) => sum + i.price * i.quantity,
+                            0,
+                          ) ||
+                          order.totalPrice -
+                            (order.shippingPrice || 0) -
+                            (order.taxPrice || 0),
+                      )}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Shipping:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      ₹{formatMoney(order.shippingPrice || 0)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Tax:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      ₹{formatMoney(order.taxPrice || 0)}
+                    </Typography>
+                  </Box>
+                  {order.discount && order.discount > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1.5,
+                      }}
+                    >
+                      <Typography variant="body2" color="success.main">
+                        Discount:
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={500}
+                        color="success.main"
+                      >
+                        -₹{formatMoney(order.discount)}
+                      </Typography>
+                    </Box>
+                  )}
+                  <Divider sx={{ my: 2 }} />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 600, color: "#1C1B19" }}
+                    >
+                      Total
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 700, color: "#1C1B19" }}
+                    >
+                      ₹{formatMoney(order.totalPrice || 0)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: 600, mb: 2 }}
+                  >
+                    Payment Information
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Method:
+                    </Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                      {order.paymentMethod}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Status:
+                    </Typography>
+                    <Chip
+                      label={order.paymentStatus}
+                      color={
+                        order.paymentStatus === "Paid" ? "success" : "warning"
+                      }
+                      size="small"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </Box>
+                  {order.paidAt && order.paymentStatus === "Paid" && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block", mt: 1 }}
+                    >
+                      Paid on: {new Date(order.paidAt).toLocaleDateString()}
+                    </Typography>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Action Buttons */}
+        <Box
+          sx={{
+            mt: 4,
+            display: "flex",
+            gap: 2,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          {order.status === "Delivered" && (
+            <Button
+              variant="contained"
+              onClick={() => setReturnModalOpen(true)}
+              startIcon={<ReturnIcon />}
+              disabled={!!returnRequest}
+              sx={{
+                borderRadius: "12px",
+                px: 3,
+                py: 1.2,
+                fontWeight: 600,
+                textTransform: "none",
+                bgcolor: "#B8925A",
+                color: "#FFFFFF",
+                "&:hover": {
+                  bgcolor: "#9E7B47",
+                },
+                "&.Mui-disabled": {
+                  bgcolor: "#F3F1EC",
+                  color: "#6B6862",
+                },
+              }}
+            >
+              {returnRequest
+                ? `Return Request (${returnRequest.status})`
+                : "Return or Exchange Item"}
+            </Button>
+          )}
+          <Button
+            variant="outlined"
+            startIcon={<EmailIcon />}
+            onClick={() => setSupportModalOpen(true)}
+            sx={{
+              borderRadius: "12px",
+              px: 3,
+              py: 1.2,
+              fontWeight: 600,
+              textTransform: "none",
+              borderColor: "#1C1B19",
+              color: "#1C1B19",
+              "&:hover": {
+                bgcolor: "#1C1B19",
+                color: "#FFFFFF",
+              },
+            }}
+          >
+            Contact Support
+          </Button>
+        </Box>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <div>
+            {snackbar.severity === "success" ? (
+              <Alert severity="success" sx={{ width: "100%" }}>
+                {snackbar.message}
+              </Alert>
+            ) : snackbar.severity === "error" ? (
+              <Alert severity="error" sx={{ width: "100%" }}>
+                {snackbar.message}
+              </Alert>
+            ) : (
+              <Alert severity="info" sx={{ width: "100%" }}>
+                {snackbar.message}
+              </Alert>
+            )}
+          </div>
+        </Snackbar>
+      </Container>
+      <SupportModal
+        open={supportModalOpen}
+        onClose={() => setSupportModalOpen(false)}
+        order={order}
+        user={user}
+      />
+      <ReturnExchangeModal
+        open={returnModalOpen}
+        onClose={() => setReturnModalOpen(false)}
+        order={order}
+        user={user}
+        onRequestSubmitted={() => {
+          const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+          if (userInfo?.token && id) {
+            fetchReturnRequest(id, userInfo.token);
+          }
+        }}
+      />
+    </>
+  );
+};
+
+export default OrderDetailsPage;

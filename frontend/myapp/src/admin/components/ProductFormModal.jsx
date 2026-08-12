@@ -50,39 +50,43 @@ import { useOutletContext } from 'react-router-dom';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-// Styled components (matching CustomerDetailsModal style)
+// Styled components (Quiet Luxury style)
 const StyledDialog = styled(Dialog)(({ theme }) => ({
     '& .MuiDialog-paper': {
-        borderRadius: 16,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: 24,
+        background: '#FFFFFF',
+        border: '1px solid #E7E4DD',
+        boxShadow: '0 20px 40px -10px rgba(28, 27, 25, 0.15)'
     },
 }));
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
-    background: 'white',
-    borderBottom: '1px solid rgba(0,0,0,0.08)',
-    padding: theme.spacing(2, 3),
+    background: '#FAF9F6',
+    borderBottom: '1px solid #E7E4DD',
+    padding: theme.spacing(2.5, 3),
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-    background: '#f8fafc',
+    background: '#FAF9F6',
     padding: theme.spacing(3),
 }));
 
 const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
-    background: 'white',
-    borderTop: '1px solid rgba(0,0,0,0.08)',
+    background: '#FAF9F6',
+    borderTop: '1px solid #E7E4DD',
     padding: theme.spacing(2, 3),
 }));
 
 const SectionCard = styled(Paper)(({ theme }) => ({
     padding: theme.spacing(3),
-    borderRadius: 12,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    borderRadius: 16,
+    border: '1px solid #E7E4DD',
+    boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)',
     transition: 'transform 0.2s, box-shadow 0.2s',
     height: '100%',
+    backgroundColor: '#FFFFFF',
     '&:hover': {
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        boxShadow: '0 6px 24px -2px rgba(28, 27, 25, 0.08)',
     },
 }));
 
@@ -92,13 +96,13 @@ const SectionHeader = styled(Box)(({ theme }) => ({
     gap: theme.spacing(1.5),
     marginBottom: theme.spacing(3),
     '& .MuiSvgIcon-root': {
-        color: '#667eea',
+        color: '#B8925A',
         fontSize: 24,
     },
     '& .MuiTypography-root': {
+        fontFamily: '"Playfair Display", Georgia, serif',
         fontWeight: 600,
         fontSize: '1.1rem',
-        color: '#1e293b',
     },
 }));
 

@@ -313,12 +313,21 @@ export default function ProductDetail() {
     (review) => review.name === userInfo.name
   );
 
-  const displayPrice = product.discountedPrice || product.price
-  const originalPrice = product.discountedPrice ? product.originalPrice : null
+  // Safe price parser
+  const numPrice = parseFloat(product.price) || 0
+  const numDiscounted = parseFloat(product.discountedPrice) || 0
+  const numOriginal = parseFloat(product.originalPrice) || 0
+
+  const displayPrice = (numDiscounted > 0 && numDiscounted < numPrice) ? numDiscounted : numPrice
+  const originalPrice = (numDiscounted > 0 && numDiscounted < numPrice)
+    ? (numOriginal > 0 ? numOriginal : numPrice)
+    : (numOriginal > numPrice ? numOriginal : null)
+
+  const fmtPrice = (val) => val.toLocaleString('en-IN', { maximumFractionDigits: 2 })
 
   return (
-    <div className="bg-white">
-      <div className="pt-6">
+    <div className="bg-background min-h-screen pb-12">
+      <div className="pt-8">
         {/* Breadcrumbs */}
         <nav aria-label="Breadcrumb">
           <ol role="list" className="mx-auto flex max-w-2xl items-center space-x-2 px-4 sm:px-6 lg:max-w-7xl lg:px-8">
@@ -363,16 +372,16 @@ export default function ProductDetail() {
 
         {/* Product info */}
         <div className="mx-auto max-w-2xl px-4 pt-10 pb-16 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto_auto_1fr] lg:gap-x-8 lg:px-8 lg:pt-16 lg:pb-12">
-          <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{product.name}</h1>
+          <div className="lg:col-span-2 lg:border-r lg:border-border-light lg:pr-8">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">{product.name}</h1>
 
             {/* Price display with discount */}
-            <div className="mt-4 flex items-center gap-2">
-              <p className="text-3xl tracking-tight text-gray-900">₹{displayPrice}</p>
+            <div className="mt-4 flex items-center gap-3">
+              <p className="text-3xl font-bold tracking-tight text-text-primary">₹{fmtPrice(displayPrice)}</p>
               {originalPrice && (
                 <div className="flex items-center gap-2">
-                  <p className="text-lg text-gray-500 line-through">₹{originalPrice}</p>
-                  <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded-full">
+                  <p className="text-lg text-text-secondary line-through">₹{fmtPrice(originalPrice)}</p>
+                  <span className="bg-error/10 text-error text-xs font-semibold px-2.5 py-1 rounded-full border border-error/20">
                     Save {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}%
                   </span>
                 </div>
@@ -395,14 +404,14 @@ export default function ProductDetail() {
                         key={rating}
                         aria-hidden="true"
                         className={classNames(
-                          reviews.average > rating ? 'text-yellow-400' : 'text-gray-200',
+                          reviews.average > rating ? 'text-accent' : 'text-border-light',
                           'size-5 shrink-0',
                         )}
                       />
                     ))}
                   </div>
                   <p className="sr-only">{reviews.average} out of 5 stars</p>
-                  <a href={reviews.href} className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                  <a href={reviews.href} className="ml-3 text-sm font-medium text-accent hover:underline">
                     {reviews.totalCount} reviews
                   </a>
                 </div>
@@ -485,10 +494,10 @@ export default function ProductDetail() {
                             htmlFor={`size-${size.id}`}
                             className={classNames(
                               selectedSize?.id === size.id
-                                ? 'border-indigo-600 bg-indigo-600 text-white'
-                                : 'border-gray-300 bg-white text-gray-900',
-                              !size.inStock ? 'cursor-not-allowed bg-gray-50 text-gray-200' : 'cursor-pointer hover:bg-indigo-900',
-                              'flex items-center justify-center rounded-md border py-3 px-3 text-sm font-medium uppercase sm:flex-1'
+                                ? 'border-accent bg-accent text-white shadow-xs'
+                                : 'border-border-light bg-surface text-text-primary hover:border-accent hover:text-accent',
+                              !size.inStock ? 'cursor-not-allowed bg-surface-muted text-text-secondary/50' : 'cursor-pointer',
+                              'flex items-center justify-center rounded-xl border py-3 px-3 text-sm font-medium uppercase transition-colors'
                             )}
                           >
                             {size.name}
@@ -547,13 +556,13 @@ export default function ProductDetail() {
                   }
                   className={classNames(
                     product.quantity === 0
-                      ? 'bg-gray-400 cursor-not-allowed'
+                      ? 'bg-border-light text-text-secondary cursor-not-allowed'
                       : addedToCart
-                        ? 'bg-green-600 hover:bg-green-700'
+                        ? 'bg-success text-white'
                         : (product.colors?.length > 0 && !selectedColor) || (product.sizes?.length > 0 && !selectedSize)
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-indigo-600 hover:bg-indigo-700',
-                    'flex-1 flex items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden transition-colors duration-200'
+                          ? 'bg-border-light text-text-secondary cursor-not-allowed'
+                          : 'bg-accent hover:bg-accent-hover text-white shadow-soft hover:shadow-card',
+                    'flex-1 flex items-center justify-center rounded-xl border border-transparent px-8 py-3.5 text-base font-semibold focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:outline-hidden transition-all duration-200'
                   )}
                 >
                   {product.quantity === 0
@@ -571,16 +580,16 @@ export default function ProductDetail() {
                   onClick={handleWishlistToggle}
                   className={classNames(
                     isWishlisted
-                      ? 'bg-pink-50 text-pink-600 border-pink-300 hover:bg-pink-100'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-pink-600',
-                    'flex items-center justify-center rounded-md border px-4 py-3 text-base font-medium transition-colors duration-200'
+                      ? 'bg-accent-light text-accent border-accent/30'
+                      : 'bg-surface text-text-secondary border-border-light hover:border-accent hover:text-accent',
+                    'flex items-center justify-center rounded-xl border px-4 py-3.5 text-base font-medium transition-colors duration-200 shadow-xs'
                   )}
                   title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 >
                   {isWishlisted ? (
-                    <HeartIconSolid className="size-6 text-pink-600" />
+                    <HeartIconSolid className="size-6 text-accent" />
                   ) : (
-                    <HeartIcon className="size-6 text-gray-500 hover:text-pink-600" />
+                    <HeartIcon className="size-6 text-text-secondary hover:text-accent" />
                   )}
                 </button>
               </div>
@@ -641,11 +650,11 @@ export default function ProductDetail() {
         </div>
 
         {/* ================= PREMIUM REVIEWS SECTION ================= */}
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 border-t border-gray-200">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 border-t border-border-light">
 
           {/* Header */}
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl font-semibold tracking-tight text-text-primary">
               Customer Reviews
             </h2>
             <p className="mt-2 text-gray-500 text-sm">
@@ -766,84 +775,107 @@ export default function ProductDetail() {
             {/* Review Form */}
             <div id="write-review" className="lg:col-span-1">
 
-              <div className="sticky top-24 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <div className="sticky top-24 bg-surface rounded-2xl shadow-card border border-border-light p-6 sm:p-8">
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                <h3 className="font-heading text-xl font-semibold text-text-primary mb-6">
                   Write a Review
                 </h3>
 
                 {reviewSuccess && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">
-                    Thank you for your review!
+                  <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs sm:text-sm text-emerald-800 font-medium flex items-center gap-2">
+                    <span>✨ Thank you! Your review has been submitted.</span>
                   </div>
                 )}
 
                 {!isUserLoggedIn ? (
-                  <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-100">
-                    <p className="text-gray-600 font-medium mb-4">You need to login first to write a review.</p>
+                  <div className="text-center py-8 px-4 bg-surface-muted rounded-2xl border border-border-light space-y-4">
+                    <p className="text-text-secondary font-medium text-sm">Please log in to share your experience with this product.</p>
                     <Link
                       to="/login"
-                      className="inline-block bg-indigo-600 text-white rounded-md py-2 px-4 text-sm font-medium hover:bg-indigo-700 transition-colors"
+                      className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-6 text-sm font-semibold transition-all shadow-soft"
                     >
-                      Login Now
+                      Login to Write Review
                     </Link>
                   </div>
                 ) : hasUserReviewed ? (
-                  <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-100">
-                    <p className="text-gray-600 font-medium">You have already submitted a review for this product.</p>
+                  <div className="text-center py-8 px-4 bg-surface-muted rounded-2xl border border-border-light">
+                    <p className="text-text-secondary font-medium text-sm">You have already submitted a review for this product.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleReviewSubmit} className="space-y-5">
 
-                    <input
-                      type="text"
-                      required
-                      disabled={isUserLoggedIn}
-                      placeholder="Your Name"
-                      value={isUserLoggedIn ? userInfo?.name : reviewForm.name}
-                      onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                      className={classNames(
-                        isUserLoggedIn ? 'bg-gray-100 cursor-not-allowed text-gray-500' : '',
-                        "w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                      )}
-                    />
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map(rating => (
-                        <button
-                          key={rating}
-                          type="button"
-                          onClick={() => setReviewForm({ ...reviewForm, rating })}
-                        >
-                          <StarIcon
-                            className={classNames(
-                              reviewForm.rating >= rating ? "text-yellow-400" : "text-gray-200",
-                              "h-6 w-6 hover:text-yellow-400 transition-colors"
-                            )}
-                          />
-                        </button>
-                      ))}
-                      <span className="text-sm text-gray-500 ml-2">
-                        {reviewForm.rating}/5
-                      </span>
+                    <div>
+                      <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        disabled={isUserLoggedIn}
+                        placeholder="Your Name"
+                        value={isUserLoggedIn ? userInfo?.name : reviewForm.name}
+                        onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                        className={classNames(
+                          isUserLoggedIn ? 'bg-surface-muted cursor-not-allowed text-text-secondary' : 'bg-background',
+                          "w-full rounded-xl border border-border-light p-3 text-sm text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-xs"
+                        )}
+                      />
                     </div>
 
-                    <textarea
-                      rows={4}
-                      required
-                      placeholder="Share your experience..."
-                      value={reviewForm.comment}
-                      onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                      className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
-                    />
+                    {/* Rating */}
+                    <div>
+                      <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                        Rating
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        {[1, 2, 3, 4, 5].map(rating => (
+                          <button
+                            key={rating}
+                            type="button"
+                            onClick={() => setReviewForm({ ...reviewForm, rating })}
+                            className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                          >
+                            <StarIcon
+                              className={classNames(
+                                reviewForm.rating >= rating ? "text-accent fill-accent" : "text-border-light",
+                                "h-7 w-7 transition-colors"
+                              )}
+                            />
+                          </button>
+                        ))}
+                        <span className="text-sm font-semibold text-accent ml-2">
+                          {reviewForm.rating}/5 Stars
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                        Your Review
+                      </label>
+                      <textarea
+                        rows={4}
+                        required
+                        placeholder="Share details about fit, quality, comfort, or material..."
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                        className="w-full rounded-xl border border-border-light bg-background p-3 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none transition-all shadow-xs"
+                      />
+                    </div>
 
                     <button
                       type="submit"
-                      disabled={submittingReview}
-                      className="w-full bg-indigo-600 text-white rounded-md py-2 text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
+                      disabled={submittingReview || !reviewForm.comment.trim()}
+                      className="w-full bg-accent hover:bg-accent-hover text-white rounded-xl py-3 px-6 text-sm font-semibold tracking-wide transition-all shadow-soft hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
                     >
-                      {submittingReview ? "Submitting..." : "Submit Review"}
+                      {submittingReview ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                          <span>Submitting Review...</span>
+                        </>
+                      ) : (
+                        <span>Submit Review</span>
+                      )}
                     </button>
 
                   </form>

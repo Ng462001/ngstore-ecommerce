@@ -262,12 +262,12 @@ const Reviews = () => {
     return (
         <div className="space-y-6">
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                         Product Reviews Management
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Manage all customer reviews across all products
                     </Typography>
                 </div>
@@ -276,59 +276,66 @@ const Reviews = () => {
                     startIcon={<Refresh />}
                     onClick={fetchReviews}
                     disabled={loading}
+                    sx={{
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: '#E7E4DD',
+                        color: '#1C1B19',
+                        bgcolor: '#FFFFFF',
+                        '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                    }}
                 >
                     Refresh
                 </Button>
             </div>
-            {/* Header */}
-
 
             {/* Stats Cards */}
             <Grid container spacing={3}>
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card className="shadow-md">
+                    <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                         <CardContent className="text-center">
-                            <Typography variant="h3" className="font-bold text-blue-600">
+                            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 700, color: '#1C1B19' }}>
                                 {stats.totalReviews || 0}
                             </Typography>
-                            <Typography variant="body2" className="text-gray-500">
+                            <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                                 Total Reviews
                             </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card className="shadow-md">
+                    <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                         <CardContent className="text-center">
-                            <Typography variant="h3" className="font-bold text-yellow-600">
+                            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 700, color: '#B8925A' }}>
                                 {stats.averageRating
                                     ?.toFixed(1) || '0.0'}
                             </Typography>
-                            <Typography variant="body2" className="text-gray-500">
+                            <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                                 Average Rating
                             </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card className="shadow-md">
+                    <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                         <CardContent className="text-center">
-                            <Typography variant="h3" className="font-bold text-green-600">
+                            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 700, color: '#3E7A55' }}>
                                 {stats.recentReviews || 0}
                             </Typography>
-                            <Typography variant="body2" className="text-gray-500">
+                            <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                                 Recent Reviews (30 days)
                             </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <Card className="shadow-md">
+                    <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                         <CardContent className="text-center">
-                            <Typography variant="h3" className="font-bold text-purple-600">
+                            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 700, color: '#1C1B19' }}>
                                 {totalPages}
                             </Typography>
-                            <Typography variant="body2" className="text-gray-500">
+                            <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                                 Total Pages
                             </Typography>
                         </CardContent>
@@ -337,10 +344,10 @@ const Reviews = () => {
             </Grid>
 
             {/* Filters Card */}
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                 <CardContent className="p-6">
-                    <Typography variant="h6" className="font-bold mb-4">
-                        <FilterIcon className="mr-2" />
+                    <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', mb: 2, display: 'flex', alignItems: 'center' }}>
+                        <FilterIcon sx={{ color: '#B8925A', mr: 1 }} />
                         Filters
                     </Typography>
                     <div className="space-y-4">

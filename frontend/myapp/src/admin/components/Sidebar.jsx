@@ -44,35 +44,38 @@ const Sidebar = ({ onMobileClose }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-gradient-to-b from-blue-600 to-indigo-700 text-white">
+        <div className="flex flex-col h-full bg-surface border-r border-border-light text-text-primary">
             {/* Logo */}
-            <div className="flex items-center justify-center p-6 border-b border-blue-500">
-                <Store className="mr-2" />
-                <span className="text-xl font-bold">E-Commerce Admin</span>
+            <div className="flex items-center justify-center p-6 border-b border-border-light gap-2.5">
+                <Store className="text-accent" />
+                <span className="font-heading text-lg font-semibold tracking-wide text-text-primary">NGStore Admin</span>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-2">
-                {menuItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => handleItemClick(item.path)}
-                        className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-all ${currentSection === item.id
-                            ? 'bg-white bg-opacity-20 text-white font-medium'
-                            : 'text-blue-100 hover:bg-white hover:bg-opacity-10'
-                            }`}
-                    >
-                        <span className="mr-3">{item.icon}</span>
-                        <span>{item.label}</span>
-                    </button>
-                ))}
+            <nav className="flex-1 px-4 py-6 space-y-1.5">
+                {menuItems.map((item) => {
+                    const isActive = currentSection === item.id;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => handleItemClick(item.path)}
+                            className={`flex items-center w-full px-4 py-3 text-left rounded-xl transition-all duration-200 text-sm ${isActive
+                                ? 'bg-accent-light text-accent font-semibold shadow-xs border-r-2 border-accent'
+                                : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
+                                }`}
+                        >
+                            <span className={`mr-3 ${isActive ? 'text-accent' : 'text-text-secondary'}`}>{item.icon}</span>
+                            <span>{item.label}</span>
+                        </button>
+                    );
+                })}
             </nav>
 
             {/* Bottom Section */}
-            <div className="mt-auto p-4 border-t border-blue-500 space-y-2">
+            <div className="mt-auto p-4 border-t border-border-light space-y-2">
                 <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-3 text-left rounded-lg text-blue-100 hover:bg-red-500 hover:bg-opacity-20 transition-all"
+                    className="flex items-center w-full px-4 py-3 text-left rounded-xl text-error hover:bg-error/10 transition-all text-sm font-medium"
                 >
                     <Logout className="mr-3" />
                     <span>Logout</span>

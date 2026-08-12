@@ -6,7 +6,6 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import Shop from './pages/Shop'
 import Home from './pages/Home'
 import Product from './pages/Product'
 import ProductDetail from './pages/ProductDetail'
@@ -88,7 +87,7 @@ const App = () => {
         },
         {
           path: '/shop',
-          element: <Shop />
+          element: <Product />
         },
         {
           path: '/contact',

@@ -1081,36 +1081,37 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                     transform: 'translate(-50%, -50%)',
                     width: { xs: '95%', sm: '90%', md: '800px' },
                     maxHeight: '90vh',
-                    bgcolor: 'background.paper',
-                    borderRadius: 2,
-                    boxShadow: 24,
+                    bgcolor: '#FFFFFF',
+                    borderRadius: '24px',
+                    border: '1px solid #E7E4DD',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column'
                 }}>
                     {/* Header */}
                     <Box sx={{
-                        p: 2,
-                        borderBottom: 1,
-                        borderColor: 'divider',
+                        p: 2.5,
+                        px: 3,
+                        borderBottom: '1px solid #E7E4DD',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        bgcolor: 'primary.main',
-                        color: 'white'
+                        bgcolor: '#FAF9F6',
+                        color: '#1C1B19'
                     }}>
-                        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <ChatIcon />
+                        <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <ChatIcon sx={{ color: '#B8925A' }} />
                             Customer Support
                         </Typography>
-                        <IconButton onClick={handleClose} sx={{ color: 'white' }}>
+                        <IconButton onClick={handleClose} sx={{ color: '#6B6862', '&:hover': { color: '#1C1B19', bgcolor: '#F3F1EC' } }}>
                             <CloseIcon />
                         </IconButton>
                     </Box>
 
                     {/* Content */}
                     <Box sx={{
-                        p: 3,
+                        p: 3.5,
                         overflow: 'auto',
                         flex: 1
                     }}>
@@ -1121,11 +1122,11 @@ const SupportModal = ({ open, onClose, order, user, token }) => {
                     {activeStep !== 2 && !showMyTickets && !selectedTicket && (
                         <Box sx={{
                             p: 2,
-                            borderTop: 1,
-                            borderColor: 'divider',
-                            bgcolor: 'grey.50'
+                            px: 3,
+                            borderTop: '1px solid #E7E4DD',
+                            bgcolor: '#FAF9F6'
                         }}>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                 <strong>Support Hours:</strong> Mon-Sun, 7 AM - 12 AM | <strong>Email:</strong> ngtech2026@gmail.com | <strong>Phone:</strong> +919422498134
                             </Typography>
                         </Box>

@@ -25,12 +25,24 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
     return state.cartItems || []
   })
 
+  // Safe price parser — avoids discountedPrice=0 corrupting totals
+  const getItemPrice = (item) => {
+    const p = parseFloat(item.price) || 0
+    const dp = parseFloat(item.discountedPrice) || 0
+    if (dp > 0 && dp < p) return dp
+    return p || dp
+  }
+
+  // Format price using Indian locale
+  const fmt = (val) =>
+    val.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) =>
-    sum + (parseFloat(item.discountedPrice || item.price) * item.quantity), 0
+    sum + (getItemPrice(item) * item.quantity), 0
   )
-  const shipping = subtotal > 50 ? 0 : 5.00 // Free shipping over $50
-  const tax = subtotal * 0.08 // 8% tax
+  const shipping = subtotal > 500 ? 0 : 50 // Free shipping over ₹500
+  const tax = subtotal * 0.18 // 18% GST
   const total = subtotal + shipping + tax
 
   // Get item image
@@ -85,10 +97,10 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+      <Typography variant="h4" component="h1" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
         Order Summary
       </Typography>
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#6B6862' }}>
         Review your items and shipping details
       </Typography>
 
@@ -96,8 +108,8 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
         {/* Left Column - Items and Address */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Order Items */}
-          <Paper elevation={1} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="600">
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
               Items in Cart ({cartItems.length})
             </Typography>
             <List>
@@ -112,13 +124,13 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                         <Avatar
                           src={getItemImage(item)}
                           alt={item.name}
-                          sx={{ width: 80, height: 80, borderRadius: 1, marginRight: 2 }}
+                          sx={{ width: 80, height: 80, borderRadius: '12px', marginRight: 2, border: '1px solid #E7E4DD', bgcolor: '#FAF9F6' }}
                           variant="rounded"
                         />
                       </ListItemAvatar>
                       <ListItemText
                         primary={
-                          <Typography variant="subtitle1" fontWeight="600">
+                          <Typography variant="subtitle1" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                             {item.name}
                           </Typography>
                         }
@@ -139,7 +151,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                                 Qty: {item.quantity}
                               </Typography>
                             </Box>
-                            <Typography variant="body1" fontWeight="600" sx={{ mt: 1 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 700, color: '#B8925A', mt: 1 }}>
                               ₹{totalPrice.toFixed(2)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -149,7 +161,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                         }
                       />
                     </ListItem>
-                    {index < cartItems.length - 1 && <Divider variant="inset" component="li" />}
+                    {index < cartItems.length - 1 && <Divider variant="inset" component="li" sx={{ borderColor: '#E7E4DD' }} />}
                   </Box>
                 )
               })}
@@ -157,9 +169,9 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
           </Paper>
 
           {/* Shipping Address - Only show selected address */}
-          <Paper elevation={1} sx={{ p: 3 }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" fontWeight="600">
+              <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                 Shipping Address
               </Typography>
               <Button
@@ -167,30 +179,31 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                 onClick={handleEditAddress}
                 variant="outlined"
                 size="small"
+                sx={{ borderRadius: '8px', borderColor: '#B8925A', color: '#B8925A' }}
               >
                 Change Address
               </Button>
             </Box>
 
             {!localSelectedAddress ? (
-              <Alert severity="warning" sx={{ mb: 2 }}>
+              <Alert severity="warning" sx={{ mb: 2, borderRadius: '12px' }}>
                 No shipping address selected. Please go back and select an address.
               </Alert>
             ) : (
-              <Box sx={{ p: 2, border: 1, borderColor: 'primary.main', borderRadius: 1, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+              <Box sx={{ p: 2.5, border: '1px solid #B8925A', borderRadius: '14px', bgcolor: '#F7F3EC', color: '#1C1B19' }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                  <LocationOn sx={{ color: 'white', mt: 0.5 }} />
+                  <LocationOn sx={{ color: '#B8925A', mt: 0.5 }} />
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" fontWeight="600" sx={{ color: 'white', mb: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="600" sx={{ color: '#1C1B19', mb: 1 }}>
                       {localSelectedAddress.name || 'Shipping Address'}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'white', opacity: 0.9, lineHeight: 1.6 }}>
+                    <Typography variant="body2" sx={{ color: '#6B6862', lineHeight: 1.6 }}>
                       {localSelectedAddress.street}<br />
                       {localSelectedAddress.city}, {localSelectedAddress.state} {localSelectedAddress.zipCode}<br />
                       {localSelectedAddress.country}
                     </Typography>
                     {localSelectedAddress.mobile && (
-                      <Typography variant="body2" sx={{ color: 'white', opacity: 0.9, mt: 1 }}>
+                      <Typography variant="body2" sx={{ color: '#6B6862', mt: 1 }}>
                         📞 {localSelectedAddress.mobile}
                       </Typography>
                     )}
@@ -205,7 +218,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                 fullWidth
                 onClick={handleEditAddress}
                 startIcon={<LocationOn />}
-                sx={{ mt: 2 }}
+                sx={{ mt: 2, bgcolor: '#B8925A', '&:hover': { bgcolor: '#9E7B47' }, borderRadius: '12px' }}
               >
                 Select Shipping Address
               </Button>
@@ -215,48 +228,48 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
 
         {/* Right Column - Order Totals */}
         <Box>
-          <Paper elevation={1} sx={{ p: 3, position: 'sticky', top: 20 }}>
-            <Typography variant="h6" gutterBottom fontWeight="600">
-              Order Summary
+          <Paper elevation={0} sx={{ p: 3.5, position: 'sticky', top: 20, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+              Summary
             </Typography>
 
             <Box sx={{ spaceY: 2, mb: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)
                 </Typography>
-                <Typography variant="body2">₹{subtotal.toFixed(2)}</Typography>
+                <Typography variant="body2" fontWeight="500">₹{fmt(subtotal)}</Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   Shipping
                 </Typography>
-                <Typography variant="body2">
-                  {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
+                <Typography variant="body2" fontWeight="500" sx={{ color: shipping === 0 ? '#3E7A55' : 'inherit' }}>
+                  {shipping === 0 ? 'FREE' : `₹${fmt(shipping)}`}
                 </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   Tax
                 </Typography>
-                <Typography variant="body2">₹{tax.toFixed(2)}</Typography>
+                <Typography variant="body2" fontWeight="500">₹{fmt(tax)}</Typography>
               </Box>
 
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 2, borderColor: '#E7E4DD' }} />
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="h6" fontWeight="600">
+                <Typography variant="h6" fontWeight="600" sx={{ color: '#1C1B19' }}>
                   Total
                 </Typography>
-                <Typography variant="h6" fontWeight="600">
-                  ₹{total.toFixed(2)}
+                <Typography variant="h6" fontWeight="700" sx={{ color: '#B8925A' }}>
+                  ₹{fmt(total)}
                 </Typography>
               </Box>
 
               {shipping === 0 && (
-                <Typography variant="body2" color="success.main" sx={{ mt: 1, textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center', color: '#3E7A55', fontWeight: 500 }}>
                   🎉 You qualify for free shipping!
                 </Typography>
               )}
@@ -270,7 +283,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                 fullWidth
                 onClick={handleProceedToPayment}
                 disabled={!localSelectedAddress}
-                sx={{ py: 1.5 }}
+                sx={{ py: 1.5, borderRadius: '12px', bgcolor: '#B8925A', '&:hover': { bgcolor: '#9E7B47' }, fontWeight: 600 }}
               >
                 Proceed to Payment
               </Button>
@@ -280,14 +293,14 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                 size="large"
                 fullWidth
                 onClick={onBack}
-                sx={{ py: 1.5 }}
+                sx={{ py: 1.5, borderRadius: '12px', borderColor: '#E7E4DD', color: '#6B6862', '&:hover': { borderColor: '#B8925A', color: '#B8925A' } }}
               >
                 Back to Shipping
               </Button>
             </Box>
 
             {/* Security Notice */}
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Box sx={{ mt: 3, p: 2, bgcolor: '#FAF9F6', borderRadius: '12px', border: '1px solid #E7E4DD' }}>
               <Typography variant="caption" color="text.secondary" display="block" textAlign="center">
                 🔒 Secure checkout · Encrypted payment
               </Typography>
@@ -295,7 +308,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
 
             {/* Address Requirement Notice */}
             {!localSelectedAddress && (
-              <Alert severity="info" sx={{ mt: 2 }}>
+              <Alert severity="info" sx={{ mt: 2, borderRadius: '12px' }}>
                 Please select a shipping address to proceed with payment.
               </Alert>
             )}

@@ -102,30 +102,29 @@ const Contact = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', py: 8 }}>
+    <Box sx={{ bgcolor: '#FAF9F6', minHeight: '100vh', py: 10 }}>
       <Container maxWidth="lg">
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Box sx={{ textAlign: 'center', mb: 10 }}>
           <Typography
             variant="h2"
             sx={{
-              fontWeight: 800,
-              mb: 3,
-              background: 'linear-gradient(45deg, #2196F3 30%, #9C27B0 90%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
+              fontFamily: '"Playfair Display", Georgia, serif',
+              fontWeight: 600,
+              fontSize: { xs: '2.25rem', sm: '3rem', md: '3.75rem' },
+              mb: 2,
+              color: '#1C1B19'
             }}
           >
             Get In Touch
           </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.8 }}>
+          <Typography variant="h5" sx={{ maxWidth: 800, mx: 'auto', lineHeight: 1.8, color: '#6B6862', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Have a question or need assistance? We're here to help! Reach out to us and we'll respond as soon as possible.
           </Typography>
         </Box>
 
         {/* Contact Info Cards */}
-        <Grid container spacing={4} sx={{ mb: 8 }}>
+        <Grid container spacing={3} sx={{ mb: 10 }}>
           {contactInfo.map((info, index) => (
             <Grid item xs={12} md={4} key={index}>
               <Card
@@ -133,40 +132,44 @@ const Contact = () => {
                 href={info.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                elevation={0}
                 sx={{
                   height: '100%',
                   textAlign: 'center',
                   p: 4,
-                  borderRadius: 4,
-                  boxShadow: 3,
+                  borderRadius: '20px',
+                  bgcolor: '#FFFFFF',
+                  border: '1px solid #E7E4DD',
+                  boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)',
                   textDecoration: 'none',
-                  transition: 'all 0.3s',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 6
+                    transform: 'translateY(-6px)',
+                    boxShadow: '0 12px 28px -4px rgba(28, 27, 25, 0.08)'
                   }
                 }}
               >
                 <Box
                   sx={{
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     borderRadius: '50%',
-                    bgcolor: `${info.color}15`,
+                    bgcolor: '#F7F3EC',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     mx: 'auto',
                     mb: 3,
-                    color: info.color
+                    color: '#B8925A',
+                    border: '1px solid #E7E4DD'
                   }}
                 >
                   {info.icon}
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, mb: 1, color: '#1C1B19' }}>
                   {info.title}
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" sx={{ color: '#6B6862', fontSize: '0.95rem' }}>
                   {info.details}
                 </Typography>
               </Card>
@@ -175,11 +178,11 @@ const Contact = () => {
         </Grid>
 
         {/* Contact Form */}
-        <Grid container spacing={6}>
+        <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 4, boxShadow: 3, height: '100%' }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
+            <Card elevation={0} sx={{ borderRadius: '24px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', height: '100%' }}>
+              <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+                <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, mb: 3, color: '#1C1B19' }}>
                   Send Us a Message
                 </Typography>
                 <form onSubmit={handleSubmit}>
@@ -236,7 +239,7 @@ const Contact = () => {
                         onChange={handleChange}
                         required
                         multiline
-                        rows={6}
+                        rows={5}
                         variant="outlined"
                       />
                     </Grid>
@@ -247,15 +250,17 @@ const Contact = () => {
                         variant="contained"
                         size="large"
                         disabled={loading}
-                        startIcon={loading ? <CircularProgress size={20} /> : <SendIcon />}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
                         sx={{
                           py: 1.5,
-                          borderRadius: 2,
+                          borderRadius: '12px',
                           fontWeight: 600,
                           fontSize: '1rem',
-                          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                          textTransform: 'none',
+                          bgcolor: '#B8925A',
+                          boxShadow: '0 4px 14px rgba(184, 146, 90, 0.25)',
                           '&:hover': {
-                            background: 'linear-gradient(45deg, #1976D2 30%, #00ACC1 90%)',
+                            bgcolor: '#9E7B47'
                           }
                         }}
                       >
@@ -270,50 +275,50 @@ const Contact = () => {
 
           {/* Map or Additional Info */}
           <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 4, boxShadow: 3, height: '100%' }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
+            <Card elevation={0} sx={{ borderRadius: '24px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', height: '100%' }}>
+              <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+                <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, mb: 3, color: '#1C1B19' }}>
                   Business Hours
                 </Typography>
                 <Box sx={{ mb: 4 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="body1" fontWeight={600}>Monday - Friday</Typography>
-                    <Typography variant="body1" color="text.secondary">9:00 AM - 6:00 PM</Typography>
+                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1C1B19' }}>Monday - Friday</Typography>
+                    <Typography variant="body1" sx={{ color: '#6B6862' }}>9:00 AM - 6:00 PM</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="body1" fontWeight={600}>Saturday</Typography>
-                    <Typography variant="body1" color="text.secondary">10:00 AM - 4:00 PM</Typography>
+                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1C1B19' }}>Saturday</Typography>
+                    <Typography variant="body1" sx={{ color: '#6B6862' }}>10:00 AM - 4:00 PM</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="body1" fontWeight={600}>Sunday</Typography>
-                    <Typography variant="body1" color="text.secondary">Closed</Typography>
+                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1C1B19' }}>Sunday</Typography>
+                    <Typography variant="body1" sx={{ color: '#6B6862' }}>Closed</Typography>
                   </Box>
                 </Box>
 
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, mt: 4 }}>
-                  FAQ
+                <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, mb: 2, mt: 4, color: '#1C1B19' }}>
+                  Frequently Asked Questions
                 </Typography>
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1, color: '#1C1B19' }}>
                     How long does shipping take?
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                  <Typography variant="body2" sx={{ lineHeight: 1.8, color: '#6B6862' }}>
                     Standard shipping typically takes 3-5 business days. Express shipping is available for 1-2 day delivery.
                   </Typography>
                 </Box>
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1, color: '#1C1B19' }}>
                     What is your return policy?
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                  <Typography variant="body2" sx={{ lineHeight: 1.8, color: '#6B6862' }}>
                     We offer a 10-day return policy for most items. Products must be in original condition with tags attached.
                   </Typography>
                 </Box>
                 <Box>
-                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography variant="body1" fontWeight={600} sx={{ mb: 1, color: '#1C1B19' }}>
                     Do you ship internationally?
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                  <Typography variant="body2" sx={{ lineHeight: 1.8, color: '#6B6862' }}>
                     Yes, we ship to select international destinations. Shipping costs and delivery times vary by location.
                   </Typography>
                 </Box>

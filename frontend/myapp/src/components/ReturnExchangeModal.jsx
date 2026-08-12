@@ -33,7 +33,7 @@ import {
     Inventory as InventoryIcon
 } from '@mui/icons-material'
 
-const ReturnExchangeModal = ({ open, onClose, order, user }) => {
+const ReturnExchangeModal = ({ open, onClose, order, user, onRequestSubmitted }) => {
     const [activeStep, setActiveStep] = useState(0) // 0: Type, 1: Items, 2: Reason, 3: Success
     const [requestType, setRequestType] = useState('') // 'return' or 'exchange'
     const [selectedItems, setSelectedItems] = useState([])
@@ -196,6 +196,9 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
             const data = await response.json()
             if (!data.success) throw new Error(data.message || 'Failed to submit request')
 
+            if (onRequestSubmitted) {
+                onRequestSubmitted()
+            }
             setActiveStep(3)
         } catch (err) {
             console.error(err)
@@ -206,6 +209,9 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
     }
 
     const handleClose = () => {
+        if (activeStep === 3 && onRequestSubmitted) {
+            onRequestSubmitted()
+        }
         setActiveStep(0)
         setRequestType('')
         setSelectedItems([])
@@ -691,33 +697,34 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
                 transform: 'translate(-50%, -50%)',
                 width: { xs: '95%', sm: '600px', md: '700px' },
                 maxHeight: '90vh',
-                bgcolor: 'background.paper',
-                borderRadius: 2,
-                boxShadow: 24,
+                bgcolor: '#FFFFFF',
+                borderRadius: '24px',
+                border: '1px solid #E7E4DD',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column'
             }}>
                 {/* Header */}
                 <Box sx={{
-                    p: 2,
-                    borderBottom: 1,
-                    borderColor: 'divider',
+                    p: 2.5,
+                    px: 3,
+                    borderBottom: '1px solid #E7E4DD',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    bgcolor: (activeStep < 3 && requestType) ? (requestType === 'return' ? 'primary.main' : 'secondary.main') : 'primary.dark',
-                    color: 'white'
+                    bgcolor: '#FAF9F6',
+                    color: '#1C1B19'
                 }}>
-                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {activeStep < 3 && requestType === 'return' && <ReturnIcon />}
-                        {activeStep < 3 && requestType === 'exchange' && <ExchangeIcon />}
+                    <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        {activeStep < 3 && requestType === 'return' && <ReturnIcon sx={{ color: '#B8925A' }} />}
+                        {activeStep < 3 && requestType === 'exchange' && <ExchangeIcon sx={{ color: '#B8925A' }} />}
                         {activeStep < 3
                             ? (requestType ? `${requestType === 'return' ? 'Return' : 'Exchange'} Request` : 'Start Request')
                             : 'Request Submitted'}
                     </Typography>
                     {activeStep < 3 && (
-                        <IconButton onClick={handleClose} sx={{ color: 'white' }}>
+                        <IconButton onClick={handleClose} sx={{ color: '#6B6862', '&:hover': { color: '#1C1B19', bgcolor: '#F3F1EC' } }}>
                             <CloseIcon />
                         </IconButton>
                     )}
@@ -725,8 +732,8 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
 
                 {/* Progress Steps */}
                 {activeStep < 3 && (
-                    <Box sx={{ px: 3, pt: 2, pb: 1, borderBottom: 1, borderColor: 'divider' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Box sx={{ px: 3, pt: 2, pb: 1.5, borderBottom: '1px solid #E7E4DD', bgcolor: '#FAF9F6' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-around', maxWidth: 400, mx: 'auto' }}>
                             {['Type', 'Items', 'Details'].map((step, index) => (
                                 <Box key={step} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <Box
@@ -734,17 +741,18 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
                                             width: 30,
                                             height: 30,
                                             borderRadius: '50%',
-                                            bgcolor: activeStep >= index ? (requestType === 'exchange' ? 'secondary.main' : 'primary.main') : 'grey.300',
-                                            color: activeStep >= index ? 'white' : 'grey.600',
+                                            bgcolor: activeStep >= index ? '#B8925A' : '#F3F1EC',
+                                            color: activeStep >= index ? 'white' : '#6B6862',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontWeight: 'bold'
+                                            fontWeight: 600,
+                                            fontSize: '0.85rem'
                                         }}
                                     >
                                         {index + 1}
                                     </Box>
-                                    <Typography variant="caption" sx={{ mt: 0.5, fontWeight: activeStep >= index ? 600 : 400 }}>
+                                    <Typography variant="caption" sx={{ mt: 0.5, fontWeight: activeStep >= index ? 600 : 400, color: activeStep >= index ? '#1C1B19' : '#6B6862' }}>
                                         {step}
                                     </Typography>
                                 </Box>
@@ -755,7 +763,7 @@ const ReturnExchangeModal = ({ open, onClose, order, user }) => {
 
                 {/* Content */}
                 <Box sx={{
-                    p: 3,
+                    p: 3.5,
                     overflow: 'auto',
                     flex: 1
                 }}>

@@ -228,26 +228,55 @@ const UserReturnDetailsModal = ({ open, onClose, request }) => {
             maxWidth="md"
             fullWidth
             PaperProps={{
-                sx: { borderRadius: 2, minHeight: '60vh' }
+                sx: {
+                    borderRadius: '24px',
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E7E4DD',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
+                    overflow: 'hidden'
+                }
             }}
         >
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-                <Box>
-                    <Typography variant="h6" component="div">
-                        {request.type} Request Details
+            <DialogTitle sx={{ m: 0, p: 2.5, px: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                        Request Details #{request._id?.slice(-6).toUpperCase()}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Request ID: #{request._id?.slice(0, 8).toUpperCase()}
-                    </Typography>
+                    <Chip
+                        label={request.type}
+                        size="small"
+                        sx={{
+                            bgcolor: typeConfig.bgColor,
+                            color: typeConfig.textColor,
+                            fontWeight: 600
+                        }}
+                    />
+                    <Chip
+                        label={request.status}
+                        size="small"
+                        sx={{
+                            bgcolor: statusConfig.bgColor,
+                            color: statusConfig.textColor,
+                            fontWeight: 600
+                        }}
+                    />
                 </Box>
-                <IconButton onClick={onClose} size="small">
+                <IconButton onClick={onClose} size="small" sx={{ color: '#6B6862', '&:hover': { color: '#1C1B19', bgcolor: '#F3F1EC' } }}>
                     <Close />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers sx={{ p: 0 }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1 }}>
-                    <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
+            <DialogContent sx={{ p: 0 }}>
+                <Box sx={{ borderBottom: '1px solid #E7E4DD', bgcolor: '#FAF9F6' }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={(e, v) => setActiveTab(v)}
+                        TabIndicatorProps={{ style: { backgroundColor: '#B8925A' } }}
+                        sx={{
+                            '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, color: '#6B6862' },
+                            '& .Mui-selected': { color: '#B8925A !important' }
+                        }}
+                    >
                         <Tab label="Overview" />
                         <Tab label="Tracking" />
                         <Tab label="Items" />

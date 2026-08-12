@@ -48,23 +48,23 @@ export default function ResetPassword() {
     }
 
     return (
-        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                    Create new password
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Your new password must be different from previous used passwords.
-                </p>
-            </div>
+        <div className="flex min-h-screen flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 bg-background">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md bg-surface p-8 sm:p-10 rounded-2xl border border-border-light shadow-card">
+                <div className="text-center mb-8">
+                    <h2 className="font-heading text-3xl font-semibold tracking-tight text-text-primary">
+                        Create new password
+                    </h2>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        Your new password must be different from previous used passwords.
+                    </p>
+                </div>
 
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+                        <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-text-primary mb-2">
                             New Password
                         </label>
-                        <div className="mt-2 relative">
+                        <div className="relative">
                             <input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
@@ -72,11 +72,11 @@ export default function ResetPassword() {
                                 minLength="6"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="block w-full rounded-md border-0 pl-3 pr-10 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                className="block w-full rounded-xl border border-border-light bg-background pl-3.5 pr-10 py-3 text-text-primary shadow-xs placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent sm:text-sm"
                             />
                             <button
                                 type="button"
-                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-secondary hover:text-text-primary"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? (
@@ -89,10 +89,10 @@ export default function ResetPassword() {
                     </div>
 
                     <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-gray-900">
+                        <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-text-primary mb-2">
                             Confirm New Password
                         </label>
-                        <div className="mt-2 relative">
+                        <div className="relative">
                             <input
                                 id="confirmPassword"
                                 type={showConfirmPassword ? "text" : "password"}
@@ -100,11 +100,11 @@ export default function ResetPassword() {
                                 minLength="6"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="block w-full rounded-md border-0 pl-3 pr-10 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                className="block w-full rounded-xl border border-border-light bg-background pl-3.5 pr-10 py-3 text-text-primary shadow-xs placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent sm:text-sm"
                             />
                             <button
                                 type="button"
-                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-secondary hover:text-text-primary"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                                 {showConfirmPassword ? (
@@ -116,11 +116,11 @@ export default function ResetPassword() {
                         </div>
                     </div>
 
-                    <div>
+                    <div className="pt-2">
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-base font-semibold leading-6 text-white shadow-soft hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all duration-200 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isLoading ? 'Resetting...' : 'Reset Password'}
                         </button>

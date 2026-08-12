@@ -23,16 +23,19 @@ function CustomStepIcon(props) {
   return (
     <Box
       sx={{
-        width: 24,
-        height: 24,
+        width: 28,
+        height: 28,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: active ? 'primary.main' : completed ? 'success.main' : 'grey.300',
-        color: active || completed ? 'white' : 'grey.600',
-        fontSize: '0.875rem',
+        backgroundColor: active ? '#B8925A' : completed ? '#3E7A55' : '#F3F1EC',
+        border: '1px solid',
+        borderColor: active ? '#B8925A' : completed ? '#3E7A55' : '#E7E4DD',
+        color: active || completed ? 'white' : '#6B6862',
+        fontSize: '0.825rem',
         fontWeight: 'bold',
+        transition: 'all 0.3s ease'
       }}
     >
       {completed ? <CheckIcon sx={{ fontSize: 16 }} /> : icon}
@@ -121,16 +124,16 @@ export default function HorizontalLinearStepper() {
 
   return (
     <CheckoutContext.Provider value={{ checkoutData, updateCheckoutData }}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
+      <Container maxWidth="lg" sx={{ mt: 5, mb: 8 }}>
+        <Paper elevation={0} sx={{ p: { xs: 3, sm: 5 }, mb: 3, borderRadius: '24px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+          <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
             Checkout
           </Typography>
-          <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mb: 4 }}>
-            Complete your purchase in {steps.length - activeStep} simple {steps.length - activeStep === 1 ? 'step' : 'steps'}
+          <Typography variant="subtitle1" align="center" sx={{ mb: 5, color: '#6B6862', fontSize: '0.95rem' }}>
+            Complete your order in {steps.length - activeStep} simple {steps.length - activeStep === 1 ? 'step' : 'steps'}
           </Typography>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4, overflowX: 'auto', py: 1, '& .MuiStep-root': { px: { xs: 0.5, sm: 2 } } }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 6, overflowX: 'auto', py: 1, '& .MuiStep-root': { px: { xs: 0.5, sm: 2 } } }}>
             {steps.map((label, index) => (
               <Step key={label} completed={isStepComplete(index)}>
                 <StepLabel
@@ -141,11 +144,11 @@ export default function HorizontalLinearStepper() {
                     '& .MuiStepLabel-label': {
                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
                       fontWeight: index === activeStep ? 600 : 400,
-                      color: index === activeStep ? 'primary.main' : 'text.secondary',
+                      color: index === activeStep ? '#B8925A' : '#6B6862',
                       display: { xs: index === activeStep ? 'inline-block' : 'none', sm: 'inline-block' }
                     },
                     '& .MuiStepLabel-label.Mui-completed': {
-                      color: 'text.secondary',
+                      color: '#6B6862',
                       fontWeight: 400
                     }
                   }}
@@ -159,15 +162,15 @@ export default function HorizontalLinearStepper() {
           <Box sx={{ mt: 2 }}>
             {activeStep === steps.length ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography variant="h5" gutterBottom color="success.main">
+                <Typography variant="h5" gutterBottom sx={{ color: '#3E7A55', fontWeight: 600 }}>
                   Order Completed Successfully!
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" sx={{ color: '#6B6862' }}>
                   Thank you for your purchase. You will receive an email confirmation shortly.
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={{ mt: 3 }}
+                  sx={{ mt: 4, bgcolor: '#B8925A', '&:hover': { bgcolor: '#9E7B47' } }}
                   onClick={() => navigate('/')}
                 >
                   Continue Shopping

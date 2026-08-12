@@ -59,29 +59,30 @@ const AdminLayout = () => {
             {/* App Bar */}
             <AppBar
                 position="fixed"
+                elevation={0}
                 sx={{
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                     ml: { md: `${drawerWidth}px` },
-                    backgroundColor: 'white',
-                    color: 'text.primary',
-                    boxShadow: 1
+                    backgroundColor: '#FFFFFF',
+                    color: '#1C1B19',
+                    borderBottom: '1px solid #E7E4DD'
                 }}
             >
-                <Toolbar>
+                <Toolbar sx={{ px: { sm: 3 } }}>
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         edge="start"
                         onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { md: 'none' } }}
+                        sx={{ mr: 2, display: { md: 'none' }, color: '#B8925A' }}
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                         {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                        Admin Panel
+                    <Typography variant="caption" sx={{ color: '#B8925A', fontWeight: 600, letterSpacing: '0.05em', bgcolor: '#F7F3EC', px: 2, py: 0.5, borderRadius: '20px', border: '1px solid #E7E4DD' }}>
+                        ADMIN PANEL
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -101,7 +102,8 @@ const AdminLayout = () => {
                             display: { xs: 'block', md: 'none' },
                             '& .MuiDrawer-paper': {
                                 boxSizing: 'border-box',
-                                width: drawerWidth
+                                width: drawerWidth,
+                                borderRight: '1px solid #E7E4DD'
                             }
                         }}
                     >
@@ -118,7 +120,8 @@ const AdminLayout = () => {
                             display: { xs: 'none', md: 'block' },
                             '& .MuiDrawer-paper': {
                                 boxSizing: 'border-box',
-                                width: drawerWidth
+                                width: drawerWidth,
+                                borderRight: '1px solid #E7E4DD'
                             }
                         }}
                         open
@@ -136,10 +139,10 @@ const AdminLayout = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
+                    p: { xs: 2.5, sm: 4 },
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                     minHeight: '100vh',
-                    backgroundColor: '#f5f5f5'
+                    backgroundColor: '#FAF9F6'
                 }}
             >
                 <Toolbar /> {/* Spacing for AppBar */}

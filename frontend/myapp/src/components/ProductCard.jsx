@@ -69,38 +69,73 @@ const ProductCard = ({ item }) => {
         }
     };
 
+    // Parse numeric prices safely
+    const numPrice = parseFloat(item.price) || 0;
+    const numDiscountedPrice = parseFloat(item.discountedPrice) || 0;
+    const numOriginalPrice = parseFloat(item.originalPrice) || 0;
+
+    // Determine selling display price and MRP (original price)
+    let displayPrice = numPrice;
+    let originalPrice = null;
+
+    if (numDiscountedPrice > 0 && numDiscountedPrice < numPrice) {
+        displayPrice = numDiscountedPrice;
+        originalPrice = numPrice;
+    } else if (numOriginalPrice > 0 && numPrice < numOriginalPrice) {
+        displayPrice = numPrice;
+        originalPrice = numOriginalPrice;
+    } else if (numDiscountedPrice > 0 && numOriginalPrice > numDiscountedPrice) {
+        displayPrice = numDiscountedPrice;
+        originalPrice = numOriginalPrice;
+    } else {
+        displayPrice = numDiscountedPrice || numPrice;
+        if (numOriginalPrice > displayPrice) {
+            originalPrice = numOriginalPrice;
+        }
+    }
+
     // Calculate discount percentage if not provided
     const calculateDiscount = () => {
-        if (item.discount) return item.discount;
-        if (item.originalPrice && item.discountedPrice) {
-            return Math.round(((item.originalPrice - item.discountedPrice) / item.originalPrice) * 100);
+        if (item.discount && !isNaN(parseFloat(item.discount)) && parseFloat(item.discount) > 0) {
+            return Math.round(parseFloat(item.discount));
         }
-        if (item.price && item.discountedPrice) {
-            return Math.round(((item.price - item.discountedPrice) / item.price) * 100);
+        if (originalPrice && displayPrice && originalPrice > displayPrice) {
+            return Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
         }
         return null;
     };
 
     const discountPercentage = calculateDiscount();
-    const displayPrice = item.discountedPrice || item.price;
-    const originalPrice = item.originalPrice || (item.discountedPrice ? item.price : null);
+
+    // Helper to format currency consistently
+    const formatAmount = (val) => {
+        if (val === null || val === undefined || isNaN(val)) return '0';
+        const num = parseFloat(val);
+        return num.toLocaleString('en-IN', {
+            maximumFractionDigits: 2
+        });
+    };
 
     return (
         <NavLink to={`/product/${item.id || item._id}`} style={{ textDecoration: 'none', position: 'relative', display: 'block', width: '100%' }}>
             <Card sx={{
                 width: '100%',
                 maxWidth: { xs: '100%', sm: 280 },
-                height: { xs: 370, sm: 400 },
+                height: { xs: 380, sm: 410 },
                 margin: '0 auto',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E7E4DD',
+                boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                borderRadius: 3,
+                borderRadius: '16px',
+                overflow: 'hidden',
                 '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                    transform: 'translateY(-6px)',
+                    boxShadow: '0 12px 32px -4px rgba(28, 27, 25, 0.12)',
+                    borderColor: '#D4B382',
                 }
             }}>
                 {/* Wishlist Heart Icon Button Overlay */}
@@ -110,52 +145,55 @@ const ProductCard = ({ item }) => {
                         onClick={handleWishlistToggle}
                         sx={{
                             position: 'absolute',
-                            top: 8,
-                            right: 8,
+                            top: 12,
+                            right: 12,
                             zIndex: 10,
-                            bgcolor: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(4px)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            bgcolor: 'rgba(250, 249, 246, 0.85)',
+                            backdropFilter: 'blur(6px)',
+                            border: '1px solid #E7E4DD',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            transition: 'all 0.2s ease',
                             '&:hover': {
-                                bgcolor: '#FFF5F5'
+                                bgcolor: '#FFFFFF',
+                                transform: 'scale(1.1)',
                             }
                         }}
                     >
                         {isWishlisted ? (
-                            <FavoriteIcon sx={{ fontSize: 18, color: '#FF4081' }} />
+                            <FavoriteIcon sx={{ fontSize: 18, color: '#B8925A' }} />
                         ) : (
-                            <FavoriteBorderIcon sx={{ fontSize: 18, color: '#666' }} />
+                            <FavoriteBorderIcon sx={{ fontSize: 18, color: '#6B6862' }} />
                         )}
                     </IconButton>
                 </Tooltip>
 
-                <CardActionArea sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <CardActionArea sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
                     {/* Fixed size image container with proper cover */}
                     <Box sx={{
-                        height: { xs: 190, sm: 230 },
+                        height: { xs: 200, sm: 240 },
                         width: '100%',
                         overflow: 'hidden',
-                        backgroundColor: '#f5f5f5',
+                        backgroundColor: '#FAF9F6',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        position: 'relative'
                     }}>
                         <CardMedia
                             component="img"
                             sx={{
                                 height: '100%',
                                 width: '100%',
-                                objectFit: 'cover', // This ensures image covers the entire area
-                                objectPosition: 'center', // Centers the image
-                                transition: 'transform 0.3s ease',
+                                objectFit: 'cover',
+                                objectPosition: 'center',
+                                transition: 'transform 0.5s ease-out',
                                 '&:hover': {
-                                    transform: 'scale(1.05)'
+                                    transform: 'scale(1.06)'
                                 }
                             }}
                             image={item.image && (item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL}${item.image}`)}
                             alt={item.name}
                             onError={(e) => {
-                                // Fallback to a demo image if the main image fails to load
                                 e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=280&h=200&fit=crop';
                             }}
                         />
@@ -166,8 +204,8 @@ const ProductCard = ({ item }) => {
                         flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        p: 2,
-                        '&:last-child': { pb: 2 }
+                        p: 2.5,
+                        '&:last-child': { pb: 2.5 }
                     }}>
                         {/* Product name with fixed height */}
                         <Typography
@@ -175,10 +213,12 @@ const ProductCard = ({ item }) => {
                             variant="h6"
                             component="div"
                             sx={{
-                                fontWeight: 'bold',
-                                fontSize: '1rem',
-                                lineHeight: 1.2,
-                                height: 40, // Fixed height for title
+                                fontFamily: '"Playfair Display", Georgia, serif',
+                                fontWeight: 600,
+                                color: '#1C1B19',
+                                fontSize: '1.05rem',
+                                lineHeight: 1.3,
+                                height: 42,
                                 overflow: 'hidden',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
@@ -192,14 +232,15 @@ const ProductCard = ({ item }) => {
                         <Typography
                             variant="body2"
                             sx={{
-                                color: 'text.secondary',
-                                minHeight: 40, // Fixed height for description
-                                maxHeight: 40,
+                                color: '#6B6862',
+                                fontSize: '0.825rem',
+                                minHeight: 36,
+                                maxHeight: 36,
                                 overflow: 'hidden',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
-                                WebkitBoxOrienta: 'vertical',
-                                mb: 1
+                                WebkitBoxOrient: 'vertical',
+                                mb: 1.5
                             }}
                         >
                             {item.description || item.short_description || 'Product description goes here'}
@@ -210,32 +251,35 @@ const ProductCard = ({ item }) => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            mt: 'auto', // Pushes price to bottom
-                            pt: 1
+                            mt: 'auto',
+                            pt: 1,
+                            borderTop: '1px solid #F3F1EC'
                         }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
                                 {/* Current price */}
                                 <Typography
-                                    variant="h6"
+                                    variant="body1"
                                     sx={{
-                                        color: 'primary.main',
-                                        fontWeight: 'bold',
-                                        fontSize: '1.1rem'
+                                        color: '#1C1B19',
+                                        fontWeight: 600,
+                                        fontSize: '1.05rem',
+                                        fontFamily: '"Inter", system-ui, -apple-system, sans-serif'
                                     }}
                                 >
-                                    ₹{typeof displayPrice === 'number' ? displayPrice.toFixed(2) : (displayPrice || '0.00')}
+                                    ₹{formatAmount(displayPrice)}
                                 </Typography>
 
                                 {/* Original price if discounted */}
-                                {originalPrice && originalPrice !== displayPrice && (
+                                {originalPrice && originalPrice > displayPrice && (
                                     <Typography
                                         variant="body2"
                                         sx={{
-                                            color: 'text.secondary',
-                                            textDecoration: 'line-through'
+                                            color: '#6B6862',
+                                            textDecoration: 'line-through',
+                                            fontSize: '0.85rem'
                                         }}
                                     >
-                                        ₹{typeof originalPrice === 'number' ? originalPrice.toFixed(2) : originalPrice}
+                                        ₹{formatAmount(originalPrice)}
                                     </Typography>
                                 )}
                             </Box>
@@ -244,11 +288,14 @@ const ProductCard = ({ item }) => {
                             {discountPercentage && discountPercentage > 0 && (
                                 <Chip
                                     label={`${discountPercentage}% OFF`}
-                                    color="error"
                                     size="small"
                                     sx={{
-                                        fontSize: '0.75rem',
-                                        height: 24
+                                        backgroundColor: '#B3413B',
+                                        color: '#FFFFFF',
+                                        fontWeight: 600,
+                                        fontSize: '0.7rem',
+                                        height: 22,
+                                        borderRadius: '6px'
                                     }}
                                 />
                             )}

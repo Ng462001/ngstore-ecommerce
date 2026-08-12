@@ -29,14 +29,26 @@ export default function Payment({ onBack, selectedAddress }) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    // Safe price parser — avoids discountedPrice=0 corrupting totals
+    const getItemPrice = (item) => {
+        const p = parseFloat(item.price) || 0
+        const dp = parseFloat(item.discountedPrice) || 0
+        if (dp > 0 && dp < p) return dp
+        return p || dp
+    }
+
+    // Format price using Indian locale
+    const fmt = (val) =>
+        val.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+
     // Calculate totals
     const subtotal = cartItems.reduce(
-        (sum, item) => sum + (parseFloat(item.discountedPrice || item.price) * item.quantity),
+        (sum, item) => sum + (getItemPrice(item) * item.quantity),
         0
     );
-    const shipping = subtotal > 50 ? 0 : 5.00;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shipping + tax;
+    const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
+    const tax = Number((subtotal * 0.18).toFixed(2)); // 18% GST
+    const total = Number((subtotal + shipping + tax).toFixed(2));
 
     const handlePaymentSubmit = async (e) => {
         e.preventDefault();
@@ -152,19 +164,19 @@ export default function Payment({ onBack, selectedAddress }) {
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                 Payment Details
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" sx={{ mb: 4, color: '#6B6862' }}>
                 Complete your purchase with secure payment
             </Typography>
 
             <Grid container spacing={4}>
                 {/* Left Column - Payment Form */}
                 <Grid item xs={12} md={8}>
-                    <Paper elevation={1} sx={{ p: 3 }}>
+                    <Paper elevation={0} sx={{ p: 3.5, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                         <FormControl component="fieldset" sx={{ width: '100%' }}>
-                            <FormLabel component="legend" sx={{ mb: 2, fontWeight: 600 }}>
+                            <FormLabel component="legend" sx={{ mb: 2, fontWeight: 600, color: '#1C1B19' }}>
                                 Select Payment Method
                             </FormLabel>
                             <RadioGroup
@@ -174,37 +186,37 @@ export default function Payment({ onBack, selectedAddress }) {
                             >
                                 <FormControlLabel
                                     value="card"
-                                    control={<Radio />}
+                                    control={<Radio sx={{ color: '#B8925A', '&.Mui-checked': { color: '#B8925A' } }} />}
                                     label={
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <CreditCard />
-                                            <Typography>Credit/Debit Card (Stripe Checkout)</Typography>
+                                            <CreditCard sx={{ color: '#B8925A' }} />
+                                            <Typography sx={{ fontWeight: 500, color: '#1C1B19' }}>Credit/Debit Card (Stripe Checkout)</Typography>
                                         </Box>
                                     }
                                 />
                                 <FormControlLabel
                                     value="cod"
-                                    control={<Radio />}
-                                    label="Cash on Delivery"
+                                    control={<Radio sx={{ color: '#B8925A', '&.Mui-checked': { color: '#B8925A' } }} />}
+                                    label={<Typography sx={{ fontWeight: 500, color: '#1C1B19' }}>Cash on Delivery</Typography>}
                                 />
                             </RadioGroup>
                         </FormControl>
 
                         {paymentMethod === 'card' && (
-                            <Alert severity="info" sx={{ mt: 2 }}>
+                            <Alert severity="info" sx={{ mt: 2, borderRadius: '12px' }}>
                                 You will be redirected to Stripe's secure checkout page to complete your payment.
                             </Alert>
                         )}
 
                         {paymentMethod === 'cod' && (
-                            <Alert severity="info" sx={{ mt: 2 }}>
+                            <Alert severity="info" sx={{ mt: 2, borderRadius: '12px' }}>
                                 You will pay cash when your order is delivered.
                             </Alert>
                         )}
 
                         {/* Security Notice */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                            <Lock color="success" />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 3, p: 2, bgcolor: '#FAF9F6', borderRadius: '12px', border: '1px solid #E7E4DD' }}>
+                            <Lock sx={{ color: '#3E7A55' }} />
                             <Typography variant="caption" color="text.secondary">
                                 Your payment information is secure and encrypted by Stripe
                             </Typography>
@@ -212,17 +224,17 @@ export default function Payment({ onBack, selectedAddress }) {
                     </Paper>
 
                     {/* Order Summary */}
-                    <Paper elevation={1} sx={{ p: 3, mt: 3 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="600">
+                    <Paper elevation={0} sx={{ p: 3.5, mt: 3, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                             Order Items
                         </Typography>
                         {cartItems.map((item) => (
-                            <Box key={item.cartId || item.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                                <Typography variant="body2">
+                            <Box key={item.cartId || item.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px border #FAF9F6' }}>
+                                <Typography variant="body2" sx={{ color: '#1C1B19' }}>
                                     {item.name} × {item.quantity}
                                 </Typography>
-                                <Typography variant="body2" fontWeight="600">
-                                    ₹{(parseFloat(item.discountedPrice || item.price) * item.quantity).toFixed(2)}
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#B8925A' }}>
+                                    ₹{fmt(getItemPrice(item) * item.quantity)}
                                 </Typography>
                             </Box>
                         ))}
@@ -231,43 +243,43 @@ export default function Payment({ onBack, selectedAddress }) {
 
                 {/* Right Column - Order Summary */}
                 <Grid item xs={12} md={4}>
-                    <Paper elevation={1} sx={{ p: 3, position: 'sticky', top: 20 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="600">
-                            Order Summary
+                    <Paper elevation={0} sx={{ p: 3.5, position: 'sticky', top: 20, borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                            Summary
                         </Typography>
 
                         <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                                 <Typography variant="body2" color="text.secondary">
                                     Subtotal
                                 </Typography>
-                                <Typography variant="body2">₹{subtotal.toFixed(2)}</Typography>
+                                <Typography variant="body2" fontWeight="500">₹{fmt(subtotal)}</Typography>
                             </Box>
 
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                                 <Typography variant="body2" color="text.secondary">
                                     Shipping
                                 </Typography>
-                                <Typography variant="body2">
-                                    {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
+                                <Typography variant="body2" fontWeight="500" sx={{ color: shipping === 0 ? '#3E7A55' : 'inherit' }}>
+                                    {shipping === 0 ? 'FREE' : `₹${fmt(shipping)}`}
                                 </Typography>
                             </Box>
 
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
                                 <Typography variant="body2" color="text.secondary">
                                     Tax
                                 </Typography>
-                                <Typography variant="body2">₹{tax.toFixed(2)}</Typography>
+                                <Typography variant="body2" fontWeight="500">₹{fmt(tax)}</Typography>
                             </Box>
 
-                            <Divider sx={{ my: 2 }} />
+                            <Divider sx={{ my: 2, borderColor: '#E7E4DD' }} />
 
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="h6" fontWeight="600">
+                                <Typography variant="h6" fontWeight="600" sx={{ color: '#1C1B19' }}>
                                     Total
                                 </Typography>
-                                <Typography variant="h6" fontWeight="600">
-                                    ₹{total.toFixed(2)}
+                                <Typography variant="h6" fontWeight="700" sx={{ color: '#B8925A' }}>
+                                    ₹{fmt(total)}
                                 </Typography>
                             </Box>
                         </Box>
@@ -280,10 +292,10 @@ export default function Payment({ onBack, selectedAddress }) {
                                 fullWidth
                                 onClick={handlePaymentSubmit}
                                 disabled={isProcessing}
-                                startIcon={isProcessing ? <CircularProgress size={20} /> : <PaymentIcon />}
-                                sx={{ py: 1.5 }}
+                                startIcon={isProcessing ? <CircularProgress size={20} color="inherit" /> : <PaymentIcon />}
+                                sx={{ py: 1.5, borderRadius: '12px', bgcolor: '#B8925A', '&:hover': { bgcolor: '#9E7B47' }, fontWeight: 600 }}
                             >
-                                {isProcessing ? 'Processing...' : `Pay ₹${total.toFixed(2)}`}
+                                {isProcessing ? 'Processing...' : `Pay ₹${fmt(total)}`}
                             </Button>
 
                             <Button
@@ -292,9 +304,9 @@ export default function Payment({ onBack, selectedAddress }) {
                                 fullWidth
                                 onClick={onBack}
                                 disabled={isProcessing}
-                                sx={{ py: 1.5 }}
+                                sx={{ py: 1.5, borderRadius: '12px', borderColor: '#E7E4DD', color: '#6B6862', '&:hover': { borderColor: '#B8925A', color: '#B8925A' } }}
                             >
-                                Back to Order Summary
+                                Back to Summary
                             </Button>
                         </Box>
                     </Paper>

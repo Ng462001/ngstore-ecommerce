@@ -682,21 +682,22 @@ const AdminOrderDetails = () => {
                 <Paper elevation={0} sx={{
                     p: 3,
                     mb: 3,
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    bgcolor: '#FFFFFF',
+                    color: '#1C1B19',
+                    borderRadius: '20px',
+                    border: '1px solid #E7E4DD',
+                    boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)'
                 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
                         <Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                <Typography variant="h4" fontWeight="bold">
+                                <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                     Order #{order._id.substring(0, 8).toUpperCase()}
                                 </Typography>
                                 <Chip
                                     label={order.status}
                                     sx={{
-                                        bgcolor: 'white',
+                                        bgcolor: '#FAF9F6',
                                         color: getStatusColor(order.status),
                                         fontWeight: 'bold',
                                         fontSize: '0.875rem'

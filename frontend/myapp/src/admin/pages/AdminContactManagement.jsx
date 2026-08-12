@@ -921,12 +921,12 @@ const AdminContactManagement = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
-                        Contact Management
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                        Inquiries & Messages
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Manage customer inquiries and support requests ({filteredContacts.length} contacts)
                     </Typography>
                 </div>
@@ -936,6 +936,15 @@ const AdminContactManagement = () => {
                         startIcon={<Refresh />}
                         onClick={handleRefresh}
                         disabled={actionLoading.refresh}
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderColor: '#E7E4DD',
+                            color: '#1C1B19',
+                            bgcolor: '#FFFFFF',
+                            '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                        }}
                     >
                         Refresh
                     </Button>
@@ -943,8 +952,8 @@ const AdminContactManagement = () => {
             </div>
 
             {/* Filters */}
-            <Card className="shadow-md rounded-xl">
-                <CardContent className="p-4">
+            <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                <CardContent sx={{ p: 3 }}>
                     <div className="flex gap-4 flex-wrap">
                         <TextField
                             select
@@ -992,7 +1001,7 @@ const AdminContactManagement = () => {
                             style={{ minWidth: 250 }}
                             placeholder="Search by name, email, subject..."
                             InputProps={{
-                                startAdornment: <Search color="action" sx={{ mr: 1 }} />
+                                startAdornment: <Search sx={{ color: '#6B6862', mr: 1 }} />
                             }}
                         />
 
@@ -1000,7 +1009,7 @@ const AdminContactManagement = () => {
                             <Button
                                 variant="text"
                                 onClick={handleFilterReset}
-                                className="self-center"
+                                sx={{ color: '#B3413B', textTransform: 'none', fontWeight: 600 }}
                             >
                                 Clear Filters
                             </Button>
@@ -1010,18 +1019,18 @@ const AdminContactManagement = () => {
             </Card>
 
             {/* Contacts Table */}
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', overflow: 'hidden' }}>
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
-                            <CircularProgress />
+                            <CircularProgress sx={{ color: '#B8925A' }} />
                         </div>
                     ) : paginatedContacts.length === 0 ? (
                         <div className="text-center py-12">
-                            <Typography variant="h6" className="text-gray-500 mb-2">
+                            <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', mb: 1 }}>
                                 No contacts found
                             </Typography>
-                            <Typography variant="body2" className="text-gray-400">
+                            <Typography variant="body2" sx={{ color: '#6B6862' }}>
                                 {hasActiveFilters
                                     ? 'Try changing your filters or search term'
                                     : 'No contact messages yet'
@@ -1032,22 +1041,22 @@ const AdminContactManagement = () => {
                         <>
                             <TableContainer>
                                 <Table>
-                                    <TableHead className="bg-gray-50">
+                                    <TableHead sx={{ bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
                                         <TableRow>
-                                            <TableCell className="font-bold">Contact ID</TableCell>
-                                            <TableCell className="font-bold">Customer</TableCell>
-                                            <TableCell className="font-bold">Subject</TableCell>
-                                            <TableCell className="font-bold">Priority</TableCell>
-                                            <TableCell className="font-bold">Status</TableCell>
-                                            <TableCell className="font-bold">Date</TableCell>
-                                            <TableCell className="font-bold" align="center">Actions</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Contact ID</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Customer</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Subject</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Priority</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Status</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Date</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }} align="center">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {paginatedContacts.map((contact) => (
                                             <TableRow
                                                 key={contact._id}
-                                                className="hover:bg-gray-50"
+                                                sx={{ '&:hover': { bgcolor: '#FAF9F6' }, borderBottom: '1px solid #E7E4DD' }}
                                             >
                                                 <TableCell>
                                                     <Typography variant="body2" className="font-mono">

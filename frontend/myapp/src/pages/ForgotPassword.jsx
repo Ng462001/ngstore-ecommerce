@@ -45,26 +45,26 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                    Reset your password
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    {isSubmitted
-                        ? "Check your email for reset instructions"
-                        : "Enter your email address and we'll send you a link to reset your password"}
-                </p>
-            </div>
+        <div className="flex min-h-screen flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 bg-background">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md bg-surface p-8 sm:p-10 rounded-2xl border border-border-light shadow-card">
+                <div className="text-center mb-8">
+                    <h2 className="font-heading text-3xl font-semibold tracking-tight text-text-primary">
+                        Reset password
+                    </h2>
+                    <p className="mt-2 text-sm text-text-secondary">
+                        {isSubmitted
+                            ? "Check your email for reset instructions"
+                            : "Enter your email address and we'll send you a link to reset your password"}
+                    </p>
+                </div>
 
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
                 {!isSubmitted ? (
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-text-primary mb-2">
                                 Email address
                             </label>
-                            <div className="mt-2">
+                            <div>
                                 <input
                                     id="email"
                                     type="email"
@@ -72,7 +72,7 @@ export default function ForgotPassword() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    className="block w-full rounded-xl border border-border-light bg-background px-3.5 py-3 text-text-primary shadow-xs placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent sm:text-sm"
                                     placeholder="you@example.com"
                                 />
                             </div>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className={`flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-base font-semibold leading-6 text-white shadow-soft hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all duration-200 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isLoading ? (
                                     <>
@@ -100,19 +100,19 @@ export default function ForgotPassword() {
                     </form>
                 ) : (
                     <div className="space-y-6">
-                        <div className="rounded-md bg-green-50 p-4">
+                        <div className="rounded-xl bg-success/10 p-4 border border-success/30">
                             <div className="flex">
                                 <div className="flex-shrink-0">
-                                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg className="h-5 w-5 text-success" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
                                 </div>
                                 <div className="ml-3">
-                                    <p className="text-sm font-medium text-green-800">
+                                    <p className="text-sm font-semibold text-success">
                                         Reset link sent successfully!
                                     </p>
-                                    <p className="mt-2 text-sm text-green-700">
-                                        Check your email at <span className="font-semibold">{email}</span> for instructions to reset your password.
+                                    <p className="mt-1 text-xs text-text-secondary">
+                                        Check your email at <span className="font-semibold text-text-primary">{email}</span> for instructions to reset your password.
                                     </p>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@ export default function ForgotPassword() {
                         <div className="flex flex-col space-y-4">
                             <button
                                 onClick={handleResend}
-                                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                                className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-base font-semibold leading-6 text-white shadow-soft hover:bg-accent-hover transition-all duration-200"
                             >
                                 Resend reset link
                             </button>
@@ -129,18 +129,18 @@ export default function ForgotPassword() {
                     </div>
                 )}
 
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="mt-8 pt-6 border-t border-border-light">
                     <div className="space-y-3">
-                        <p className="text-center text-sm text-gray-500">
+                        <p className="text-center text-sm text-text-secondary">
                             Remember your password?{' '}
-                            <NavLink to="/login" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+                            <NavLink to="/login" className="font-semibold text-accent hover:underline">
                                 Sign in
                             </NavLink>
                         </p>
 
-                        <p className="text-center text-sm text-gray-500">
+                        <p className="text-center text-sm text-text-secondary">
                             Don't have an account?{' '}
-                            <NavLink to="/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+                            <NavLink to="/signup" className="font-semibold text-accent hover:underline">
                                 Sign up
                             </NavLink>
                         </p>

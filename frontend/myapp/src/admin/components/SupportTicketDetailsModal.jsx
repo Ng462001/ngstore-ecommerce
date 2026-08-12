@@ -913,9 +913,12 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
             fullWidth
             PaperProps={{
                 sx: {
-                    borderRadius: 2,
+                    borderRadius: '24px',
                     maxHeight: '90vh',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E7E4DD',
+                    boxShadow: '0 20px 40px -10px rgba(28, 27, 25, 0.15)'
                 }
             }}
         >
@@ -925,8 +928,9 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                 animate={{ opacity: 1, y: 0 }}
             >
                 <Box sx={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#FAF9F6',
+                    color: '#1C1B19',
+                    borderBottom: '1px solid #E7E4DD',
                     p: 3,
                     position: 'relative'
                 }}>
@@ -936,11 +940,11 @@ const SupportTicketDetailsModal = ({ open, onClose, ticket, onTicketUpdate, onSe
                                 sx={{
                                     width: 64,
                                     height: 64,
-                                    bgcolor: 'white',
-                                    color: '#667eea',
+                                    bgcolor: '#B8925A',
+                                    color: '#FFFFFF',
                                     fontWeight: 'bold',
                                     fontSize: '1.5rem',
-                                    border: '2px solid rgba(255,255,255,0.5)'
+                                    border: '1px solid #E7E4DD'
                                 }}
                             >
                                 {ticket.user?.name?.charAt(0).toUpperCase() || 'T'}

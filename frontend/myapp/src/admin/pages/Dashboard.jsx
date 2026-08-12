@@ -658,10 +658,10 @@ const Dashboard = () => {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-extrabold text-slate-800 tracking-tight">
-                        Dashboard
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', tracking: '-0.02em' }}>
+                        Dashboard Overview
                     </Typography>
-                    <Typography variant="body2" className="text-slate-500 font-medium">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Real-time analytical insights and storefront operations.
                     </Typography>
                 </div>
@@ -671,7 +671,18 @@ const Dashboard = () => {
                         startIcon={<Refresh />}
                         onClick={handleRefresh}
                         disabled={refreshing}
-                        className="normal-case border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 font-semibold rounded-xl px-4 py-2"
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderColor: '#E7E4DD',
+                            color: '#1C1B19',
+                            bgcolor: '#FFFFFF',
+                            '&:hover': {
+                                bgcolor: '#F7F3EC',
+                                borderColor: '#B8925A'
+                            }
+                        }}
                     >
                         {refreshing ? 'Syncing...' : 'Sync Data'}
                     </Button>
@@ -679,7 +690,7 @@ const Dashboard = () => {
             </div>
 
             {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl flex items-center justify-between">
+                <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-2xl flex items-center justify-between">
                     <div>
                         <strong className="font-bold">Sync Error: </strong>
                         <span className="font-medium">{error}</span>
@@ -706,7 +717,7 @@ const Dashboard = () => {
                             value={formatCurrency(stats.totalRevenue)}
                             change="+12.4%"
                             icon={<AttachMoney />}
-                            color="#10b981"
+                            color="#B8925A"
                             loading={loading}
                             sparklineData={mockSparklines.revenue.length >= 2 ? mockSparklines.revenue : [1000, 1500, 1200, 2000, 1800, 2500, 3000]}
                         />
@@ -721,7 +732,7 @@ const Dashboard = () => {
                             value={stats.totalOrders.toLocaleString()}
                             change="+8.2%"
                             icon={<ShoppingCart />}
-                            color="#6366f1"
+                            color="#B8925A"
                             loading={loading}
                             sparklineData={mockSparklines.orders.length >= 2 ? mockSparklines.orders : [4, 8, 5, 12, 10, 15, 18]}
                         />
@@ -736,7 +747,7 @@ const Dashboard = () => {
                             value={stats.totalCustomers.toLocaleString()}
                             change="+16.8%"
                             icon={<Person />}
-                            color="#f59e0b"
+                            color="#3E7A55"
                             loading={loading}
                             sparklineData={mockSparklines.customers}
                         />

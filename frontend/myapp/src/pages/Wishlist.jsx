@@ -6,20 +6,12 @@ import {
   Box,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Button,
-  IconButton,
-  Chip,
   Paper,
-  Tooltip,
-  Divider
+  Chip,
 } from '@mui/material'
 import {
   Favorite as FavoriteIcon,
-  DeleteOutline as DeleteOutlineIcon,
   ShoppingCart as ShoppingCartIcon,
   ArrowForward as ArrowForwardIcon,
   ShoppingBag as ShoppingBagIcon,
@@ -27,6 +19,7 @@ import {
 } from '@mui/icons-material'
 import { removeFromWishlist, addProduct, clearWishlist, setWishlist } from '../Redux/action/action'
 import { toast } from 'react-hot-toast'
+import ProductCard from '../components/ProductCard'
 
 const Wishlist = () => {
   const navigate = useNavigate()
@@ -115,7 +108,7 @@ const Wishlist = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: '#F8F9FA', minHeight: '80vh', py: 5 }}>
+    <Box sx={{ bgcolor: '#FAF9F6', minHeight: '80vh', py: 6 }}>
       <Container maxWidth="lg">
         {/* Page Header */}
         <Box
@@ -123,21 +116,20 @@ const Wishlist = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 4,
+            mb: 5,
             flexWrap: 'wrap',
             gap: 2
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <FavoriteIcon sx={{ fontSize: 36, color: '#FF4081' }} />
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1A202C' }}>
+            <FavoriteIcon sx={{ fontSize: 36, color: '#B8925A' }} />
+            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
               My Wishlist
             </Typography>
             <Chip
               label={`${wishlistItems.length} ${wishlistItems.length === 1 ? 'item' : 'items'}`}
-              color="secondary"
               size="medium"
-              sx={{ fontWeight: 700, borderRadius: 2, bgcolor: '#FF4081', color: 'white' }}
+              sx={{ fontWeight: 600, borderRadius: '10px', bgcolor: '#B8925A', color: 'white' }}
             />
           </Box>
 
@@ -147,7 +139,7 @@ const Wishlist = () => {
               color="error"
               startIcon={<ClearAllIcon />}
               onClick={handleClearWishlist}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+              sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, borderColor: '#B3413B', color: '#B3413B' }}
             >
               Clear Wishlist
             </Button>
@@ -161,14 +153,15 @@ const Wishlist = () => {
             sx={{
               p: 6,
               textAlign: 'center',
-              borderRadius: 4,
-              bgcolor: 'white',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+              borderRadius: '24px',
+              bgcolor: '#FFFFFF',
+              border: '1px solid #E7E4DD',
+              boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              py: 10
+              py: 12
             }}
           >
             <Box
@@ -176,19 +169,20 @@ const Wishlist = () => {
                 width: 90,
                 height: 90,
                 borderRadius: '50%',
-                bgcolor: '#FCE4EC',
+                bgcolor: '#F7F3EC',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                mb: 3
+                mb: 3,
+                border: '1px solid #E7E4DD'
               }}
             >
-              <FavoriteIcon sx={{ fontSize: 48, color: '#FF4081' }} />
+              <FavoriteIcon sx={{ fontSize: 44, color: '#B8925A' }} />
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#2D3748', mb: 1 }}>
+            <Typography variant="h5" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', mb: 1 }}>
               Your Wishlist is Empty
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 450, mb: 4 }}>
+            <Typography variant="body1" sx={{ color: '#6B6862', maxWidth: 450, mb: 4, fontSize: '0.95rem' }}>
               Explore our store and save products you love to your wishlist to view or purchase them anytime!
             </Typography>
             <Button
@@ -198,16 +192,15 @@ const Wishlist = () => {
               endIcon={<ArrowForwardIcon />}
               onClick={() => navigate('/store')}
               sx={{
-                borderRadius: 3,
+                borderRadius: '14px',
                 px: 4,
                 py: 1.5,
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: 'none',
-                bgcolor: '#4F46E5',
-                background: 'linear-gradient(135deg, #FF4081 0%, #FF4081 100%)',
-                boxShadow: '0 8px 20px rgba(79, 70, 229, 0.3)',
+                bgcolor: '#B8925A',
+                boxShadow: '0 4px 14px rgba(184, 146, 90, 0.25)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #c82e61ff 0%, #d5376cff 100%)'
+                  bgcolor: '#9E7B47'
                 }
               }}
             >
@@ -215,154 +208,32 @@ const Wishlist = () => {
             </Button>
           </Paper>
         ) : (
-          <Grid container spacing={{ xs: 1.5, sm: 3 }}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             {wishlistItems.map((item) => {
               const productId = item._id || item.id
-              const displayPrice = item.discountedPrice || item.price
-              const originalPrice = item.price && item.discountedPrice ? item.price : item.originalPrice
-
               return (
-                <Grid item xs={6} sm={6} md={4} lg={3} key={productId}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: 3,
-                      bgcolor: 'white',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                      transition: 'all 0.3s ease',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      '&:hover': {
-                        transform: 'translateY(-6px)',
-                        boxShadow: '0 12px 24px rgba(0,0,0,0.12)'
-                      }
-                    }}
-                  >
-                    {/* Delete button */}
-                    <Tooltip title="Remove from wishlist" arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleRemoveFromWishlist(productId)}
-                        sx={{
-                          position: 'absolute',
-                          top: 10,
-                          right: 10,
-                          zIndex: 2,
-                          bgcolor: 'rgba(255, 255, 255, 0.9)',
-                          backdropFilter: 'blur(4px)',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                          color: '#E53E3E',
-                          '&:hover': {
-                            bgcolor: '#FFF5F5',
-                            color: '#C53030'
-                          }
-                        }}
-                      >
-                        <DeleteOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-
-                    {/* Image */}
-                    <Box
+                <Grid item xs={12} sm={6} md={4} lg={3} key={productId}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <ProductCard item={item} />
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<ShoppingCartIcon />}
+                      onClick={() => handleAddToCart(item)}
                       sx={{
-                        height: 200,
-                        overflow: 'hidden',
-                        bgcolor: '#F7FAFC',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        p: 2
+                        borderRadius: '12px',
+                        py: 1.2,
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        fontSize: '0.9rem',
+                        bgcolor: '#B8925A',
+                        boxShadow: '0 2px 8px rgba(184, 146, 90, 0.2)',
+                        '&:hover': { bgcolor: '#9E7B47' }
                       }}
-                      onClick={() => navigate(`/product/${productId}`)}
                     >
-                      <CardMedia
-                        component="img"
-                        image={getProductImage(item)}
-                        alt={item.name}
-                        sx={{
-                          height: '100%',
-                          maxWidth: '100%',
-                          objectFit: 'contain',
-                          transition: 'transform 0.3s ease',
-                          '&:hover': { transform: 'scale(1.06)' }
-                        }}
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'
-                        }}
-                      />
-                    </Box>
-
-                    {/* Content */}
-                    <CardContent sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                      {item.category && (
-                        <Typography variant="caption" sx={{ color: '#4F46E5', fontWeight: 700, mb: 0.5 }}>
-                          {item.category.toUpperCase()}
-                        </Typography>
-                      )}
-
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 700,
-                          lineHeight: 1.3,
-                          mb: 1,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          minHeight: '2.6em',
-                          cursor: 'pointer',
-                          '&:hover': { color: '#4F46E5' }
-                        }}
-                        onClick={() => navigate(`/product/${productId}`)}
-                      >
-                        {item.name}
-                      </Typography>
-
-                      <Box sx={{ mt: 'auto', pt: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 800, color: '#1A202C' }}>
-                            ₹{typeof displayPrice === 'number' ? displayPrice.toLocaleString() : displayPrice}
-                          </Typography>
-                          {originalPrice && originalPrice > displayPrice && (
-                            <Typography
-                              variant="body2"
-                              sx={{ color: '#A0AEC0', textDecoration: 'line-through' }}
-                            >
-                              ₹{typeof originalPrice === 'number' ? originalPrice.toLocaleString() : originalPrice}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    </CardContent>
-
-                    <Divider />
-
-                    {/* Action buttons */}
-                    <CardActions sx={{ p: 1.5, gap: 1 }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        size="medium"
-                        startIcon={<ShoppingCartIcon />}
-                        onClick={() => handleAddToCart(item)}
-                        sx={{
-                          borderRadius: 2,
-                          py: 1,
-                          fontWeight: 700,
-                          textTransform: 'none',
-                          bgcolor: '#4F46E5',
-                          '&:hover': { bgcolor: '#4338CA' }
-                        }}
-                      >
-                        Add to Cart
-                      </Button>
-                    </CardActions>
-                  </Card>
+                      Add to Cart
+                    </Button>
+                  </Box>
                 </Grid>
               )
             })}

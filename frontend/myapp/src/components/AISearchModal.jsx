@@ -85,248 +85,217 @@ export default function AISearchModal({ open, onClose }) {
         <Dialog open={open} onClose={onClose} className="relative z-50">
             <DialogBackdrop
                 transition
-                className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity duration-300 ease-out data-closed:opacity-0"
+                className="fixed inset-0 bg-text-primary/40 backdrop-blur-md transition-opacity duration-300 ease-out data-closed:opacity-0"
             />
 
-            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 sm:pt-20">
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-2.5 sm:p-4 pt-4 sm:pt-20 overflow-y-auto">
                 <DialogPanel
                     transition
-                    className="w-full max-w-3xl transform rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5 transition duration-300 ease-out data-closed:scale-95 data-closed:opacity-0"
+                    className="w-full max-w-3xl transform rounded-2xl bg-surface p-4 sm:p-6 shadow-card border border-border-light transition duration-300 ease-out data-closed:scale-95 data-closed:opacity-0 my-auto sm:my-0 max-h-[92vh] flex flex-col"
                 >
                     {/* Header & Mode Switcher */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                        <div className="flex items-center space-x-2">
-                            <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white shadow-md shadow-indigo-200">
-                                <SparklesIcon className="h-5 w-5 animate-pulse" />
+                    <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border-light gap-2">
+                        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                            <div className="p-2 sm:p-2.5 bg-accent rounded-xl text-white shadow-soft shrink-0">
+                                <SparklesIcon className="h-4 sm:h-5 w-4 sm:w-5 animate-pulse" />
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-1.5">
-                                    Smart Search
-                                    <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
-                                        ✨ AI Powered
+                            <div className="min-w-0">
+                                <h3 className="font-heading text-base sm:text-lg font-semibold text-text-primary flex items-center gap-1.5 sm:gap-2">
+                                    <span className="truncate">Smart Search</span>
+                                    <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-accent-light text-accent font-semibold border border-accent/30 shrink-0">
+                                        ✨ AI
                                     </span>
                                 </h3>
-                                <p className="text-xs text-gray-500">Natural language search, auto filter detection & smart matching</p>
+                                <p className="text-[11px] sm:text-xs text-text-secondary truncate hidden sm:block">Natural language search, auto filter detection & smart matching</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                             {/* Mode Toggle Button */}
                             <button
                                 type="button"
                                 onClick={() => setIsAiMode(!isAiMode)}
-                                className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${
+                                className={`text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 ${
                                     isAiMode
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-xs'
-                                        : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200'
+                                        ? 'bg-accent-light border-accent/40 text-accent shadow-xs'
+                                        : 'bg-surface-muted border-border-light text-text-secondary hover:text-text-primary'
                                 }`}
                             >
                                 <SparklesIcon className="h-3.5 w-3.5" />
-                                {isAiMode ? 'AI Mode ON' : 'Standard Search'}
+                                <span>{isAiMode ? 'AI Mode' : 'Standard'}</span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                className="rounded-xl p-1.5 text-text-secondary hover:bg-surface-muted hover:text-text-primary transition-colors"
                             >
-                                <XMarkIcon className="h-6 w-6" />
+                                <XMarkIcon className="h-5 sm:h-6 w-5 sm:w-6" />
                             </button>
                         </div>
                     </div>
 
                     {/* Search Input */}
-                    <form onSubmit={handleFormSubmit} className="mt-4 relative">
+                    <form onSubmit={handleFormSubmit} className="mt-3 sm:mt-4 relative shrink-0">
                         <div className="relative flex items-center">
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={isAiMode ? "Ask AI e.g. 'Red sports shoes under ₹2,000' or 'cotton dress for summer'..." : "Search products..."}
-                                className="w-full rounded-xl border-2 border-indigo-100 pl-12 pr-28 py-3.5 text-base text-gray-900 placeholder-gray-400 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 transition-all shadow-inner"
+                                placeholder={isAiMode ? "Ask AI e.g. 'Red sports shoes under ₹2,000'..." : "Search products..."}
+                                className="w-full rounded-xl border border-border-light bg-background pl-9 sm:pl-12 pr-20 sm:pr-28 py-2.5 sm:py-3.5 text-xs sm:text-base text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-xs"
                                 autoFocus
                             />
-                            <div className="absolute left-3.5 text-indigo-500">
+                            <div className="absolute left-3 text-accent">
                                 {isAiMode ? (
-                                    <SparklesIcon className="h-6 w-6 animate-pulse" />
+                                    <SparklesIcon className="h-4 sm:h-6 w-4 sm:w-6 animate-pulse" />
                                 ) : (
-                                    <MagnifyingGlassIcon className="h-6 w-6 text-gray-400" />
+                                    <MagnifyingGlassIcon className="h-4 sm:h-6 w-4 sm:w-6 text-text-secondary" />
                                 )}
                             </div>
                             <button
                                 type="submit"
                                 disabled={!searchQuery.trim()}
-                                className="absolute right-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium text-sm rounded-lg transition-colors flex items-center gap-1 shadow-md shadow-indigo-200"
+                                className="absolute right-1.5 sm:right-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold text-xs sm:text-sm rounded-lg transition-all flex items-center gap-1 shadow-soft"
                             >
                                 Search
-                                <ArrowRightIcon className="h-4 w-4" />
+                                <ArrowRightIcon className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
                             </button>
                         </div>
                     </form>
 
-                    {/* Quick AI Sample Prompts */}
-                    {!searchQuery && (
-                        <div className="mt-5">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">
-                                <SparklesIcon className="h-3.5 w-3.5 text-indigo-500" />
-                                Try asking AI
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                {samplePrompts.map((prompt, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handlePromptClick(prompt)}
-                                        className="text-xs px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700 transition-all font-medium flex items-center gap-1 shadow-xs"
-                                    >
-                                        {prompt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* AI Intent Breakdown Card */}
-                    {aiMetadata && (
-                        <div className="mt-4 p-3.5 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 border border-indigo-100 rounded-xl text-xs space-y-2">
-                            <div className="flex items-center justify-between">
-                                <span className="font-semibold text-indigo-900 flex items-center gap-1">
-                                    <SparklesIcon className="h-4 w-4 text-indigo-600" />
-                                    AI Search Explanation:
-                                </span>
-                                {aiMetadata.isAiPowered && (
-                                    <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full border border-purple-200">
-                                        Gemini 1.5 Flash
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-gray-700 font-medium italic">{aiMetadata.explanation}</p>
-
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                                {aiMetadata.category && (
-                                    <span className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-700 font-semibold">
-                                        Category: {aiMetadata.category}
-                                    </span>
-                                )}
-                                {aiMetadata.color && (
-                                    <span className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-700 font-semibold capitalize">
-                                        Color: {aiMetadata.color}
-                                    </span>
-                                )}
-                                {(aiMetadata.maxPrice || aiMetadata.minPrice) && (
-                                    <span className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-emerald-700 font-semibold">
-                                        Price: {aiMetadata.minPrice ? `₹${aiMetadata.minPrice}` : '₹0'} - {aiMetadata.maxPrice ? `₹${aiMetadata.maxPrice}` : 'Any'}
-                                    </span>
-                                )}
-                                {aiMetadata.sort && (
-                                    <span className="px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-700 font-semibold">
-                                        Sort: {aiMetadata.sort} ({aiMetadata.order})
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Suggested Queries */}
-                            {aiMetadata.suggestedQueries && aiMetadata.suggestedQueries.length > 0 && (
-                                <div className="pt-2 border-t border-indigo-100/60 flex items-center gap-2">
-                                    <span className="text-gray-500 font-medium shrink-0">Related:</span>
-                                    <div className="flex flex-wrap gap-1">
-                                        {aiMetadata.suggestedQueries.map((sq, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setSearchQuery(sq)}
-                                                className="text-[11px] text-indigo-600 hover:text-indigo-800 underline decoration-indigo-300 font-medium"
-                                            >
-                                                "{sq}"
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Results Container */}
-                    {(loading || results.length > 0 || (searchQuery.trim().length >= 2 && !loading)) && (
-                        <div className="mt-4 border-t border-gray-100 pt-4 max-h-[340px] overflow-y-auto pr-1">
-                            {loading ? (
-                                <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="relative">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-3 border-indigo-600 border-t-transparent"></div>
-                                        <SparklesIcon className="h-4 w-4 text-purple-600 absolute inset-0 m-auto animate-pulse" />
-                                    </div>
-                                    <span className="mt-3 text-sm text-gray-500 font-medium">AI is analyzing catalog...</span>
-                                </div>
-                            ) : results.length > 0 ? (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between px-1 mb-1">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                            Found {results.length} matching products
-                                        </span>
-                                    </div>
-                                    {results.map((product) => {
-                                        const productImg = product.image || product.images?.[0]?.src || 'https://via.placeholder.com/60x60?text=No+Image';
-                                        const fullImgUrl = productImg.startsWith('http') ? productImg : `${import.meta.env.VITE_API_URL}${productImg}`;
-                                        return (
-                                            <div
-                                                key={product._id}
-                                                onClick={() => {
-                                                    navigate(`/product/${product._id}`)
-                                                    onClose()
-                                                }}
-                                                className="group flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all cursor-pointer"
-                                            >
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <img
-                                                        src={fullImgUrl}
-                                                        alt={product.name}
-                                                        className="w-12 h-12 object-contain rounded-lg bg-gray-50 border border-gray-200 group-hover:scale-105 transition-transform"
-                                                        onError={(e) => {
-                                                            e.target.src = 'https://via.placeholder.com/60x60?text=No+Image'
-                                                        }}
-                                                    />
-                                                    <div className="min-w-0">
-                                                        <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                                                            {product.name}
-                                                        </h4>
-                                                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                                                            <span className="bg-gray-100 px-2 py-0.5 rounded capitalize">{product.category}</span>
-                                                            {product.colors && product.colors.length > 0 && (
-                                                                <span className="text-gray-400">• {product.colors[0].name}</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-right shrink-0 ml-3">
-                                                    <div className="text-sm font-bold text-gray-900">
-                                                        ₹{(product.discountedPrice || product.price)?.toLocaleString()}
-                                                    </div>
-                                                    {product.discount > 0 && (
-                                                        <div className="text-xs text-emerald-600 font-semibold">
-                                                            {product.discount}% OFF
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-
-                                    <div className="pt-2 border-t border-gray-100">
+                    {/* Scrollable Container for Prompts, Intent & Results */}
+                    <div className="overflow-y-auto flex-1 mt-3 sm:mt-4 pr-0.5 space-y-3 sm:space-y-4">
+                        {/* Quick AI Sample Prompts */}
+                        {!searchQuery && (
+                            <div>
+                                <p className="text-[11px] sm:text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <SparklesIcon className="h-3.5 w-3.5 text-accent" />
+                                    Try asking AI
+                                </p>
+                                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                                    {samplePrompts.map((prompt, idx) => (
                                         <button
-                                            onClick={handleFormSubmit}
-                                            className="w-full text-center py-2.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                                            key={idx}
+                                            onClick={() => handlePromptClick(prompt)}
+                                            className="text-[11px] sm:text-xs px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-surface-muted border border-border-light hover:border-accent hover:bg-accent-light hover:text-accent text-text-primary transition-all font-medium flex items-center gap-1 shadow-xs"
                                         >
-                                            View all AI results in store page
-                                            <ArrowRightIcon className="h-3.5 w-3.5" />
+                                            {prompt}
                                         </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* AI Intent Breakdown Card */}
+                        {aiMetadata && (
+                            <div className="p-3 sm:p-4 bg-accent-light/50 border border-accent/20 rounded-xl text-xs space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-text-primary flex items-center gap-1 text-xs">
+                                        <SparklesIcon className="h-3.5 w-3.5 text-accent" />
+                                        AI Search Explanation:
+                                    </span>
+                                    {aiMetadata.isAiPowered && (
+                                        <span className="text-[10px] bg-accent/10 text-accent font-bold px-2 py-0.5 rounded-full border border-accent/20">
+                                            Gemini 1.5
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-text-secondary font-medium italic text-[11px] sm:text-xs">{aiMetadata.explanation}</p>
+
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                    {aiMetadata.category && (
+                                        <span className="px-2 py-0.5 rounded-md bg-surface border border-border-light text-accent font-semibold text-[10px] sm:text-xs">
+                                            Category: {aiMetadata.category}
+                                        </span>
+                                    )}
+                                    {aiMetadata.color && (
+                                        <span className="px-2 py-0.5 rounded-md bg-surface border border-border-light text-accent font-semibold capitalize text-[10px] sm:text-xs">
+                                            Color: {aiMetadata.color}
+                                        </span>
+                                    )}
+                                    {(aiMetadata.maxPrice || aiMetadata.minPrice) && (
+                                        <span className="px-2 py-0.5 rounded-md bg-surface border border-border-light text-success font-semibold text-[10px] sm:text-xs">
+                                            Price: {aiMetadata.minPrice ? `₹${aiMetadata.minPrice}` : '₹0'} - {aiMetadata.maxPrice ? `₹${aiMetadata.maxPrice}` : 'Any'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Results Container */}
+                        {(loading || results.length > 0 || (searchQuery.trim().length >= 2 && !loading)) && (
+                            <div className="border-t border-border-light pt-3 space-y-2">
+                                {loading ? (
+                                    <div className="flex flex-col items-center justify-center py-6">
+                                        <div className="animate-spin rounded-full h-7 w-7 border-2 border-accent border-t-transparent"></div>
+                                        <span className="mt-2 text-xs text-text-secondary font-medium">AI is analyzing catalog...</span>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500 text-sm">
-                                    No products matching your AI search query. Try simplifying your search!
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                ) : results.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between px-1 mb-1">
+                                            <span className="text-[11px] sm:text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                                Found {results.length} matching products
+                                            </span>
+                                        </div>
+                                        {results.map((product) => {
+                                            const productImg = product.image || product.images?.[0]?.src || 'https://via.placeholder.com/60x60?text=No+Image';
+                                            const fullImgUrl = productImg.startsWith('http') ? productImg : `${import.meta.env.VITE_API_URL}${productImg}`;
+                                            return (
+                                                <div
+                                                    key={product._id}
+                                                    onClick={() => {
+                                                        navigate(`/product/${product._id}`)
+                                                        onClose()
+                                                    }}
+                                                    className="group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-border-light hover:border-accent hover:bg-accent-light/30 transition-all cursor-pointer"
+                                                >
+                                                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                                        <img
+                                                            src={fullImgUrl}
+                                                            alt={product.name}
+                                                            className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-lg bg-background border border-border-light group-hover:scale-105 transition-transform shrink-0"
+                                                            onError={(e) => {
+                                                                e.target.src = 'https://via.placeholder.com/60x60?text=No+Image'
+                                                            }}
+                                                        />
+                                                        <div className="min-w-0">
+                                                            <h4 className="font-heading text-xs sm:text-sm font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
+                                                                {product.name}
+                                                            </h4>
+                                                            <div className="flex items-center gap-1.5 text-[11px] text-text-secondary mt-0.5">
+                                                                <span className="bg-surface-muted px-1.5 py-0.5 rounded capitalize text-[10px]">{product.category}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-right shrink-0 ml-2">
+                                                        <div className="text-xs sm:text-sm font-bold text-accent">
+                                                            ₹{(product.discountedPrice || product.price)?.toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+
+                                        <div className="pt-2 border-t border-border-light">
+                                            <button
+                                                onClick={handleFormSubmit}
+                                                className="w-full text-center py-2 text-xs font-semibold text-accent hover:bg-accent-light rounded-xl transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                View all AI results in store page
+                                                <ArrowRightIcon className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 text-text-secondary text-xs">
+                                        No products matching your search query.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </DialogPanel>
             </div>
         </Dialog>

@@ -158,7 +158,7 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
         >
             <div
                 ref={mainImageRef}
-                className={`relative bg-gray-50 rounded-xl overflow-hidden group ${fullscreen ? 'w-full h-full' : ''
+                className={`relative bg-surface border border-border-light rounded-2xl overflow-hidden shadow-soft group ${fullscreen ? 'w-full h-full' : ''
                     }`}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
@@ -167,8 +167,8 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
             >
                 {/* Loading spinner */}
                 {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
+                        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 )}
 
@@ -197,9 +197,9 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
                         <button
                             onClick={prevImage}
                             aria-label="Previous image"
-                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white shadow rounded-full p-2 opacity-80 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-surface/90 backdrop-blur-sm border border-border-light shadow-sm rounded-full p-2.5 opacity-80 hover:opacity-100 transition-all focus:outline-none focus:ring-2 focus:ring-accent"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
@@ -207,9 +207,9 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
                         <button
                             onClick={nextImage}
                             aria-label="Next image"
-                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white shadow rounded-full p-2 opacity-80 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-surface/90 backdrop-blur-sm border border-border-light shadow-sm rounded-full p-2.5 opacity-80 hover:opacity-100 transition-all focus:outline-none focus:ring-2 focus:ring-accent"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
@@ -282,12 +282,12 @@ export default function ProductImageGallery({ mainImage, images = [], productNam
                                 setSelectedIndex(index);
                                 setLoading(true);
                             }}
-                            className={`aspect-square min-w-[80px] rounded-lg overflow-hidden transition-all duration-200 flex-shrink-0
+                            className={`aspect-square min-w-[80px] rounded-xl overflow-hidden transition-all duration-200 flex-shrink-0
                                 ${selectedIndex === index
-                                    ? "ring-2 ring-indigo-500"
-                                    : "ring-1 ring-gray-300 hover:ring-indigo-400"
+                                    ? "ring-2 ring-accent border-transparent"
+                                    : "border border-border-light hover:border-accent"
                                 }
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                focus:outline-none focus:ring-2 focus:ring-accent
                             `}
                         >
                             {imageErrors[index] ? (

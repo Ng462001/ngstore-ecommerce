@@ -272,12 +272,12 @@ const Orders = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
-                        Orders
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                        Order Management
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Manage and track customer orders ({filteredOrders.length} of {orders.length} orders)
                     </Typography>
                 </div>
@@ -285,19 +285,28 @@ const Orders = () => {
                     variant="outlined"
                     startIcon={<Refresh />}
                     onClick={fetchOrders}
+                    sx={{
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderColor: '#E7E4DD',
+                        color: '#1C1B19',
+                        bgcolor: '#FFFFFF',
+                        '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                    }}
                 >
                     Refresh
                 </Button>
             </div>
 
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-2xl">
                     Error loading orders: {error}
                 </div>
             )}
 
             {/* Filter Bar */}
-            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.04)', bgcolor: 'white' }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={4}>
                         <TextField
@@ -308,8 +317,8 @@ const Orders = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             InputProps={{
-                                startAdornment: <Search sx={{ color: '#94a3b8', mr: 1 }} />,
-                                sx: { borderRadius: 2 }
+                                startAdornment: <Search sx={{ color: '#6B6862', mr: 1 }} />,
+                                sx: { borderRadius: '12px' }
                             }}
                         />
                     </Grid>
@@ -320,7 +329,7 @@ const Orders = () => {
                                 value={statusFilter}
                                 label="Order Status"
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                sx={{ borderRadius: 2 }}
+                                sx={{ borderRadius: '12px' }}
                             >
                                 <MenuItem value="All">All Statuses</MenuItem>
                                 <MenuItem value="Pending">Pending</MenuItem>
@@ -339,7 +348,7 @@ const Orders = () => {
                                 value={paymentFilter}
                                 label="Payment"
                                 onChange={(e) => setPaymentFilter(e.target.value)}
-                                sx={{ borderRadius: 2 }}
+                                sx={{ borderRadius: '12px' }}
                             >
                                 <MenuItem value="All">All Payment</MenuItem>
                                 <MenuItem value="Paid">Paid</MenuItem>
@@ -356,7 +365,7 @@ const Orders = () => {
                             InputLabelProps={{ shrink: true }}
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6} md={2}>
@@ -368,7 +377,7 @@ const Orders = () => {
                             InputLabelProps={{ shrink: true }}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            InputProps={{ sx: { borderRadius: 2 } }}
+                            InputProps={{ sx: { borderRadius: '12px' } }}
                         />
                     </Grid>
                 </Grid>
@@ -378,7 +387,6 @@ const Orders = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Button
                             size="small"
-                            color="secondary"
                             onClick={() => {
                                 setSearchQuery('');
                                 setStatusFilter('All');
@@ -386,7 +394,7 @@ const Orders = () => {
                                 setStartDate('');
                                 setEndDate('');
                             }}
-                            sx={{ textTransform: 'none', fontWeight: 600 }}
+                            sx={{ textTransform: 'none', fontWeight: 600, color: '#B3413B' }}
                         >
                             Clear Filters
                         </Button>
@@ -394,56 +402,56 @@ const Orders = () => {
                 )}
             </Paper>
 
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', overflow: 'hidden' }}>
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
-                            <CircularProgress />
+                            <CircularProgress sx={{ color: '#B8925A' }} />
                         </div>
                     ) : filteredOrders.length === 0 ? (
                         <div className="text-center py-12">
-                            <Typography className="text-gray-500">
+                            <Typography sx={{ color: '#6B6862' }}>
                                 {orders.length === 0 ? 'No orders found' : 'No orders found matching the filter criteria'}
                             </Typography>
                         </div>
                     ) : (
                         <TableContainer>
                             <Table>
-                                <TableHead className="bg-gray-50">
+                                <TableHead sx={{ bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
                                     <TableRow>
-                                        <TableCell className="font-bold">Order ID</TableCell>
-                                        <TableCell className="font-bold">Customer</TableCell>
-                                        <TableCell className="font-bold">Date</TableCell>
-                                        <TableCell className="font-bold">Amount</TableCell>
-                                        <TableCell className="font-bold">Items</TableCell>
-                                        <TableCell className="font-bold">Payment</TableCell>
-                                        <TableCell className="font-bold">Status</TableCell>
-                                        <TableCell className="font-bold" align="center">Actions</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Order ID</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Customer</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Date</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Amount</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Items</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Payment</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Status</TableCell>
+                                        <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }} align="center">Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {filteredOrders.map((order) => (
-                                        <TableRow key={order._id} className="hover:bg-gray-50">
+                                        <TableRow key={order._id} sx={{ '&:hover': { bgcolor: '#FAF9F6' }, borderBottom: '1px solid #E7E4DD' }}>
                                             <TableCell>
-                                                <Typography variant="body1" className="font-medium">
+                                                <Typography variant="body1" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                                     #{order._id.substring(0, 8).toUpperCase()}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>
                                                 <div>
-                                                    <Typography variant="body2" className="font-medium">
+                                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1C1B19' }}>
                                                         {order.user?.name || order.shippingAddress?.city || 'N/A'}
                                                     </Typography>
-                                                    <Typography variant="caption" className="text-gray-500">
+                                                    <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                                         {order.user?.email || order.shippingAddress?.mobile || ''}
                                                     </Typography>
                                                 </div>
                                             </TableCell>
-                                            <TableCell>{formatDate(order.createdAt)}</TableCell>
-                                            <TableCell className="font-medium">
+                                            <TableCell sx={{ color: '#6B6862' }}>{formatDate(order.createdAt)}</TableCell>
+                                            <TableCell sx={{ color: '#B8925A', fontWeight: 700 }}>
                                                 ₹{order.totalPrice?.toFixed(2) || '0.00'}
                                             </TableCell>
-                                            <TableCell>{order.orderItems?.length || 0}</TableCell>
+                                            <TableCell sx={{ color: '#1C1B19', fontWeight: 600 }}>{order.orderItems?.length || 0}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={order.paymentStatus}

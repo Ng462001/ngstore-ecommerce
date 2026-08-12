@@ -196,38 +196,38 @@ const Profile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
                 {/* Header Section */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-                    <p className="text-gray-600">Manage your personal information and preferences</p>
+                <div className="text-center mb-10">
+                    <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-text-primary mb-2">My Account</h1>
+                    <p className="text-text-secondary text-base">Manage your personal information and preferences</p>
                 </div>
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Sidebar Navigation */}
                     <div className="lg:col-span-4">
-                        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 sticky top-6">
+                        <div className="bg-surface rounded-2xl shadow-soft p-4 sm:p-6 sticky top-24 border border-border-light">
                             {/* User Avatar */}
                             <div className="text-center mb-4 sm:mb-6">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-accent rounded-full flex items-center justify-center text-white text-2xl font-heading font-semibold mx-auto mb-3 shadow-soft">
                                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                 </div>
-                                <h2 className="font-semibold text-gray-900">{user.name}</h2>
-                                <p className="text-sm text-gray-500">{user.email}</p>
-                                <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                    {user.role === 'user' && 'User'}
+                                <h2 className="font-heading text-lg font-semibold text-text-primary">{user.name}</h2>
+                                <p className="text-xs text-text-secondary">{user.email}</p>
+                                <span className="inline-block mt-2 px-3 py-0.5 bg-accent-light text-accent text-xs font-semibold rounded-full border border-accent/20 capitalize">
+                                    {user.role}
                                 </span>
                             </div>
 
                             {/* Navigation Tabs */}
-                            <nav className="flex lg:flex-col overflow-x-auto gap-2 lg:gap-0 lg:space-y-2 mb-4 sm:mb-6 pb-2 lg:pb-0 no-scrollbar">
+                            <nav className="flex lg:flex-col overflow-x-auto gap-2 lg:gap-0 lg:space-y-1.5 mb-4 sm:mb-6 pb-2 lg:pb-0 no-scrollbar">
                                 <button
                                     onClick={() => setActiveTab('profile')}
                                     className={`shrink-0 lg:w-full text-left px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 ${activeTab === 'profile'
-                                        ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-accent-light text-accent border border-accent/30 font-semibold'
+                                        : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
                                         }`}
                                 >
                                     <div className="flex items-center whitespace-nowrap">
@@ -240,8 +240,8 @@ const Profile = () => {
                                 <button
                                     onClick={() => setActiveTab('address')}
                                     className={`shrink-0 lg:w-full text-left px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 ${activeTab === 'address'
-                                        ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-accent-light text-accent border border-accent/30 font-semibold'
+                                        : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
                                         }`}
                                 >
                                     <div className="flex items-center whitespace-nowrap">
@@ -255,8 +255,8 @@ const Profile = () => {
                                 <button
                                     onClick={() => setActiveTab('password')}
                                     className={`shrink-0 lg:w-full text-left px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 ${activeTab === 'password'
-                                        ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-accent-light text-accent border border-accent/30 font-semibold'
+                                        : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
                                         }`}
                                 >
                                     <div className="flex items-center whitespace-nowrap">
@@ -269,8 +269,8 @@ const Profile = () => {
                                 <button
                                     onClick={() => setActiveTab('requests')}
                                     className={`shrink-0 lg:w-full text-left px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 ${activeTab === 'requests'
-                                        ? 'bg-blue-50 text-blue-600 border border-blue-200 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-accent-light text-accent border border-accent/30 font-semibold'
+                                        : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
                                         }`}
                                 >
                                     <div className="flex items-center whitespace-nowrap">
@@ -304,12 +304,12 @@ const Profile = () => {
                     <div className="lg:col-span-8">
                         {/* Profile Information */}
                         {activeTab === 'profile' && (
-                            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                                <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                            <div className="bg-surface rounded-2xl shadow-soft border border-border-light overflow-hidden">
+                                <div className="bg-surface-muted border-b border-border-light px-6 py-4">
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-white">Personal Information</h3>
-                                            <p className="text-blue-100 text-sm">Your basic profile details</p>
+                                            <h3 className="font-heading text-lg font-semibold text-text-primary">Personal Information</h3>
+                                            <p className="text-text-secondary text-xs">Your basic profile details</p>
                                         </div>
                                     </div>
                                 </div>
@@ -358,18 +358,18 @@ const Profile = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-end space-x-4 pt-4">
+                                                 <div className="flex justify-end space-x-4 pt-4">
                                                     <button
                                                         type="button"
                                                         onClick={handleCancelEdit}
-                                                        className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all duration-200"
+                                                        className="px-6 py-2.5 border border-border-light text-text-secondary font-medium rounded-xl hover:bg-surface-muted transition-all duration-200 text-sm"
                                                         disabled={isLoading}
                                                     >
                                                         Cancel
                                                     </button>
                                                     <button
                                                         type="submit"
-                                                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
+                                                        className="px-6 py-2.5 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-soft disabled:opacity-50"
                                                         disabled={isLoading}
                                                     >
                                                         {isLoading ? (
@@ -384,68 +384,68 @@ const Profile = () => {
                                         </form>
                                     ) : (
                                         <div className="space-y-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Full Name</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <p className="text-gray-900 font-medium">{user.name}</p>
-                                                    </div>
-                                                </div>
+                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Full Name</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light">
+                                                         <p className="text-text-primary font-medium text-sm">{user.name}</p>
+                                                     </div>
+                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Email Address</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <p className="text-gray-900 font-medium">{user.email}</p>
-                                                    </div>
-                                                </div>
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Email Address</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light">
+                                                         <p className="text-text-primary font-medium text-sm">{user.email}</p>
+                                                     </div>
+                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Phone Number</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <p className="text-gray-900 font-medium">{user.phone || 'Not provided'}</p>
-                                                    </div>
-                                                </div>
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Phone Number</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light">
+                                                         <p className="text-text-primary font-medium text-sm">{user.phone || 'Not provided'}</p>
+                                                     </div>
+                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Account Role</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 capitalize">
-                                                            {user.role}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Account Role</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light flex items-center">
+                                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-accent-light text-accent border border-accent/30 capitalize">
+                                                             ✨ {user.role || 'customer'}
+                                                         </span>
+                                                     </div>
+                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Member Since</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <p className="text-gray-900 font-medium">
-                                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric'
-                                                            }) : 'N/A'}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Member Since</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light">
+                                                         <p className="text-text-primary font-medium text-sm">
+                                                             {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                                                                 year: 'numeric',
+                                                                 month: 'long',
+                                                                 day: 'numeric'
+                                                             }) : 'N/A'}
+                                                         </p>
+                                                     </div>
+                                                 </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="text-sm font-medium text-gray-500">Last Updated</label>
-                                                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <p className="text-gray-900 font-medium">
-                                                            {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', {
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric'
-                                                            }) : 'N/A'}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                                 <div className="space-y-1">
+                                                     <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Last Updated</label>
+                                                     <div className="p-3 bg-background rounded-xl border border-border-light">
+                                                         <p className="text-text-primary font-medium text-sm">
+                                                             {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', {
+                                                                 year: 'numeric',
+                                                                 month: 'long',
+                                                                 day: 'numeric'
+                                                             }) : 'N/A'}
+                                                         </p>
+                                                     </div>
+                                                 </div>
 
-                                            </div>
-                                            <div className="flex justify-end space-x-4 ">
+                                             </div>
+                                             <div className="flex justify-end space-x-4 ">
                                                 <button
                                                     onClick={handleEditClick}
-                                                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:bg-blue-500/80 transition-all duration-200"
+                                                    className="px-5 py-2.5 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-soft"
                                                 >
                                                     Edit Profile
                                                 </button>

@@ -130,8 +130,16 @@ const UserRequests = ({ requestId }) => {
 
     return (
         <Paper elevation={0} sx={{ p: 0, bgcolor: 'transparent' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
+            <Box sx={{ borderBottom: '1px solid #E7E4DD', mb: 4 }}>
+                <Tabs
+                    value={activeTab}
+                    onChange={(e, v) => setActiveTab(v)}
+                    TabIndicatorProps={{ style: { backgroundColor: '#B8925A' } }}
+                    sx={{
+                        '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, color: '#6B6862' },
+                        '& .Mui-selected': { color: '#B8925A !important' }
+                    }}
+                >
                     <Tab label="Support Tickets" icon={<Assignment fontSize="small" />} iconPosition="start" />
                     <Tab label="Returns & Exchanges" icon={<SyncIcon fontSize="small" />} iconPosition="start" />
                 </Tabs>
@@ -141,34 +149,35 @@ const UserRequests = ({ requestId }) => {
             {activeTab === 0 && (
                 <Box>
                     {tickets.length === 0 && !loading ? (
-                        <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                        <Typography sx={{ textAlign: 'center', py: 6, color: '#6B6862' }}>
                             You haven't submitted any support tickets yet.
                         </Typography>
                     ) : (
                         tickets.map(ticket => (
-                            <Paper key={ticket._id} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+                            <Paper elevation={0} key={ticket._id} sx={{ p: 3, mb: 2.5, borderRadius: '16px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 16px -2px rgba(28, 27, 25, 0.04)' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                     <Box>
-                                        <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>
+                                        <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, fontSize: '1.1rem', mb: 0.5, color: '#1C1B19' }}>
                                             {ticket.subject}
                                         </Typography>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                                 Ticket Id: #{ticket._id.slice(0, 8).toUpperCase()}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                                 • {new Date(ticket.createdAt).toLocaleDateString()}
                                             </Typography>
-                                            <Chip label={ticket.category} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                            <Chip label={ticket.category} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', borderColor: '#E7E4DD', color: '#6B6862' }} />
                                         </Box>
                                     </Box>
                                     <Chip
                                         label={ticket.status}
                                         color={ticket.status === 'Resolved' ? 'success' : ticket.status === 'Closed' ? 'default' : 'primary'}
                                         size="small"
+                                        sx={{ fontWeight: 600 }}
                                     />
                                 </Box>
-                                <Typography variant="body2" color="text.secondary" paragraph>
+                                <Typography variant="body2" sx={{ color: '#6B6862', mb: 2 }}>
                                     {ticket.message.substring(0, 100)}...
                                 </Typography>
                                 <Button
@@ -178,6 +187,7 @@ const UserRequests = ({ requestId }) => {
                                         setSelectedTicket(ticket);
                                         setOpenDialog(true);
                                     }}
+                                    sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, borderColor: '#B8925A', color: '#B8925A', '&:hover': { borderColor: '#9E7B47', bgcolor: '#F7F3EC' } }}
                                 >
                                     View Conversation ({ticket.responses.length})
                                 </Button>
@@ -191,18 +201,18 @@ const UserRequests = ({ requestId }) => {
             {activeTab === 1 && (
                 <Box>
                     {returns.length === 0 && !loading ? (
-                        <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                        <Typography sx={{ textAlign: 'center', py: 6, color: '#6B6862' }}>
                             No return or exchange requests found.
                         </Typography>
                     ) : (
                         returns.map(req => (
-                            <Paper key={req._id} sx={{ p: 3, mb: 2, borderRadius: 2 }}>
+                            <Paper elevation={0} key={req._id} sx={{ p: 3, mb: 2.5, borderRadius: '16px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 16px -2px rgba(28, 27, 25, 0.04)' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                     <Box>
-                                        <Typography variant="subtitle1" fontWeight="bold">
+                                        <Typography variant="subtitle1" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                             {req.type} Request
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                             Order: #{req.order?._id.slice(0, 8).toUpperCase() || 'N/A'} • {new Date(req.createdAt).toLocaleDateString()}
                                         </Typography>
                                     </Box>
@@ -210,6 +220,7 @@ const UserRequests = ({ requestId }) => {
                                         label={req.status}
                                         color={req.status === 'Completed' ? 'success' : req.status === 'Rejected' ? 'error' : 'warning'}
                                         size="small"
+                                        sx={{ fontWeight: 600 }}
                                     />
                                 </Box>
                                 <Divider sx={{ my: 1 }} />

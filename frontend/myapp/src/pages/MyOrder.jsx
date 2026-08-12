@@ -132,13 +132,13 @@ export default function OrderHistory() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Delivered': return 'text-green-600 bg-green-50 border-green-200'
-            case 'Out for delivery': return 'text-blue-600 bg-blue-50 border-blue-200'
-            case 'Shipped': return 'text-blue-600 bg-blue-50 border-blue-200'
-            case 'Processing': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-            case 'Cancelled': return 'text-red-600 bg-red-50 border-red-200'
-            case 'Returned': return 'text-purple-600 bg-purple-50 border-purple-200'
-            default: return 'text-gray-600 bg-gray-50 border-gray-200'
+            case 'Delivered': return 'text-success bg-success/10 border-success/30'
+            case 'Out for delivery': return 'text-accent bg-accent-light border-accent/30'
+            case 'Shipped': return 'text-accent bg-accent-light border-accent/30'
+            case 'Processing': return 'text-accent bg-accent-light border-accent/30'
+            case 'Cancelled': return 'text-error bg-error/10 border-error/30'
+            case 'Returned': return 'text-text-secondary bg-surface-muted border-border-light'
+            default: return 'text-text-secondary bg-surface-muted border-border-light'
         }
     }
 
@@ -198,16 +198,16 @@ export default function OrderHistory() {
 
     if (!userInfo) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 flex items-center justify-center">
-                <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md w-full mx-4">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="min-h-screen bg-background py-16 flex items-center justify-center">
+                <div className="bg-surface p-8 rounded-2xl shadow-card text-center max-w-md w-full mx-4 border border-border-light">
+                    <div className="w-16 h-16 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-error/20">
+                        <svg className="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
-                    <p className="text-gray-600 mb-6">Please log in to access your order history.</p>
-                    <Link to="/login" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md">
+                    <h2 className="font-heading text-2xl font-semibold text-text-primary mb-3">Authentication Required</h2>
+                    <p className="text-text-secondary mb-6 text-sm">Please log in to access your order history.</p>
+                    <Link to="/login" className="inline-flex items-center px-6 py-3 bg-accent text-white font-medium rounded-xl hover:bg-accent-hover transition-all duration-200 shadow-soft">
                         Sign In to Continue
                     </Link>
                 </div>
@@ -217,33 +217,33 @@ export default function OrderHistory() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 flex justify-center items-center">
+            <div className="min-h-screen bg-background py-16 flex justify-center items-center">
                 <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-600">Loading your orders...</p>
+                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-text-secondary text-sm">Loading your orders...</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+        <div className="min-h-screen bg-background py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-3">Order History</h1>
-                    <p className="text-gray-600 text-lg">Track and manage all your orders</p>
+                <div className="text-center mb-10">
+                    <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-text-primary mb-2">Order History</h1>
+                    <p className="text-text-secondary text-base">Track and manage all your orders</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Filter Section */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 sticky top-8 border border-gray-100">
+                        <div className="bg-surface rounded-2xl shadow-soft p-4 sm:p-6 sticky top-24 border border-border-light">
                             <div className="flex justify-between items-center mb-4 lg:mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+                                <h2 className="font-heading text-lg font-semibold text-text-primary">Filters</h2>
                                 <button
                                     onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                    className="lg:hidden text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                                    className="lg:hidden text-sm font-medium text-accent hover:underline flex items-center gap-1"
                                 >
                                     {showMobileFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}
                                 </button>
@@ -251,14 +251,14 @@ export default function OrderHistory() {
                             <div className={`space-y-6 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
                                 {/* Search Filter */}
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-700 mb-3 uppercase">Search</h3>
+                                    <h3 className="text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wider">Search</h3>
                                     <div className="relative">
                                         <input
                                             type="text"
                                             placeholder="Order ID or Product Name"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                            className="w-full pl-10 pr-3 py-2 border border-border-light bg-background rounded-xl text-sm focus:ring-1 focus:ring-accent focus:border-accent transition-colors text-text-primary"
                                         />
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +315,7 @@ export default function OrderHistory() {
                                 </div>
                                 <button
                                     onClick={handleClearFilters}
-                                    className="w-full py-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors duration-200"
+                                    className="w-full py-2 text-accent hover:bg-accent-light text-sm font-medium border border-accent/30 rounded-xl transition-colors duration-200"
                                 >
                                     Clear All Filters
                                 </button>
@@ -392,18 +392,18 @@ export default function OrderHistory() {
                                                     })}
                                                 </p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-bold text-gray-900">₹{order.totalPrice}</p>
+                                             <div className="text-right">
+                                                <p className="text-2xl font-bold text-gray-900">₹{Number(order.totalPrice || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
                                                 <p className="text-sm text-gray-600">{order.orderItems.length} item{order.orderItems.length > 1 ? 's' : ''}</p>
-                                            </div>
+                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="p-4 bg-gray-50 flex justify-end">
+                                    <div className="p-4 bg-surface-muted/50 flex justify-end border-t border-border-light">
                                         <button
                                             onClick={() => navigate(`/order-details/${order._id}`)}
-                                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg hover:bg-blue-500/80 transition-all duration-200"
+                                            className="px-5 py-2.5 bg-accent hover:bg-accent-hover text-white font-medium rounded-xl transition-all duration-200 text-sm shadow-soft"
                                         >
                                             View Details
                                         </button>

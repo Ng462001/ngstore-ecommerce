@@ -36,10 +36,13 @@ function CustomStepIcon(props) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: completed ? 'success.main' : active ? 'primary.main' : 'grey.300',
-        color: active || completed ? 'white' : 'grey.600',
+        backgroundColor: completed ? '#3E7A55' : active ? '#B8925A' : '#F3F1EC',
+        border: '1px solid',
+        borderColor: completed ? '#3E7A55' : active ? '#B8925A' : '#E7E4DD',
+        color: active || completed ? 'white' : '#6B6862',
         fontSize: '0.875rem',
         fontWeight: 'bold',
+        transition: 'all 0.3s ease'
       }}
     >
       {completed ? <CheckIcon sx={{ fontSize: 16 }} /> : (stepIcons[icon - 1] || <ReturnIcon sx={{ fontSize: 16 }} />)}

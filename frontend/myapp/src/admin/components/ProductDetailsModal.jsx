@@ -123,9 +123,12 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
             fullWidth
             PaperProps={{
                 sx: {
-                    borderRadius: 2,
+                    borderRadius: '24px',
                     maxHeight: '95vh',
                     overflow: 'hidden',
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E7E4DD',
+                    boxShadow: '0 20px 40px -10px rgba(28, 27, 25, 0.15)'
                 }
             }}
         >
@@ -135,8 +138,9 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                 animate={{ opacity: 1, y: 0 }}
             >
                 <Box sx={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    bgcolor: '#FAF9F6',
+                    color: '#1C1B19',
+                    borderBottom: '1px solid #E7E4DD',
                     p: 3,
                     position: 'relative',
                     overflow: 'hidden'
@@ -156,9 +160,9 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                 sx={{
                                     width: 52,
                                     height: 52,
-                                    border: '2px solid white',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                    bgcolor: 'rgba(255,255,255,0.2)',
+                                    border: '1px solid #E7E4DD',
+                                    boxShadow: '0 4px 12px rgba(28, 27, 25, 0.08)',
+                                    bgcolor: '#F3F1EC',
                                     flexShrink: 0
                                 }}
                             />

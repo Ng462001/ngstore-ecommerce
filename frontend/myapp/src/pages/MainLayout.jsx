@@ -11,11 +11,13 @@ const MainLayout = () => {
     }, [pathname])
 
     return (
-        <>
+        <div className="bg-background text-text-primary min-h-screen flex flex-col selection:bg-accent selection:text-white font-sans antialiased">
             <Navbar />
-            <Outlet />
+            <main className="flex-grow">
+                <Outlet />
+            </main>
             <Footer />
-        </>
+        </div>
     )
 }
 

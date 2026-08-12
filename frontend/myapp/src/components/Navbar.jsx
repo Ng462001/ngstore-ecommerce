@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useMemo, useCallback } from 'react'
+import { Fragment, useState, useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -12,241 +12,405 @@ import {
   TabList,
   TabPanel,
   TabPanels,
-} from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/outline'
-import { NavLink, useNavigate } from 'react-router-dom'
-import CartDetail from './CartDetail'
-import AISearchModal from './AISearchModal'
-import { Avatar, Box, Icon, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
-import { useSelector, useDispatch } from 'react-redux'
-import { logoutUser } from '../Redux/action/action'
-import Person2Icon from '@mui/icons-material/Person2';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import LogoutIcon from '@mui/icons-material/Logout';
+} from "@headlessui/react";
+import {
+  Bars3Icon,
+  MagnifyingGlassIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+  HeartIcon,
+  SparklesIcon,
+  UserIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import { NavLink, useNavigate } from "react-router-dom";
+import CartDetail from "./CartDetail";
+import AISearchModal from "./AISearchModal";
+import {
+  Avatar,
+  Box,
+  Icon,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../Redux/action/action";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LocalMallOutlinedIcon from "@mui/icons-material/LocalMallOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 
 const navigation = {
   pages: [
-    { name: 'Home', href: '/' },
-    { name: 'Stores', href: '/store' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
+    { name: "Home", href: "/" },
+    { name: "Stores", href: "/store" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
   ],
-}
+};
 
 const userSettings = [
-  { name: 'Profile', href: '/profile', icon: Person2Icon },
-  { name: 'My Orders', href: '/my-orders', icon: ShoppingCartIcon },
-  { name: 'Logout', href: '/', icon: LogoutIcon }
-]
+  { name: "My Profile", href: "/profile", icon: PersonOutlineIcon },
+  { name: "My Orders", href: "/my-orders", icon: LocalMallOutlinedIcon },
+  { name: "Logout", href: "/", icon: LogoutOutlinedIcon },
+];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false)
-  const [cartOpen, setCartOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
-  const [anchorElUser, setAnchorElUser] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const [open, setOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [anchorElUser, setAnchorElUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Custom hook to safely get Redux state
-  const useAppSelector = (selector) => useSelector(selector)
+  const useAppSelector = (selector) => useSelector(selector);
 
   // Get wishlist items from Redux store
-  const wishlistItems = useAppSelector(state => {
-    if (!state) return []
+  const wishlistItems = useAppSelector((state) => {
+    if (!state) return [];
     if (state.productReducer) {
-      return state.productReducer.wishlistItems || []
+      return state.productReducer.wishlistItems || [];
     }
-    return state.wishlistItems || []
-  })
+    return state.wishlistItems || [];
+  });
 
-  const totalWishlistItems = wishlistItems.length
+  const totalWishlistItems = wishlistItems.length;
 
   // Get user login state from Redux
-  const isUserLoggedIn = useAppSelector(state => {
-    if (!state) return false
+  const isUserLoggedIn = useAppSelector((state) => {
+    if (!state) return false;
     if (state.productReducer) {
-      return state.productReducer.isUserLoggedIn || false
+      return state.productReducer.isUserLoggedIn || false;
     }
-    return state.isUserLoggedIn || false
-  })
+    return state.isUserLoggedIn || false;
+  });
 
   // Get user profile from Redux
-  const userProfile = useAppSelector(state => {
-    if (!state) return null
+  const userProfile = useAppSelector((state) => {
+    if (!state) return null;
     if (state.productReducer?.user) {
-      return state.productReducer.user
+      return state.productReducer.user;
     }
-    return state.user || null
-  })
+    return state.user || null;
+  });
 
   // Get cart items from Redux store
-  const cartItems = useAppSelector(state => {
-    if (!state) return []
+  const cartItems = useAppSelector((state) => {
+    if (!state) return [];
     if (state.productReducer) {
       return Array.isArray(state.productReducer)
         ? state.productReducer
-        : (state.productReducer.cartItems || [])
+        : state.productReducer.cartItems || [];
     }
-    return state.cartItems || []
-  })
+    return state.cartItems || [];
+  });
 
   // Calculate total items in cart safely
   const totalCartItems = useMemo(() => {
     return cartItems.reduce((total, item) => {
-      const quantity = Number(item?.quantity) || 0
-      return total + quantity
-    }, 0)
-  }, [cartItems])
+      const quantity = Number(item?.quantity) || 0;
+      return total + quantity;
+    }, 0);
+  }, [cartItems]);
 
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setOpen(false)
-        setCartOpen(false)
-        setSearchOpen(false)
+      if (e.key === "Escape") {
+        setOpen(false);
+        setCartOpen(false);
+        setSearchOpen(false);
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault()
-        setSearchOpen(true)
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Fetch search suggestions with debouncing
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
-      setSuggestions([])
-      return
+      setSuggestions([]);
+      return;
     }
 
     const delayDebounceFn = setTimeout(async () => {
-      setSuggestionsLoading(true)
+      setSuggestionsLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`)
-        const result = await response.json()
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`,
+        );
+        const result = await response.json();
         if (result.success && result.data) {
-          setSuggestions(result.data)
+          setSuggestions(result.data);
         } else {
-          setSuggestions([])
+          setSuggestions([]);
         }
       } catch (error) {
-        console.error('Error fetching suggestions:', error)
-        setSuggestions([])
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
       } finally {
-        setSuggestionsLoading(false)
+        setSuggestionsLoading(false);
       }
-    }, 300)
+    }, 300);
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [searchQuery])
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const handleLogout = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await dispatch(logoutUser())
-      setAnchorElUser(null)
-      navigate('/')
+      await dispatch(logoutUser());
+      setAnchorElUser(null);
+      navigate("/");
       // Only reload if needed, consider updating state instead
       setTimeout(() => {
-        window.location.reload()
-      }, 100)
+        window.location.reload();
+      }, 100);
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error("Logout failed:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [dispatch, navigate])
+  }, [dispatch, navigate]);
 
   const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget)
-  }
+    setAnchorElUser(event.currentTarget);
+  };
 
   const handleCloseUserMenu = () => {
-    setAnchorElUser(null)
-  }
+    setAnchorElUser(null);
+  };
 
-  const handleUserMenuItemClick = useCallback((setting) => {
-    handleCloseUserMenu()
-    if (setting.name === 'Logout') {
-      handleLogout()
-    } else {
-      navigate(setting.href)
-    }
-  }, [handleLogout, navigate])
+  const handleUserMenuItemClick = useCallback(
+    (setting) => {
+      handleCloseUserMenu();
+      if (setting.name === "Logout") {
+        handleLogout();
+      } else {
+        navigate(setting.href);
+      }
+    },
+    [handleLogout, navigate],
+  );
 
-  const handleSearch = useCallback((e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/store?search=${encodeURIComponent(searchQuery)}`)
-      setSearchOpen(false)
-      setSearchQuery('')
-      setSuggestions([])
-    }
-  }, [searchQuery, navigate])
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        navigate(`/store?search=${encodeURIComponent(searchQuery)}`);
+        setSearchOpen(false);
+        setSearchQuery("");
+        setSuggestions([]);
+      }
+    },
+    [searchQuery, navigate],
+  );
 
-  const renderUserMenu = () => (
-    <Box sx={{ flexGrow: 0 }}>
-      <Tooltip title="Profile">
-        <IconButton
-          onClick={handleOpenUserMenu}
-          sx={{ p: 0 }}
-          disabled={isLoading}
-          aria-label="User profile menu"
-        >
-          <Avatar
-            alt={userProfile?.name || "User"}
-            src={userProfile?.avatar}
-            sx={{ width: 32, height: 32 }}
-          />
-        </IconButton>
-      </Tooltip>
-      <Menu
-        sx={{ mt: '45px' }}
-        id="menu-appbar"
-        anchorEl={anchorElUser}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        keepMounted
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        open={Boolean(anchorElUser)}
-        onClose={handleCloseUserMenu}
-      >
-        {userSettings.map((setting) => (
-          <MenuItem
-            key={setting.name}
-            onClick={() => handleUserMenuItemClick(setting)}
-            disabled={isLoading && setting.name === 'Logout'}
+  const renderUserMenu = () => {
+    const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    const currentUser = userProfile || storedUser;
+    const rawName = currentUser?.name || currentUser?.firstName || "Account";
+    const firstName = rawName.split(" ")[0];
+    const userAvatar = currentUser?.avatar;
+
+    return (
+      <Box sx={{ flexGrow: 0 }}>
+        <Tooltip title="Account Menu">
+          <button
+            onClick={handleOpenUserMenu}
+            disabled={isLoading}
+            className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#E7E4DD] bg-[#FAF9F6] hover:bg-[#FFFFFF] hover:border-[#B8925A] transition-all duration-300 shadow-xs hover:shadow-md cursor-pointer"
+            aria-label="User account menu"
           >
-            <Typography sx={{ textAlign: 'center', width: '100%' }}>
-              <NavLink
-                to={setting.href}
-                className="block w-full hover:text-indigo-600"
-                onClick={() => setOpen(false)}
+            {/* Avatar / Initial */}
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt={firstName}
+                className="size-6 rounded-full object-cover border border-[#B8925A]"
+              />
+            ) : (
+              <div className="size-6 rounded-full bg-[#B8925A] text-white flex items-center justify-center text-xs font-semibold">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+            )}
+
+            {/* User First Name */}
+            <span className="text-xs font-semibold text-[#1C1B19] group-hover:text-[#B8925A] transition-colors">
+              {firstName}
+            </span>
+
+            {/* Caret Arrow */}
+            <ChevronDownIcon className="size-3.5 text-[#6B6862] group-hover:text-[#B8925A] transition-transform duration-200" />
+          </button>
+        </Tooltip>
+        <Menu
+          sx={{ mt: "45px" }}
+          id="menu-appbar"
+          anchorEl={anchorElUser}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          keepMounted
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+          open={Boolean(anchorElUser)}
+          onClose={handleCloseUserMenu}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              minWidth: 230,
+              borderRadius: "18px",
+              bgcolor: "#FFFFFF",
+              border: "1px solid #E7E4DD",
+              boxShadow: "0 16px 40px -4px rgba(28, 27, 25, 0.12)",
+              py: 1,
+              mt: 1,
+              overflow: "hidden",
+            },
+          }}
+        >
+          {/* User Profile Header Badge Card */}
+          <Box
+            sx={{
+              px: 2.5,
+              py: 2,
+              borderBottom: "1px solid #E7E4DD",
+              mb: 1,
+              bgcolor: "#FAF9F6",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <Avatar
+              src={userAvatar}
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: "#B8925A",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                fontSize: "1rem",
+                fontFamily: '"Playfair Display", Georgia, serif',
+                boxShadow: "0 2px 8px rgba(184, 146, 90, 0.3)",
+              }}
+            >
+              {firstName.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 600,
+                  color: "#1C1B19",
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontSize: "0.95rem",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
               >
-                <div className="flex items-center gap-2">
-                  <setting.icon sx={{ width: 24, height: 24 }} />
-                  {setting.name}
-                </div>
-              </NavLink>
-            </Typography>
-          </MenuItem>
-        ))}
-      </Menu>
-    </Box>
-  )
+                {currentUser?.name || firstName}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#B8925A",
+                  fontWeight: 600,
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  display: "block",
+                }}
+              >
+                ✨ Member
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Menu Items */}
+          {userSettings.map((setting) => {
+            const IconComponent = setting.icon;
+            const isLogout = setting.name === "Logout";
+
+            return (
+              <MenuItem
+                key={setting.name}
+                onClick={() => handleUserMenuItemClick(setting)}
+                disabled={isLoading && isLogout}
+                sx={{
+                  py: 1.2,
+                  px: 2.5,
+                  my: 0.3,
+                  borderRadius: "10px",
+                  mx: 1,
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  "&:hover": {
+                    bgcolor: isLogout ? "rgba(179, 65, 59, 0.08)" : "#FAF9F6",
+                    "& .menu-text": {
+                      color: isLogout ? "#B3413B" : "#B8925A",
+                      fontWeight: 600,
+                    },
+                    "& .menu-icon": {
+                      color: isLogout ? "#B3413B" : "#B8925A",
+                      transform: "scale(1.1)",
+                    },
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    width: "100%",
+                  }}
+                >
+                  <IconComponent
+                    className="menu-icon"
+                    sx={{
+                      fontSize: 19,
+                      color: isLogout ? "#B3413B" : "#6B6862",
+                      transition: "transform 0.2s ease, color 0.2s ease",
+                    }}
+                  />
+                  <Typography
+                    className="menu-text"
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      fontSize: "0.875rem",
+                      color: isLogout ? "#B3413B" : "#1C1B19",
+                      fontFamily: '"Inter", sans-serif',
+                      transition: "color 0.2s ease",
+                    }}
+                  >
+                    {setting.name}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            );
+          })}
+        </Menu>
+      </Box>
+    );
+  };
 
   const renderMobileMenu = () => (
     <Dialog open={open} onClose={setOpen} className="relative z-40 lg:hidden">
@@ -258,7 +422,7 @@ export default function Navbar() {
       <div className="fixed inset-0 z-40 flex">
         <DialogPanel
           transition
-          className="relative flex w-full max-w-xs transform flex-col overflow-y-auto bg-white pb-12 shadow-xl transition duration-300 ease-in-out data-closed:-translate-x-full"
+          className="relative flex w-full max-w-xs transform flex-col overflow-y-auto bg-background pb-12 shadow-card border-r border-border-light transition duration-300 ease-in-out data-closed:-translate-x-full"
         >
           <div className="flex px-4 pt-5 pb-2">
             <button
@@ -273,16 +437,19 @@ export default function Navbar() {
 
           {/* Search in mobile menu */}
           <div className="px-4 pb-4">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full rounded-md border border-gray-300 px-4 py-2 pl-10 focus:border-indigo-500 focus:ring-indigo-500"
-              />
-              <MagnifyingGlassIcon className="absolute left-3 top-2.5 size-5 text-gray-400" />
-            </form>
+            <button
+              onClick={() => {
+                setOpen(false);
+                setSearchOpen(true);
+              }}
+              className="w-full flex items-center justify-between rounded-xl border border-border-light bg-surface px-4 py-2.5 text-text-secondary text-sm hover:border-accent hover:text-accent transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <MagnifyingGlassIcon className="size-5 text-gray-400" />
+                <span>Search products...</span>
+              </div>
+              <SparklesIcon className="size-4 text-accent" />
+            </button>
           </div>
 
           <div className="space-y-6 border-t border-gray-200 px-4 py-6">
@@ -290,9 +457,15 @@ export default function Navbar() {
               <div key={page.name} className="flow-root">
                 <NavLink
                   to={page.href}
-                  className="-m-2 block p-2 font-medium text-gray-900 hover:text-indigo-600"
+                  end={page.href === "/"}
+                  className={({ isActive }) =>
+                    `-m-2 block p-2 font-medium transition-colors ${
+                      isActive
+                        ? "text-accent font-semibold bg-accent-light/40 rounded-lg"
+                        : "text-text-primary hover:text-accent"
+                    }`
+                  }
                   onClick={() => setOpen(false)}
-                  end
                 >
                   {page.name}
                 </NavLink>
@@ -301,24 +474,24 @@ export default function Navbar() {
           </div>
 
           {isUserLoggedIn ? (
-            <div className="space-y-6 border-t border-gray-200 px-4 py-6">
+            <div className="space-y-6 border-t border-border-light px-4 py-6">
               {userSettings.map((setting, index) => (
                 <div key={index} className="flow-root">
-                  {setting.name === 'Logout' ? (
+                  {setting.name === "Logout" ? (
                     <button
                       onClick={() => {
-                        setOpen(false)
-                        handleLogout()
+                        setOpen(false);
+                        handleLogout();
                       }}
-                      className="-m-2 block w-full p-2 text-left font-medium text-gray-900 hover:text-indigo-600"
+                      className="-m-2 block w-full p-2 text-left font-medium text-text-primary hover:text-accent transition-colors"
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Logging out...' : setting.name}
+                      {isLoading ? "Logging out..." : setting.name}
                     </button>
                   ) : (
                     <NavLink
                       to={setting.href}
-                      className="-m-2 block p-2 font-medium text-gray-900 hover:text-indigo-600"
+                      className="-m-2 block p-2 font-medium text-text-primary hover:text-accent transition-colors flex items-center gap-2"
                       onClick={() => setOpen(false)}
                       end
                     >
@@ -330,11 +503,11 @@ export default function Navbar() {
               ))}
             </div>
           ) : (
-            <div className="space-y-6 border-t border-gray-200 px-4 py-6">
+            <div className="space-y-6 border-t border-border-light px-4 py-6">
               <div className="flow-root">
                 <NavLink
                   to="/login"
-                  className="-m-2 block p-2 font-medium text-gray-900 hover:text-indigo-600"
+                  className="-m-2 block p-2 font-medium text-text-primary hover:text-accent transition-colors"
                   onClick={() => setOpen(false)}
                 >
                   Sign in
@@ -343,7 +516,7 @@ export default function Navbar() {
               <div className="flow-root">
                 <NavLink
                   to="/signup"
-                  className="-m-2 block p-2 font-medium text-gray-900 hover:text-indigo-600"
+                  className="-m-2 block p-2 font-medium text-text-primary hover:text-accent transition-colors"
                   onClick={() => setOpen(false)}
                 >
                   Create account
@@ -366,15 +539,16 @@ export default function Navbar() {
                   className="size-6 shrink-0 text-gray-400 group-hover:text-pink-500"
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700">
-                  {totalWishlistItems} {totalWishlistItems === 1 ? 'item' : 'items'} in wishlist
+                  {totalWishlistItems}{" "}
+                  {totalWishlistItems === 1 ? "item" : "items"} in wishlist
                 </span>
               </NavLink>
             </div>
             <div className="flow-root">
               <button
                 onClick={() => {
-                  setOpen(false)
-                  setCartOpen(true)
+                  setOpen(false);
+                  setCartOpen(true);
                 }}
                 className="-m-2 flex w-full items-center p-2 hover:text-indigo-600"
                 aria-label={`Open cart with ${totalCartItems} items`}
@@ -384,7 +558,8 @@ export default function Navbar() {
                   className="size-6 shrink-0 text-gray-400"
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700">
-                  {totalCartItems} {totalCartItems === 1 ? 'item' : 'items'} in cart
+                  {totalCartItems} {totalCartItems === 1 ? "item" : "items"} in
+                  cart
                 </span>
               </button>
             </div>
@@ -392,16 +567,23 @@ export default function Navbar() {
         </DialogPanel>
       </div>
     </Dialog>
-  )
+  );
 
   const renderDesktopMenu = () => (
-    <PopoverGroup className="hidden lg:ml-8 lg:block lg:self-stretch">
+    <PopoverGroup className="hidden lg:ml-10 lg:block lg:self-stretch">
       <div className="flex h-full space-x-8">
         {navigation.pages.map((page) => (
           <NavLink
             key={page.name}
             to={page.href}
-            className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800 hover:text-indigo-600"
+            end={page.href === "/"}
+            className={({ isActive }) =>
+              `flex items-center text-xs font-semibold uppercase tracking-wider transition-colors relative py-2 ${
+                isActive
+                  ? "text-accent after:content-[''] after:absolute after:bottom-4 after:left-0 after:w-full after:h-0.5 after:bg-accent"
+                  : "text-text-primary hover:text-accent after:content-[''] after:absolute after:bottom-4 after:left-0 after:w-0 after:h-0.5 after:bg-accent hover:after:w-full after:transition-all"
+              }`
+            }
             onClick={() => setOpen(false)}
           >
             {page.name}
@@ -409,118 +591,26 @@ export default function Navbar() {
         ))}
       </div>
     </PopoverGroup>
-  )
+  );
 
   const handleSearchClose = () => {
-    setSearchOpen(false)
-    setSearchQuery('')
-    setSuggestions([])
-  }
-
-  const renderSearchModal = () => (
-    <Dialog open={searchOpen} onClose={handleSearchClose} className="relative z-50">
-      <DialogBackdrop
-        transition
-        className="fixed inset-0 bg-black/50 transition-opacity duration-300 ease-linear data-closed:opacity-0"
-      />
-      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20">
-        <DialogPanel
-          transition
-          className="w-full max-w-2xl transform rounded-lg bg-white p-6 shadow-2xl transition duration-300 ease-in-out data-closed:opacity-0 data-closed:scale-95"
-        >
-          <form onSubmit={handleSearch} className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for products, categories, tags..."
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pl-12 text-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-              autoFocus
-            />
-            <MagnifyingGlassIcon className="absolute left-4 top-3.5 size-6 text-gray-400" />
-            <button
-              type="button"
-              onClick={handleSearchClose}
-              className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
-              aria-label="Close search"
-            >
-              <XMarkIcon className="size-6" />
-            </button>
-          </form>
-
-          {/* Suggestions Dropdown */}
-          {(suggestions.length > 0 || suggestionsLoading || searchQuery.trim().length >= 2) && (
-            <div className="mt-4 border-t border-gray-100 pt-4 max-h-[350px] overflow-y-auto">
-              {suggestionsLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-                  <span className="ml-3 text-gray-500 text-sm">Searching...</span>
-                </div>
-              ) : suggestions.length > 0 ? (
-                <div className="space-y-1">
-                  <div className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                    Product Suggestions
-                  </div>
-                  {suggestions.map((product) => {
-                    const productImg = product.image || product.images?.[0]?.src || 'https://via.placeholder.com/40x40?text=No+Image';
-                    const fullImgUrl = productImg.startsWith('http') ? productImg : `${import.meta.env.VITE_API_URL}${productImg}`;
-                    return (
-                      <button
-                        key={product._id}
-                        onClick={() => {
-                          navigate(`/product/${product._id}`)
-                          handleSearchClose()
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
-                      >
-                        <img
-                          src={fullImgUrl}
-                          alt={product.name}
-                          className="w-10 h-10 object-contain rounded-md bg-gray-50 border border-gray-100"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/40x40?text=No+Image'
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">{product.name}</h4>
-                          <p className="text-xs text-gray-500 truncate">{product.category}</p>
-                        </div>
-                        <div className="text-sm font-semibold text-gray-900">
-                          ₹{(product.discountedPrice || product.price)?.toLocaleString()}
-                        </div>
-                      </button>
-                    )
-                  })}
-                  <div className="border-t border-gray-50 pt-2 mt-2">
-                    <button
-                      onClick={handleSearch}
-                      className="w-full text-center py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                    >
-                      See all results for "{searchQuery}"
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-500 text-sm">
-                  No products found for "{searchQuery}"
-                </div>
-              )}
-            </div>
-          )}
-        </DialogPanel>
-      </div>
-    </Dialog>
-  )
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSuggestions([]);
+  };
 
   return (
     <>
-      <div className="border-b border-gray-300 sticky-header sticky top-0 z-40 bg-white-500 bg-opacity-95 backdrop-blur supports-[backdrop-filter]:bg-white/95">
+      <div className="sticky-header border-b border-border-light sticky top-0 z-40 bg-background/90 backdrop-blur-md">
         {renderMobileMenu()}
         <AISearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-        <header className="relative bg-white">
-          <nav aria-label="Top" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
-            <div >
+        <header className="relative bg-transparent">
+          <nav
+            aria-label="Top"
+            className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 "
+          >
+            <div>
               <div className="flex h-16 items-center">
                 {/* Mobile menu button */}
                 <button
@@ -538,7 +628,10 @@ export default function Navbar() {
                   <NavLink to="/" className="flex items-center">
                     <img
                       alt="Company Logo"
-                      src={import.meta.env.VITE_FRONTEND_URL + "/assets/img/logo/logo.png"}
+                      src={
+                        import.meta.env.VITE_FRONTEND_URL +
+                        "/assets/img/logo/logo.png"
+                      }
                       className="h-12 w-auto"
                     />
                   </NavLink>
@@ -555,14 +648,17 @@ export default function Navbar() {
                       <>
                         <NavLink
                           to="/login"
-                          className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                          className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
                         >
                           Sign in
                         </NavLink>
-                        <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
+                        <span
+                          aria-hidden="true"
+                          className="h-4 w-px bg-border-light"
+                        />
                         <NavLink
                           to="/signup"
-                          className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                          className="text-sm font-medium text-text-primary hover:text-accent transition-colors"
                         >
                           Create account
                         </NavLink>
@@ -570,19 +666,19 @@ export default function Navbar() {
                     )}
                   </div>
 
-                  {/* AI Smart Search Button */}
-                  <div className="flex ml-4 lg:ml-6 items-center">
+                  {/* Search Button */}
+                  <div className="ml-3 sm:ml-4 flow-root lg:ml-6">
                     <button
                       onClick={() => setSearchOpen(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200 text-indigo-700 text-xs font-semibold shadow-xs transition-all hover:scale-105"
-                      aria-label="Open AI Smart Search"
+                      className="group flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-full border-0 sm:border sm:border-[#E7E4DD] bg-transparent sm:bg-[#FAF9F6] hover:bg-transparent sm:hover:bg-[#FFFFFF] sm:hover:border-[#B8925A] transition-all duration-200 cursor-pointer"
+                      aria-label="Open search"
                     >
-                      <SparklesIcon className="size-4 text-indigo-600 animate-pulse" />
-                      <span className="hidden sm:inline">✨ Smart Search</span>
-                      <span className="sm:hidden">✨ AI</span>
+                      <MagnifyingGlassIcon className="size-6 sm:size-4 shrink-0 text-text-secondary group-hover:text-accent transition-colors" />
+                      <span className="text-xs font-medium text-[#6B6862] group-hover:text-[#1C1B19] transition-colors hidden sm:inline">
+                        Search...
+                      </span>
                     </button>
                   </div>
-
 
                   {/* Wishlist */}
                   <div className="ml-4 flow-root lg:ml-6">
@@ -593,11 +689,11 @@ export default function Navbar() {
                     >
                       <HeartIcon
                         aria-hidden="true"
-                        className="size-6 shrink-0 text-gray-400 group-hover:text-pink-500 transition-colors"
+                        className="size-6 shrink-0 text-text-secondary group-hover:text-accent transition-colors"
                       />
                       {totalWishlistItems > 0 && (
                         <span
-                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-xs font-medium text-white transition-transform group-hover:scale-110"
+                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white transition-transform group-hover:scale-110 shadow-xs"
                           aria-label={`${totalWishlistItems} items in wishlist`}
                         >
                           {totalWishlistItems}
@@ -610,18 +706,18 @@ export default function Navbar() {
                   {/* Cart */}
                   <div className="ml-4 flow-root lg:ml-6">
                     <button
-                      type='button'
+                      type="button"
                       onClick={() => setCartOpen(true)}
                       className="group -m-2 flex items-center p-2 relative"
                       aria-label={`Open shopping cart with ${totalCartItems} items`}
                     >
                       <ShoppingBagIcon
                         aria-hidden="true"
-                        className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
+                        className="size-6 shrink-0 text-text-secondary group-hover:text-accent transition-colors"
                       />
                       {totalCartItems > 0 && (
                         <span
-                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs font-medium text-white transition-transform group-hover:scale-110"
+                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white transition-transform group-hover:scale-110 shadow-xs"
                           aria-label={`${totalCartItems} items in cart`}
                         >
                           {totalCartItems}
@@ -639,5 +735,5 @@ export default function Navbar() {
 
       <CartDetail open={cartOpen} setOpen={setCartOpen} />
     </>
-  )
+  );
 }

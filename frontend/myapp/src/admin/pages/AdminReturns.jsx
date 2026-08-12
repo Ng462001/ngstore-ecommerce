@@ -260,12 +260,12 @@ const AdminReturns = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                         Returns & Exchanges
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
                         Manage return and exchange requests ({filteredRequests.length} requests)
                     </Typography>
                 </div>
@@ -275,6 +275,15 @@ const AdminReturns = () => {
                         startIcon={<Refresh />}
                         onClick={handleRefresh}
                         disabled={actionLoading.refresh}
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderColor: '#E7E4DD',
+                            color: '#1C1B19',
+                            bgcolor: '#FFFFFF',
+                            '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                        }}
                     >
                         Refresh
                     </Button>
@@ -282,8 +291,8 @@ const AdminReturns = () => {
             </div>
 
             {/* Filters */}
-            <Card className="shadow-md rounded-xl">
-                <CardContent className="p-4">
+            <Card elevation={0} sx={{ borderRadius: '20px', border: '1px solid #E7E4DD', bgcolor: '#FFFFFF', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                <CardContent sx={{ p: 3 }}>
                     <div className="flex gap-4 flex-wrap">
                         <TextField
                             select
@@ -332,7 +341,7 @@ const AdminReturns = () => {
                             style={{ minWidth: 250 }}
                             placeholder="Search by customer name or ID..."
                             InputProps={{
-                                startAdornment: <Search color="action" sx={{ mr: 1 }} />
+                                startAdornment: <Search sx={{ color: '#6B6862', mr: 1 }} />
                             }}
                         />
 
@@ -340,7 +349,7 @@ const AdminReturns = () => {
                             <Button
                                 variant="text"
                                 onClick={handleFilterReset}
-                                className="self-center"
+                                sx={{ color: '#B3413B', textTransform: 'none', fontWeight: 600 }}
                             >
                                 Clear Filters
                             </Button>
@@ -350,18 +359,18 @@ const AdminReturns = () => {
             </Card>
 
             {/* Requests Table */}
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', overflow: 'hidden' }}>
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
-                            <CircularProgress />
+                            <CircularProgress sx={{ color: '#B8925A' }} />
                         </div>
                     ) : paginatedRequests.length === 0 ? (
                         <div className="text-center py-12">
-                            <Typography variant="h6" className="text-gray-500 mb-2">
+                            <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', mb: 1 }}>
                                 No requests found
                             </Typography>
-                            <Typography variant="body2" className="text-gray-400">
+                            <Typography variant="body2" sx={{ color: '#6B6862' }}>
                                 {hasActiveFilters
                                     ? 'Try changing your filters or search term'
                                     : 'No return or exchange requests yet'
@@ -372,25 +381,25 @@ const AdminReturns = () => {
                         <>
                             <TableContainer>
                                 <Table>
-                                    <TableHead className="bg-gray-50">
+                                    <TableHead sx={{ bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
                                         <TableRow>
-                                            <TableCell className="font-bold">Request ID</TableCell>
-                                            <TableCell className="font-bold">Type</TableCell>
-                                            <TableCell className="font-bold">Customer</TableCell>
-                                            <TableCell className="font-bold">Order Total</TableCell>
-                                            <TableCell className="font-bold">Status</TableCell>
-                                            <TableCell className="font-bold">Date</TableCell>
-                                            <TableCell className="font-bold" align="center">Actions</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Request ID</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Type</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Customer</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Order Total</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Status</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Date</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }} align="center">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {paginatedRequests.map((request) => (
                                             <TableRow
                                                 key={request._id}
-                                                className="hover:bg-gray-50"
+                                                sx={{ '&:hover': { bgcolor: '#FAF9F6' }, borderBottom: '1px solid #E7E4DD' }}
                                             >
                                                 <TableCell>
-                                                    <Typography variant="body2" className="font-mono">
+                                                    <Typography variant="body2" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                                         #{request._id?.slice(0, 8).toUpperCase() || 'N/A'}
                                                     </Typography>
                                                 </TableCell>
@@ -405,16 +414,16 @@ const AdminReturns = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box>
-                                                        <Typography variant="body2" fontWeight="bold">
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1C1B19' }}>
                                                             {request.user?.name || 'N/A'}
                                                         </Typography>
-                                                        <Typography variant="caption" className="text-gray-500">
+                                                        <Typography variant="caption" sx={{ color: '#6B6862' }}>
                                                             {request.user?.email || 'N/A'}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography variant="body2" className="font-medium">
+                                                    <Typography variant="body2" sx={{ color: '#B8925A', fontWeight: 700 }}>
                                                         ₹{request.order?.totalPrice?.toFixed(2) || '0.00'}
                                                     </Typography>
                                                 </TableCell>

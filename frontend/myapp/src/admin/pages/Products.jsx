@@ -232,21 +232,30 @@ const Products = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <Typography variant="h4" className="font-bold text-gray-800">
-                        Products
+                    <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
+                        Product Management
                     </Typography>
-                    <Typography variant="body1" className="text-gray-600">
-                        Manage your product inventory ({products.length} products)
+                    <Typography variant="body2" sx={{ color: '#6B6862', mt: 0.5 }}>
+                        Manage your product inventory and catalog items
                     </Typography>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <Button
                         variant="outlined"
                         startIcon={<Refresh />}
                         onClick={handleRefresh}
                         disabled={actionLoading.refresh}
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            borderColor: '#E7E4DD',
+                            color: '#1C1B19',
+                            bgcolor: '#FFFFFF',
+                            '&:hover': { bgcolor: '#F7F3EC', borderColor: '#B8925A' }
+                        }}
                     >
                         Refresh
                     </Button>
@@ -254,7 +263,14 @@ const Products = () => {
                         variant="contained"
                         startIcon={<Add />}
                         onClick={handleAddProduct}
-                        className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            bgcolor: '#B8925A',
+                            boxShadow: '0 4px 14px rgba(184, 146, 90, 0.25)',
+                            '&:hover': { bgcolor: '#9E7B47' }
+                        }}
                     >
                         Add Product
                     </Button>
@@ -262,8 +278,8 @@ const Products = () => {
             </div>
 
             {/* Filters */}
-            <Card className="shadow-md rounded-xl">
-                <CardContent className="p-4">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)' }}>
+                <CardContent sx={{ p: 3 }}>
                     <div className="flex gap-4 flex-wrap">
                         <TextField
                             select
@@ -295,7 +311,7 @@ const Products = () => {
                             style={{ minWidth: 250 }}
                             placeholder="Search by name..."
                             InputProps={{
-                                startAdornment: <Search color="action" sx={{ mr: 1 }} />
+                                startAdornment: <Search sx={{ color: '#6B6862', mr: 1 }} />
                             }}
                         />
 
@@ -303,7 +319,7 @@ const Products = () => {
                             <Button
                                 variant="text"
                                 onClick={handleFilterReset}
-                                className="self-center"
+                                sx={{ color: '#B3413B', textTransform: 'none', fontWeight: 600 }}
                             >
                                 Clear Filters
                             </Button>
@@ -314,24 +330,24 @@ const Products = () => {
 
             {/* Error Alert */}
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-2xl">
                     <strong>Error: </strong>{error}
                 </div>
             )}
 
             {/* Products Table */}
-            <Card className="shadow-md rounded-xl">
+            <Card elevation={0} sx={{ borderRadius: '20px', bgcolor: '#FFFFFF', border: '1px solid #E7E4DD', boxShadow: '0 4px 20px -2px rgba(28, 27, 25, 0.05)', overflow: 'hidden' }}>
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex justify-center py-12">
-                            <CircularProgress />
+                            <CircularProgress sx={{ color: '#B8925A' }} />
                         </div>
                     ) : products.length === 0 ? (
                         <div className="text-center py-12">
-                            <Typography variant="h6" className="text-gray-500 mb-2">
+                            <Typography variant="h6" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19', mb: 1 }}>
                                 No products found
                             </Typography>
-                            <Typography variant="body2" className="text-gray-400 mb-4">
+                            <Typography variant="body2" sx={{ color: '#6B6862', mb: 3 }}>
                                 {hasActiveFilters
                                     ? 'Try changing your filters or search term'
                                     : 'Get started by adding your first product'
@@ -342,6 +358,13 @@ const Products = () => {
                                     variant="contained"
                                     startIcon={<Add />}
                                     onClick={handleAddProduct}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        bgcolor: '#B8925A',
+                                        '&:hover': { bgcolor: '#9E7B47' }
+                                    }}
                                 >
                                     Add First Product
                                 </Button>
@@ -351,49 +374,49 @@ const Products = () => {
                         <>
                             <TableContainer>
                                 <Table>
-                                    <TableHead className="bg-gray-50">
+                                    <TableHead sx={{ bgcolor: '#FAF9F6', borderBottom: '1px solid #E7E4DD' }}>
                                         <TableRow>
-                                            <TableCell className="font-bold">Product</TableCell>
-                                            <TableCell className="font-bold">Category</TableCell>
-                                            <TableCell className="font-bold">Price</TableCell>
-                                            <TableCell className="font-bold">Stock</TableCell>
-                                            <TableCell className="font-bold">Status</TableCell>
-                                            <TableCell className="font-bold">Rating</TableCell>
-                                            <TableCell className="font-bold" align="center">Actions</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Product</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Category</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Price</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Stock</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Status</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>Rating</TableCell>
+                                            <TableCell sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }} align="center">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {products.map((product) => (
                                             <TableRow
                                                 key={product._id}
-                                                className="hover:bg-gray-50"
+                                                sx={{ '&:hover': { bgcolor: '#FAF9F6' }, borderBottom: '1px solid #E7E4DD' }}
                                             >
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
                                                         <ProductImage
                                                             src={product.image ? (product.image.startsWith('http') ? product.image : `${API_URL.replace('/api', '')}${product.image}`) : 'https://via.placeholder.com/48'}
                                                             alt={product.name}
-                                                            className="w-12 h-12 object-cover rounded"
+                                                            className="w-12 h-12 object-cover rounded-xl border border-border-light bg-background"
                                                         />
                                                         <Box>
-                                                            <Typography variant="body1" className="font-medium">
+                                                            <Typography variant="body1" sx={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 600, color: '#1C1B19' }}>
                                                                 {product.name}
                                                             </Typography>
                                                             {product.description && (
-                                                                <Typography variant="body2" className="text-gray-500 truncate max-w-xs">
+                                                                <Typography variant="body2" sx={{ color: '#6B6862' }} className="truncate max-w-xs">
                                                                     {product.description}
                                                                 </Typography>
                                                             )}
                                                         </Box>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="capitalize">
+                                                <TableCell className="capitalize" sx={{ color: '#6B6862' }}>
                                                     {product.category}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{ color: '#B8925A', fontWeight: 700 }}>
                                                     ₹{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{ color: '#1C1B19', fontWeight: 600 }}>
                                                     {product.quantity}
                                                 </TableCell>
                                                 <TableCell>
@@ -401,15 +424,15 @@ const Products = () => {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center">
-                                                        <span className="text-yellow-500 mr-1">★</span>
-                                                        <span>{(product.rating?.average || 0).toFixed(1)}</span>
-                                                        <span className="text-gray-400 ml-1">
+                                                        <span className="text-amber-500 mr-1">★</span>
+                                                        <span className="font-semibold text-text-primary">{(product.rating?.average || 0).toFixed(1)}</span>
+                                                        <span className="text-text-secondary text-xs ml-1">
                                                             ({product.rating?.count || 0})
                                                         </span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex space-x-2 justify-center">
+                                                    <div className="flex space-x-1 justify-center">
                                                         <Tooltip title="View product details">
                                                             <IconButton
                                                                 size="small"
@@ -417,7 +440,7 @@ const Products = () => {
                                                                     setViewProduct(product);
                                                                     setDetailsOpen(true);
                                                                 }}
-                                                                aria-label={`View ${product.name}`}
+                                                                sx={{ color: '#6B6862', '&:hover': { color: '#1C1B19', bgcolor: '#F3F1EC' } }}
                                                             >
                                                                 <Visibility fontSize="small" />
                                                             </IconButton>
@@ -425,9 +448,8 @@ const Products = () => {
                                                         <Tooltip title="Edit product">
                                                             <IconButton
                                                                 size="small"
-                                                                color="primary"
                                                                 onClick={() => handleEditProduct(product)}
-                                                                aria-label={`Edit ${product.name}`}
+                                                                sx={{ color: '#B8925A', '&:hover': { color: '#9E7B47', bgcolor: '#F7F3EC' } }}
                                                             >
                                                                 <Edit fontSize="small" />
                                                             </IconButton>
@@ -435,13 +457,12 @@ const Products = () => {
                                                         <Tooltip title="Delete product">
                                                             <IconButton
                                                                 size="small"
-                                                                color="error"
                                                                 onClick={() => handleDeleteClick(product)}
-                                                                aria-label={`Delete ${product.name}`}
                                                                 disabled={actionLoading.delete}
+                                                                sx={{ color: '#B3413B', '&:hover': { color: '#96342E', bgcolor: '#FDF2F2' } }}
                                                             >
                                                                 {actionLoading.delete && productToDelete?._id === product._id ? (
-                                                                    <CircularProgress size={20} />
+                                                                    <CircularProgress size={20} color="error" />
                                                                 ) : (
                                                                     <Delete fontSize="small" />
                                                                 )}
@@ -457,14 +478,20 @@ const Products = () => {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="flex justify-center py-4">
+                                <div className="flex justify-center py-4 border-t border-border-light">
                                     <Pagination
                                         count={totalPages}
                                         page={page}
                                         onChange={(e, value) => setPage(value)}
-                                        color="primary"
                                         showFirstButton
                                         showLastButton
+                                        sx={{
+                                            '& .MuiPaginationItem-root.Mui-selected': {
+                                                bgcolor: '#B8925A',
+                                                color: 'white',
+                                                '&:hover': { bgcolor: '#9E7B47' }
+                                            }
+                                        }}
                                     />
                                 </div>
                             )}
