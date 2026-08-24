@@ -453,7 +453,7 @@ const AdminReturns = () => {
                           color: "#1C1B19",
                         }}
                       >
-                        Type
+                        Customer
                       </TableCell>
                       <TableCell
                         sx={{
@@ -462,7 +462,7 @@ const AdminReturns = () => {
                           color: "#1C1B19",
                         }}
                       >
-                        Customer
+                        Type
                       </TableCell>
                       <TableCell
                         sx={{
@@ -521,19 +521,6 @@ const AdminReturns = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Chip
-                            label={request.type || "N/A"}
-                            color={
-                              request.type === "Return"
-                                ? "secondary"
-                                : "primary"
-                            }
-                            size="small"
-                            variant="outlined"
-                            icon={getStatusIcon(request.type)}
-                          />
-                        </TableCell>
-                        <TableCell>
                           <Box>
                             <Typography
                               variant="body2"
@@ -548,6 +535,19 @@ const AdminReturns = () => {
                               {request.user?.email || "N/A"}
                             </Typography>
                           </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={request.type || "N/A"}
+                            color={
+                              request.type === "Return"
+                                ? "secondary"
+                                : "primary"
+                            }
+                            size="small"
+                            variant="outlined"
+                            icon={getStatusIcon(request.type)}
+                          />
                         </TableCell>
                         <TableCell>
                           <Typography

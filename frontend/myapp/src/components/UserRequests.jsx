@@ -253,7 +253,7 @@ const UserRequests = ({ requestId }) => {
             )}
 
             {/* Ticket Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} disableScrollLock maxWidth="sm" fullWidth>
                 {selectedTicket && (
                     <>
                         <DialogTitle>

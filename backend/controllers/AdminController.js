@@ -132,11 +132,29 @@ class AdminController {
                     const product = await Product.findById(item.product);
                     if (product) {
                         product.quantity += item.quantity;
-                        product.sold -= item.quantity;
+                        if (typeof product.sold === 'number') {
+                            product.sold = Math.max(0, product.sold - item.quantity);
+                        }
                         await product.save();
                     }
                 }
                 order.paymentStatus = 'Refunded';
+
+                const ReturnExchange = require('../model/ReturnExchange');
+                const returnRequest = await ReturnExchange.findOne({ order: order._id, status: { $ne: 'Cancelled' } });
+                if (returnRequest) {
+                    returnRequest.status = 'Completed';
+                    if (!returnRequest.refundDetails) returnRequest.refundDetails = {};
+                    returnRequest.refundDetails.status = 'Processed';
+                    returnRequest.refundDetails.amount = order.totalPrice;
+                    returnRequest.refundDetails.processedAt = Date.now();
+                    returnRequest.statusUpdates.push({
+                        status: 'Completed',
+                        timestamp: Date.now(),
+                        note: notes || 'Refund processed by store admin'
+                    });
+                    await returnRequest.save();
+                }
             }
 
             // Save admin notes if provided
@@ -287,6 +305,30 @@ class AdminController {
             }
 
             const updatedOrder = await order.save();
+
+            // Sync with any existing ReturnExchange request
+            const ReturnExchange = require('../model/ReturnExchange');
+            const returnRequest = await ReturnExchange.findOne({ order: order._id, status: { $ne: 'Cancelled' } });
+            if (returnRequest) {
+                returnRequest.status = 'Completed';
+                if (!returnRequest.refundDetails) returnRequest.refundDetails = {};
+                returnRequest.refundDetails.status = 'Processed';
+                returnRequest.refundDetails.amount = order.totalPrice;
+                returnRequest.refundDetails.processedAt = Date.now();
+                returnRequest.statusUpdates.push({
+                    status: 'Completed',
+                    timestamp: Date.now(),
+                    note: 'Refund processed by store admin'
+                });
+                await returnRequest.save();
+            }
+
+            // Dispatch notification email
+            try {
+                await emailService.sendOrderStatusEmail(order, 'Refunded', 'Your order refund has been processed.');
+            } catch (emailErr) {
+                console.error('Failed to send refund email:', emailErr.message);
+            }
 
             // Log the activity
             await ActivityLog.create({

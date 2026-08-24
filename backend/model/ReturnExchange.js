@@ -36,7 +36,7 @@ const returnExchangeSchema = new mongoose.Schema({
     images: [String], // General proof images for the request
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected', 'Pickup Scheduled', 'Picked Up', 'Received', 'Processing', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'Approved', 'Rejected', 'Pickup Scheduled', 'Picked Up', 'Received', 'Processing', 'Completed', 'Refunded', 'Cancelled'],
         default: 'Pending'
     },
     refundDetails: {

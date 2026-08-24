@@ -84,6 +84,46 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 
+const getItemResolution = (item, request) => {
+  if (item?.resolution) return item.resolution;
+  if (!request) return "Pending Review";
+  if (request.status === "Completed" || request.status === "Refunded") {
+    return request.type === "Exchange" ? "Exchanged" : "Refunded";
+  }
+  if (request.status === "Rejected") {
+    return "Rejected";
+  }
+  if (
+    [
+      "Approved",
+      "Pickup Scheduled",
+      "Picked Up",
+      "Received",
+      "Processing",
+    ].includes(request.status)
+  ) {
+    return request.type === "Exchange"
+      ? "Approved for Exchange"
+      : "Approved for Refund";
+  }
+  return "Pending Review";
+};
+
+const getItemResolutionColor = (resolution) => {
+  switch (resolution) {
+    case "Refunded":
+    case "Exchanged":
+      return "success";
+    case "Approved for Refund":
+    case "Approved for Exchange":
+      return "info";
+    case "Rejected":
+      return "error";
+    default:
+      return "warning";
+  }
+};
+
 // Status configuration
 const getStatusConfig = (status) => {
   const statusMap = {
@@ -924,19 +964,16 @@ const ReturnRequestDetailsModal = ({
                         )}
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          label={item.resolution || "Pending"}
-                          size="small"
-                          color={
-                            item.resolution === "Refunded"
-                              ? "success"
-                              : item.resolution === "Exchanged"
-                                ? "info"
-                                : item.resolution === "Rejected"
-                                  ? "error"
-                                  : "warning"
-                          }
-                        />
+                        {(() => {
+                          const res = getItemResolution(item, displayRequest);
+                          return (
+                            <Chip
+                              label={res}
+                              size="small"
+                              color={getItemResolutionColor(res)}
+                            />
+                          );
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}
