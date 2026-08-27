@@ -120,34 +120,77 @@ const SupportTicketDetailsModal = ({
   useEffect(() => {
     if (open && ticket) {
       setEditedTicket({ ...ticket });
-      // History fetching removed as it was mock data and not fully implemented in backend/frontend link yet
-      // If you want history, we should fetch it from backend or derive from responses
+      fetchTicketHistory();
     }
   }, [open, ticket]);
 
-  const fetchTicketHistory = async () => {
-    if (!ticket?._id) return;
+  const fetchTicketHistory = () => {
+    if (!ticket) return;
 
     try {
       setLoadingHistory(true);
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      const token = userInfo?.token;
-      // In a real app, you would have an endpoint for ticket history
-      // For now, we'll simulate with the existing data
       const history = [
         {
-          action: "Created",
-          timestamp: ticket.createdAt,
+          action: "Ticket Created",
+          timestamp: ticket.createdAt || new Date().toISOString(),
           user: ticket.user?.name || "Customer",
-          details: "Ticket created",
+          details: `Ticket created with ${ticket.priority || "Medium"} priority in ${ticket.category || "General"}`,
+          status: "Open",
         },
-        ...(ticket.responses || []).map((response) => ({
-          action: "Response",
-          timestamp: response.createdAt,
-          user: response.senderRole === "Admin" ? "Support Agent" : "Customer",
-          details: response.message.substring(0, 50) + "...",
+        ...(ticket.statusUpdates || []).map((update) => ({
+          action: "Status Update",
+          timestamp:
+            update.timestamp || update.createdAt || new Date().toISOString(),
+          user: update.updatedBy?.name || update.user || "Admin",
+          details: update.note
+            ? `Status updated to ${update.status} (Note: ${update.note})`
+            : `Status updated to ${update.status}`,
+          status: update.status,
         })),
       ];
+
+      if (
+        ticket.status === "In Progress" &&
+        !history.some((h) => h.status === "In Progress")
+      ) {
+        history.push({
+          action: "Status Update",
+          timestamp: ticket.updatedAt || new Date().toISOString(),
+          user: "Admin",
+          details: "Status updated to In Progress",
+          status: "In Progress",
+        });
+      }
+
+      if (
+        ticket.status === "Resolved" &&
+        !history.some((h) => h.status === "Resolved")
+      ) {
+        history.push({
+          action: "Status Update",
+          timestamp:
+            ticket.resolvedAt || ticket.updatedAt || new Date().toISOString(),
+          user: "Admin",
+          details: "Status updated to Resolved",
+          status: "Resolved",
+        });
+      }
+
+      if (
+        ticket.status === "Closed" &&
+        !history.some((h) => h.status === "Closed")
+      ) {
+        history.push({
+          action: "Status Update",
+          timestamp: ticket.updatedAt || new Date().toISOString(),
+          user: "Admin",
+          details: "Ticket closed",
+          status: "Closed",
+        });
+      }
+
+      // Sort chronologically (oldest to newest)
+      history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       setTicketHistory(history);
     } catch (error) {
       console.error("Error fetching ticket history:", error);
@@ -1056,70 +1099,63 @@ const SupportTicketDetailsModal = ({
           ) : ticketHistory.length === 0 ? (
             <Alert severity="info">No history available for this ticket.</Alert>
           ) : (
-            <TableContainer>
-              <Table>
-                <TableHead sx={{ bgcolor: "grey.50" }}>
-                  <TableRow>
-                    <TableCell>
-                      <strong>Action</strong>
-                    </TableCell>
-                    <TableCell>
-                      <strong>User</strong>
-                    </TableCell>
-                    <TableCell>
-                      <strong>Timestamp</strong>
-                    </TableCell>
-                    <TableCell>
-                      <strong>Details</strong>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {ticketHistory.map((item, index) => (
-                    <TableRow key={index} hover>
-                      <TableCell>
-                        <Chip
-                          label={item.action}
-                          size="small"
-                          color={
-                            item.action === "Created"
-                              ? "primary"
-                              : item.action === "Response"
-                                ? "info"
-                                : "default"
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Avatar
-                            sx={{ width: 24, height: 24, fontSize: "0.75rem" }}
+            <Stack spacing={2}>
+              {ticketHistory.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight="bold"
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
                           >
-                            {item.user?.charAt(0)}
-                          </Avatar>
-                          <Typography variant="body2">{item.user}</Typography>
+                            {item.action}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {item.details}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ mt: 1, display: "block" }}
+                          >
+                            By {item.user} • {formatDate(item.timestamp)} ({formatDistanceToNowSafe(item.timestamp)})
+                          </Typography>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {formatDate(item.timestamp)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDistanceToNowSafe(item.timestamp)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" noWrap>
-                          {item.details}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                        {item.status && (
+                          <Chip
+                            label={item.status}
+                            size="small"
+                            sx={{
+                              bgcolor: getStatusColor(item.status).bgColor,
+                              color: getStatusColor(item.status).textColor,
+                              fontWeight: "bold",
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </Stack>
           )}
         </Paper>
       </motion.div>
@@ -1223,9 +1259,10 @@ const SupportTicketDetailsModal = ({
             <IconButton
               onClick={onClose}
               sx={{
-                color: "white",
-                bgcolor: "rgba(255,255,255,0.1)",
-                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                color: "#1C1B19",
+                bgcolor: "#FFFFFF",
+                border: "1px solid #E7E4DD",
+                "&:hover": { bgcolor: "#F5F5F0" },
               }}
             >
               <Close />

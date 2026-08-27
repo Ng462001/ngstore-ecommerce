@@ -127,6 +127,11 @@ class EmailService {
     // Send Mail
     async sendEmail(options) {
         try {
+            if (!options || !options.email || typeof options.email !== 'string' || !options.email.trim()) {
+                console.warn('sendEmail skipped: No recipient email address provided.');
+                return { success: false, error: 'Recipient email address is required' };
+            }
+
             if (process.env.BREVO_API_KEY) {
                 try {
                     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -458,6 +463,43 @@ ${contactData.message}
      * Send order status update email to the customer.
      */
     async sendOrderStatusEmail(order, oldStatus, newStatus, notes) {
+        if (!order) return { success: false, error: 'Order is required' };
+
+        // Support both signatures:
+        // 1. sendOrderStatusEmail(order, newStatus, notes)
+        // 2. sendOrderStatusEmail(order, oldStatus, newStatus, notes)
+        if (arguments.length === 3 || (!notes && newStatus === undefined)) {
+            notes = newStatus;
+            newStatus = oldStatus;
+            oldStatus = order.status || 'Updated';
+        }
+        if (!newStatus) {
+            newStatus = order.status || 'Updated';
+        }
+
+        // Resolve customer details (handle populated and unpopulated order.user)
+        let customer = order.user;
+        if (!customer || typeof customer !== 'object' || !customer.email) {
+            const User = require('../model/User');
+            const userId = customer?._id || customer;
+            if (userId) {
+                try {
+                    const fetchedUser = await User.findById(userId).select('name email');
+                    if (fetchedUser) customer = fetchedUser;
+                } catch (err) {
+                    console.error('Error fetching user for order status email:', err.message);
+                }
+            }
+        }
+
+        const customerEmail = customer?.email || order.shippingAddress?.email;
+        const customerName = customer?.name || order.shippingAddress?.name || 'Valued Customer';
+
+        if (!customerEmail) {
+            console.warn(`Order #${order._id || 'Unknown'}: No recipient email found, skipping status email.`);
+            return { success: false, error: 'Recipient email not found' };
+        }
+
         // Map status to user friendly titles, messages, and colors/gradients
         const statusDetails = {
             'Pending': {
@@ -665,7 +707,7 @@ ${contactData.message}
         }
 
         const plainMessage = `
-Hello ${order.user.name},
+Hello ${customerName},
 
 ${details.message}
 
@@ -690,7 +732,7 @@ ${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-details/${order._id
             </div>
             
             <div style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">
-                Hello ${order.user.name}! 👋
+                Hello ${customerName}! 👋
             </div>
             <p style="color: #4a5568; font-size: 15px; margin-bottom: 25px; line-height: 1.6;">
                 ${details.message}
@@ -719,8 +761,149 @@ ${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-details/${order._id
         );
 
         return this.sendEmail({
-            email: order.user.email,
+            email: customerEmail,
             subject: `Update on Order #${order._id.toString().substring(0, 8).toUpperCase()}: ${newStatus}`,
+            message: plainMessage,
+            html: htmlMessage
+        });
+    }
+
+    /**
+     * Send email reply to customer's contact message.
+     */
+    async sendReplyEmail(contact, replyText) {
+        if (!contact?.email) {
+            return { success: false, error: 'Customer email is missing' };
+        }
+
+        const plainMessage = `
+Hello ${contact.name || 'Valued Customer'},
+
+Thank you for reaching out to us. Here is the response to your inquiry:
+
+"${replyText}"
+
+---
+Your Original Message:
+Subject: ${contact.subject || 'Inquiry'}
+Message: ${contact.message || ''}
+
+If you have any further questions, feel free to reply to this email.
+
+Best regards,
+${process.env.COMPANY_NAME || 'NGSTORE'} Support Team
+        `;
+
+        const htmlMessage = getBaseTemplate(
+            '💬 Response to Your Inquiry',
+            `Re: ${contact.subject || 'Contact Support'}`,
+            `
+            <div style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">
+                Hello ${contact.name || 'Customer'}! 👋
+            </div>
+            <p style="color: #4a5568; font-size: 15px; margin-bottom: 20px; line-height: 1.6;">
+                Thank you for getting in touch with us. Our support team has reviewed your inquiry and replied below:
+            </p>
+            
+            <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 18px; margin-bottom: 25px; border-radius: 8px; color: #166534; font-size: 15px; line-height: 1.6;">
+                <strong style="display: block; margin-bottom: 6px; color: #14532d;">Our Response:</strong>
+                ${replyText.replace(/\n/g, '<br>')}
+            </div>
+            
+            <div style="background: #f8fafc; border-radius: 12px; padding: 18px; margin-bottom: 25px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                    Your Original Message
+                </div>
+                ${contact.subject ? `<div style="margin-bottom: 6px; font-size: 14px; color: #334155;"><strong>Subject:</strong> ${contact.subject}</div>` : ''}
+                <div style="font-size: 14px; color: #475569; font-style: italic;">"${contact.message || ''}"</div>
+            </div>
+            
+            <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
+                If you have any further questions or need additional assistance, simply reply to this email or visit our store.
+            </p>
+            `
+        );
+
+        return this.sendEmail({
+            email: contact.email,
+            subject: `Response to: ${contact.subject || 'Your Support Inquiry'}`,
+            message: plainMessage,
+            html: htmlMessage
+        });
+    }
+
+    /**
+     * Send confirmation email when a user submits contact form.
+     */
+    async sendContactConfirmation(contact) {
+        if (!contact?.email) return { success: false, error: 'Email missing' };
+
+        const plainMessage = `
+Hello ${contact.name || 'Customer'},
+
+We have received your message regarding "${contact.subject || 'General Inquiry'}". Our support team is reviewing it and will respond to you shortly.
+
+Best regards,
+${process.env.COMPANY_NAME || 'NGSTORE'}
+        `;
+
+        const htmlMessage = getBaseTemplate(
+            '📨 Message Received',
+            'We have received your inquiry',
+            `
+            <div style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">
+                Hello ${contact.name || 'Customer'}! 👋
+            </div>
+            <p style="color: #4a5568; font-size: 15px; margin-bottom: 20px; line-height: 1.6;">
+                Thank you for contacting us! We have received your inquiry regarding <strong>"${contact.subject || 'Support'}"</strong>. Our team will review your message and get back to you as soon as possible.
+            </p>
+            `
+        );
+
+        return this.sendEmail({
+            email: contact.email,
+            subject: `We received your message: ${contact.subject || 'Inquiry'}`,
+            message: plainMessage,
+            html: htmlMessage
+        });
+    }
+
+    /**
+     * Send notification to Admin when a new contact inquiry arrives.
+     */
+    async sendAdminNotification(contact) {
+        const adminEmail = process.env.EMAIL_USER;
+        if (!adminEmail) return { success: false, error: 'Admin email not configured' };
+
+        const plainMessage = `
+New Contact Inquiry Received:
+
+Name: ${contact.name}
+Email: ${contact.email}
+Phone: ${contact.phone || 'N/A'}
+Subject: ${contact.subject || 'N/A'}
+Message: ${contact.message}
+        `;
+
+        const htmlMessage = getBaseTemplate(
+            '🔔 New Contact Message',
+            `Inquiry from ${contact.name}`,
+            `
+            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0;">
+                <div style="margin-bottom: 8px;"><strong>From:</strong> ${contact.name} (&lt;${contact.email}&gt;)</div>
+                <div style="margin-bottom: 8px;"><strong>Phone:</strong> ${contact.phone || 'N/A'}</div>
+                <div style="margin-bottom: 8px;"><strong>Subject:</strong> ${contact.subject || 'N/A'}</div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <strong>Message:</strong>
+                    <p style="margin-top: 5px; color: #334155; white-space: pre-wrap;">${contact.message}</p>
+                </div>
+            </div>
+            `
+        );
+
+        return this.sendEmail({
+            email: adminEmail,
+            subject: `🔔 New Contact Inquiry: ${contact.subject || contact.name}`,
             message: plainMessage,
             html: htmlMessage
         });

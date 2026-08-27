@@ -216,7 +216,19 @@ const AdminReturns = () => {
         fetchRequests();
         // setDetailsOpen(false); // Optional: keep open if just saving
         if (selectedRequest && selectedRequest._id === requestId) {
-          setSelectedRequest(data.request); // Update local selected request
+          const updated = {
+            ...selectedRequest,
+            ...data.request,
+            user:
+              data.request?.user && typeof data.request.user === "object"
+                ? data.request.user
+                : selectedRequest.user,
+            order:
+              data.request?.order && typeof data.request.order === "object"
+                ? data.request.order
+                : selectedRequest.order,
+          };
+          setSelectedRequest(updated);
         }
       } else {
         showSnackbar(data.message || "Failed to update request", "error");

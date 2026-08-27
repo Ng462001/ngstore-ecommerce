@@ -834,7 +834,11 @@ const AdminOrderDetails = () => {
               <Tooltip title="Refresh">
                 <IconButton
                   onClick={fetchOrderDetails}
-                  sx={{ color: "white" }}
+                  sx={{
+                    bgcolor: "white",
+                    color: "primary.main",
+                    "&:hover": { bgcolor: "grey.100" },
+                  }}
                   aria-label="Refresh order details"
                 >
                   <Refresh />
@@ -843,7 +847,11 @@ const AdminOrderDetails = () => {
               <Tooltip title="Copy Order ID">
                 <IconButton
                   onClick={handleCopyOrderId}
-                  sx={{ color: "white" }}
+                  sx={{
+                    bgcolor: "white",
+                    color: "primary.main",
+                    "&:hover": { bgcolor: "grey.100" },
+                  }}
                   aria-label="Copy order ID"
                 >
                   <CopyAll />
@@ -931,9 +939,7 @@ const AdminOrderDetails = () => {
             <Button
               variant="contained"
               color="primary"
-              startIcon={
-                loadingAction ? <CircularProgress size={20} /> : <Edit />
-              }
+              startIcon={<Edit />}
               onClick={() => setStatusDialogOpen(true)}
               disabled={loadingAction}
             >
@@ -943,9 +949,7 @@ const AdminOrderDetails = () => {
             <Button
               variant="outlined"
               color="secondary"
-              startIcon={
-                loadingAction ? <CircularProgress size={20} /> : <Payment />
-              }
+              startIcon={<Payment />}
               onClick={() => {
                 setSelectedPaymentStatus(order.paymentStatus);
                 setPaymentDialogOpen(true);
@@ -957,9 +961,7 @@ const AdminOrderDetails = () => {
 
             <Button
               variant="outlined"
-              startIcon={
-                loadingAction ? <CircularProgress size={20} /> : <Description />
-              }
+              startIcon={<Description />}
               onClick={() => setEditDialogOpen(true)}
               disabled={loadingAction}
             >
@@ -968,9 +970,7 @@ const AdminOrderDetails = () => {
 
             <Button
               variant="outlined"
-              startIcon={
-                loadingAction ? <CircularProgress size={20} /> : <Tag />
-              }
+              startIcon={<Tag />}
               onClick={() => setTagsDialogOpen(true)}
               disabled={loadingAction}
             >
@@ -990,9 +990,7 @@ const AdminOrderDetails = () => {
             <Button
               variant="outlined"
               color="error"
-              startIcon={
-                loadingAction ? <CircularProgress size={20} /> : <Cancel />
-              }
+              startIcon={<Cancel />}
               onClick={() => {
                 if (
                   window.confirm("Are you sure you want to cancel this order?")
@@ -1013,13 +1011,7 @@ const AdminOrderDetails = () => {
               <Button
                 variant="contained"
                 color="error"
-                startIcon={
-                  loadingAction ? (
-                    <CircularProgress size={20} />
-                  ) : (
-                    <AttachMoney />
-                  )
-                }
+                startIcon={<AttachMoney />}
                 onClick={() => setRefundDialogOpen(true)}
                 disabled={loadingAction}
               >

@@ -192,7 +192,10 @@ class ReturnExchangeController {
 
       let computedRefundAmount = refundAmount;
 
-      if ((status === "Completed" || status === "Refunded") && request.type === "Return") {
+      if (
+        (status === "Completed" || status === "Refunded") &&
+        request.type === "Return"
+      ) {
         if (
           !computedRefundAmount &&
           request.items &&
@@ -213,7 +216,10 @@ class ReturnExchangeController {
 
       // Synchronize linked Order status, payment status, inventory restoration & emails
       if (request.order) {
-        const order = await Order.findById(request.order);
+        const order = await Order.findById(request.order).populate(
+          "user",
+          "name email",
+        );
         if (order) {
           if (status === "Completed" || status === "Refunded") {
             if (request.type === "Return") {

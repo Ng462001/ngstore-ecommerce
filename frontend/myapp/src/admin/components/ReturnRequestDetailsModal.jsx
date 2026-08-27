@@ -169,6 +169,20 @@ const getStatusConfig = (status) => {
       icon: <CheckCircle />,
       nextActions: [],
     },
+    Refunded: {
+      color: "success",
+      bgColor: "#e8f5e9",
+      textColor: "#2e7d32",
+      icon: <CheckCircle />,
+      nextActions: [],
+    },
+    Cancelled: {
+      color: "default",
+      bgColor: "#f5f5f5",
+      textColor: "#757575",
+      icon: <Cancel />,
+      nextActions: [],
+    },
   };
   return statusMap[status] || statusMap["Pending"];
 };
@@ -191,15 +205,16 @@ const getTypeConfig = (type) => {
   return typeMap[type] || typeMap["Return"];
 };
 
-// Status Stepper Component
-// Status Stepper Component
 const StatusStepper = ({ status, type, request }) => {
-  const statusFlow =
-    type === "Return"
-      ? ["Pending", "Approved", "Pickup Scheduled", "Received", "Completed"]
-      : ["Pending", "Approved", "Pickup Scheduled", "Received", "Completed"];
-
-  const currentIndex = statusFlow.indexOf(status);
+  const statusFlow = [
+    "Pending",
+    "Approved",
+    "Pickup Scheduled",
+    "Received",
+    "Completed",
+  ];
+  const effectiveStatus = status === "Refunded" ? "Completed" : status;
+  const currentIndex = statusFlow.indexOf(effectiveStatus);
 
   const getStatusDate = (stepStatus) => {
     if (!request) return null;
@@ -339,6 +354,9 @@ const ReturnRequestDetailsModal = ({
   const [adminNote, setAdminNote] = useState("");
   const [ticketHistory, setTicketHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
+  const [statusDialogNote, setStatusDialogNote] = useState("");
 
   // Reset state when modal closes
   useEffect(() => {
@@ -356,39 +374,59 @@ const ReturnRequestDetailsModal = ({
     }
   }, [open, request]);
 
-  const fetchRequestHistory = async () => {
-    // Simulate history fetching
+  const fetchRequestHistory = () => {
     setLoadingHistory(true);
-    setTimeout(() => {
+    try {
       const history = [
         {
-          action: "Created",
-          timestamp: request.createdAt,
+          action: "Request Created",
+          timestamp: request.createdAt || new Date().toISOString(),
           user: request.user?.name || "Customer",
-          details: `${request.type} request created`,
+          details: `${request.type || "Return"} request submitted by customer`,
           status: "Pending",
         },
         ...(request.statusUpdates || []).map((update) => ({
           action: "Status Update",
           timestamp: update.timestamp || new Date().toISOString(),
           user: "Admin",
-          details: `Status changed to ${update.status}`,
+          details: update.note
+            ? `Note: ${update.note}`
+            : `Status updated to ${update.status}`,
           status: update.status,
         })),
       ];
+      // Sort history chronologically
+      history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       setTicketHistory(history);
+    } catch (err) {
+      console.error("Error building history:", err);
+    } finally {
       setLoadingHistory(false);
-    }, 500);
+    }
   };
 
-  const handleUpdateStatus = async (status) => {
+  const handleOpenStatusDialog = (nextStatus) => {
+    setPendingStatus(nextStatus);
+    setStatusDialogNote("");
+    setStatusDialogOpen(true);
+  };
+
+  const handleConfirmStatusUpdate = async () => {
+    if (!pendingStatus) return;
+    await handleUpdateStatus(pendingStatus, statusDialogNote);
+    setStatusDialogOpen(false);
+  };
+
+  const handleUpdateStatus = async (status, customNote) => {
     if (!request?._id) return;
 
     try {
       setLoading(true);
+      const noteToSend =
+        customNote !== undefined ? customNote.trim() : adminNote.trim();
       const updateData = {
         status,
-        adminNote: adminNote.trim() || undefined,
+        adminNote: noteToSend || undefined,
       };
 
       if (onRequestUpdate) {
@@ -396,7 +434,6 @@ const ReturnRequestDetailsModal = ({
       }
     } catch (error) {
       console.error("Error updating request:", error);
-      alert("Error updating request: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -411,16 +448,15 @@ const ReturnRequestDetailsModal = ({
         status: editedRequest.status,
         type: editedRequest.type,
         adminNote: editedRequest.adminDetails?.note || adminNote,
+        refundAmount: editedRequest.refundDetails?.amount,
       };
 
       if (onRequestUpdate) {
         await onRequestUpdate(request._id, updateData);
       }
-      handleUpdateStatus(editedRequest.status);
       setEditMode(false);
     } catch (error) {
       console.error("Error updating request:", error);
-      alert("Error updating request: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -432,6 +468,9 @@ const ReturnRequestDetailsModal = ({
     setEditedRequest(null);
     setAdminNote("");
     setTicketHistory([]);
+    setStatusDialogOpen(false);
+    setPendingStatus(null);
+    setStatusDialogNote("");
   };
 
   const handleTabChange = (event, newValue) => {
@@ -455,11 +494,18 @@ const ReturnRequestDetailsModal = ({
     }).format(amount);
   };
 
+  const formatDistanceToNowSafe = (dateString) => {
+    if (!dateString) return "";
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (e) {
+      return "";
+    }
+  };
+
   const getTimeSinceCreation = () => {
     if (!request?.createdAt) return "";
-    return formatDistanceToNow(new Date(request.createdAt), {
-      addSuffix: true,
-    });
+    return formatDistanceToNowSafe(request.createdAt);
   };
 
   const renderOverviewTab = () => {
@@ -601,14 +647,103 @@ const ReturnRequestDetailsModal = ({
                           })
                         }
                       >
-                        <MenuItem value="Pending">Pending</MenuItem>
-                        <MenuItem value="Approved">Approved</MenuItem>
-                        <MenuItem value="Rejected">Rejected</MenuItem>
-                        <MenuItem value="Pickup Scheduled">
-                          Pickup Scheduled
+                        <MenuItem value="Pending">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <AssignmentReturn
+                              color="warning"
+                              fontSize="small"
+                            />{" "}
+                            Pending
+                          </Box>
                         </MenuItem>
-                        <MenuItem value="Received">Received</MenuItem>
-                        <MenuItem value="Completed">Completed</MenuItem>
+                        <MenuItem value="Approved">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <CheckCircle color="info" fontSize="small" />{" "}
+                            Approved
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Pickup Scheduled">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Schedule color="primary" fontSize="small" /> Pickup
+                            Scheduled
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Received">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <LocalShipping color="secondary" fontSize="small" />{" "}
+                            Received
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Completed">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <CheckCircle color="success" fontSize="small" />{" "}
+                            Completed
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Refunded">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <CheckCircle color="success" fontSize="small" />{" "}
+                            Refunded
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Rejected">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Cancel color="error" fontSize="small" /> Rejected
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="Cancelled">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Cancel color="action" fontSize="small" /> Cancelled
+                          </Box>
+                        </MenuItem>
                       </Select>
                     </FormControl>
                   ) : (
@@ -628,6 +763,39 @@ const ReturnRequestDetailsModal = ({
                     />
                   )}
                 </ListItem>
+
+                {editMode &&
+                  (editedRequest?.status === "Completed" ||
+                    editedRequest?.status === "Refunded") &&
+                  (editedRequest?.type || request.type) === "Return" && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <ShoppingBag fontSize="small" color="success" />
+                      </ListItemIcon>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Refund Amount (₹)"
+                        placeholder="e.g. 500"
+                        value={
+                          editedRequest?.refundDetails?.amount !== undefined
+                            ? editedRequest.refundDetails.amount
+                            : request.refundDetails?.amount || ""
+                        }
+                        onChange={(e) =>
+                          setEditedRequest({
+                            ...editedRequest,
+                            refundDetails: {
+                              ...(editedRequest.refundDetails || {}),
+                              amount: Number(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        helperText="Leave empty to auto-calculate item total"
+                      />
+                    </ListItem>
+                  )}
 
                 <ListItem>
                   <ListItemIcon>
@@ -848,10 +1016,76 @@ const ReturnRequestDetailsModal = ({
                     <TrackChanges /> Request Status Flow
                   </Typography>
                   <StatusStepper
-                    status={request.status}
-                    type={request.type}
-                    request={request}
+                    status={displayRequest.status}
+                    type={displayRequest.type}
+                    request={displayRequest}
                   />
+                  {!editMode &&
+                    statusConfig.nextActions &&
+                    statusConfig.nextActions.length > 0 && (
+                      <Box
+                        sx={{
+                          mt: 3,
+                          pt: 2,
+                          borderTop: "1px dashed #E0E0E0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: 1.5,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          fontWeight="500"
+                        >
+                          Workflow Actions:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}
+                        >
+                          {statusConfig.nextActions.map((nextStatus) => {
+                            const nextCfg = getStatusConfig(nextStatus);
+                            const isReject = nextStatus === "Rejected";
+                            const actionLabel =
+                              nextStatus === "Approved"
+                                ? "Approve Request"
+                                : nextStatus === "Rejected"
+                                  ? "Reject Request"
+                                  : nextStatus === "Pickup Scheduled"
+                                    ? "Schedule Pickup"
+                                    : nextStatus === "Received"
+                                      ? "Mark Received"
+                                      : nextStatus === "Completed"
+                                        ? request.type === "Return"
+                                          ? "Process Refund & Complete"
+                                          : "Complete Exchange"
+                                        : nextStatus;
+                            return (
+                              <Button
+                                key={nextStatus}
+                                variant={isReject ? "outlined" : "contained"}
+                                color={nextCfg.color}
+                                size="small"
+                                startIcon={nextCfg.icon}
+                                disabled={loading}
+                                onClick={() =>
+                                  handleOpenStatusDialog(nextStatus)
+                                }
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: "bold",
+                                  borderRadius: 1.5,
+                                }}
+                              >
+                                {actionLabel}
+                              </Button>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    )}
                 </Paper>
               </Grid>
             </Grid>
@@ -862,6 +1096,7 @@ const ReturnRequestDetailsModal = ({
   };
 
   const renderItemsTab = () => {
+    const displayRequest = editMode ? editedRequest || request : request;
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <Paper sx={{ p: 3, borderRadius: 2 }}>
@@ -1102,10 +1337,8 @@ const ReturnRequestDetailsModal = ({
                             color="text.secondary"
                             sx={{ mt: 1, display: "block" }}
                           >
-                            By {item.user} •{" "}
-                            {formatDistanceToNow(new Date(item.timestamp), {
-                              addSuffix: true,
-                            })}
+                            By {item.user} • {formatDate(item.timestamp)} (
+                            {formatDistanceToNowSafe(item.timestamp)})
                           </Typography>
                         </Box>
                         {item.status && (
@@ -1136,171 +1369,255 @@ const ReturnRequestDetailsModal = ({
   const typeConfig = getTypeConfig(request.type);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: "24px",
-          maxHeight: "90vh",
-          overflow: "hidden",
-          bgcolor: "#FFFFFF",
-          border: "1px solid #E7E4DD",
-          boxShadow: "0 20px 40px -10px rgba(28, 27, 25, 0.15)",
-        },
-      }}
-    >
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Box
-          sx={{
-            bgcolor: "#FAF9F6",
-            color: "#1C1B19",
-            borderBottom: "1px solid #E7E4DD",
-            p: 3,
-            position: "relative",
-          }}
-        >
-          <DialogTitle
-            sx={{
-              p: 0,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: "#B8925A",
-                  color: "#FFFFFF",
-                  fontWeight: "bold",
-                  fontSize: "1.5rem",
-                  border: "1px solid #E7E4DD",
-                }}
-              >
-                {typeConfig.icon}
-              </Avatar>
-              <Box>
-                <Typography variant="h5" fontWeight="bold">
-                  {request.type} Request #
-                  {request._id?.slice(0, 8).toUpperCase()}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    opacity: 0.9,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  <Person sx={{ fontSize: 16 }} />
-                  {request.user?.name || "Unknown Customer"} •{" "}
-                  {request.user?.email || "No email"}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                  <Chip
-                    icon={statusConfig.icon}
-                    label={request.status}
-                    size="small"
-                    sx={{
-                      fontWeight: "bold",
-                    }}
-                  />
-                  <Chip
-                    icon={typeConfig.icon}
-                    label={request.type}
-                    size="small"
-                    sx={{
-                      fontWeight: "bold",
-                    }}
-                  />
-                </Box>
-              </Box>
-            </Box>
-            <IconButton
-              onClick={onClose}
-              sx={{
-                color: "white",
-                bgcolor: "rgba(255,255,255,0.1)",
-                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-              }}
-            >
-              <Close />
-            </IconButton>
-          </DialogTitle>
-        </Box>
-      </motion.div>
-
-      {/* Tabs */}
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: "divider",
-          px: 3,
-          bgcolor: "white",
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "24px",
+            maxHeight: "90vh",
+            overflow: "hidden",
+            bgcolor: "#FFFFFF",
+            border: "1px solid #E7E4DD",
+            boxShadow: "0 20px 40px -10px rgba(28, 27, 25, 0.15)",
+          },
         }}
       >
-        <Tabs value={activeTab} onChange={handleTabChange}>
-          <Tab label="Overview" icon={<Visibility />} iconPosition="start" />
-          <Tab
-            label={`Items (${request.items?.length || 0})`}
-            icon={<ShoppingBag />}
-            iconPosition="start"
-          />
-          <Tab
-            label={`Attachments (${request.images?.length || 0})`}
-            icon={<AttachFile />}
-            iconPosition="start"
-          />
-          <Tab label="History" icon={<History />} iconPosition="start" />
-        </Tabs>
-      </Box>
-
-      <DialogContent
-        dividers
-        sx={{ p: 0, bgcolor: "#f9fafb", maxHeight: "calc(90vh - 200px)" }}
-      >
-        <Box sx={{ p: 3 }}>
-          {activeTab === 0 && renderOverviewTab()}
-          {activeTab === 1 && renderItemsTab()}
-          {activeTab === 2 && renderAttachmentsTab()}
-          {activeTab === 3 && renderHistoryTab()}
-        </Box>
-      </DialogContent>
-
-      <DialogActions
-        sx={{ p: 2, bgcolor: "grey.50", justifyContent: "space-between" }}
-      >
-        <Box>
-          {editMode && (
-            <Button
-              onClick={() => {
-                setEditMode(false);
-                setEditedRequest({ ...request });
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Box
+            sx={{
+              bgcolor: "#FAF9F6",
+              color: "#1C1B19",
+              borderBottom: "1px solid #E7E4DD",
+              p: 3,
+              position: "relative",
+            }}
+          >
+            <DialogTitle
+              sx={{
+                p: 0,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
               }}
-              variant="outlined"
-              sx={{ mr: 1 }}
             >
-              Cancel
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    bgcolor: "#B8925A",
+                    color: "#FFFFFF",
+                    fontWeight: "bold",
+                    fontSize: "1.5rem",
+                    border: "1px solid #E7E4DD",
+                  }}
+                >
+                  {typeConfig.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight="bold">
+                    {request.type} Request #
+                    {request._id?.slice(0, 8).toUpperCase()}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      opacity: 0.9,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <Person sx={{ fontSize: 16 }} />
+                    {request.user?.name || "Unknown Customer"} •{" "}
+                    {request.user?.email || "No email"}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                    <Chip
+                      icon={statusConfig.icon}
+                      label={request.status}
+                      size="small"
+                      sx={{
+                        fontWeight: "bold",
+                      }}
+                    />
+                    <Chip
+                      icon={typeConfig.icon}
+                      label={request.type}
+                      size="small"
+                      sx={{
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+              <IconButton
+                onClick={onClose}
+                sx={{
+                  color: "#1C1B19",
+                  bgcolor: "#FFFFFF",
+                  border: "1px solid #E7E4DD",
+                  "&:hover": { bgcolor: "#F5F5F0" },
+                }}
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
+          </Box>
+        </motion.div>
+
+        {/* Tabs */}
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: "divider",
+            px: 3,
+            bgcolor: "white",
+          }}
+        >
+          <Tabs value={activeTab} onChange={handleTabChange}>
+            <Tab label="Overview" icon={<Visibility />} iconPosition="start" />
+            <Tab
+              label={`Items (${request.items?.length || 0})`}
+              icon={<ShoppingBag />}
+              iconPosition="start"
+            />
+            <Tab
+              label={`Attachments (${request.images?.length || 0})`}
+              icon={<AttachFile />}
+              iconPosition="start"
+            />
+            <Tab label="History" icon={<History />} iconPosition="start" />
+          </Tabs>
+        </Box>
+
+        <DialogContent
+          dividers
+          sx={{ p: 0, bgcolor: "#f9fafb", maxHeight: "calc(90vh - 200px)" }}
+        >
+          <Box sx={{ p: 3 }}>
+            {activeTab === 0 && renderOverviewTab()}
+            {activeTab === 1 && renderItemsTab()}
+            {activeTab === 2 && renderAttachmentsTab()}
+            {activeTab === 3 && renderHistoryTab()}
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{ p: 2, bgcolor: "grey.50", justifyContent: "space-between" }}
+        >
+          <Box>
+            {editMode && (
+              <Button
+                onClick={() => {
+                  setEditMode(false);
+                  setEditedRequest({ ...request });
+                }}
+                variant="outlined"
+                sx={{ mr: 1 }}
+              >
+                Cancel
+              </Button>
+            )}
+          </Box>
+          <Box>
+            <Button onClick={onClose} variant="contained" color="primary">
+              Close
             </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* Status Update Confirmation Dialog */}
+      <Dialog
+        open={statusDialogOpen}
+        onClose={() => setStatusDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          {pendingStatus === "Rejected" ? (
+            <Cancel color="error" />
+          ) : (
+            <TrackChanges color="primary" />
           )}
-        </Box>
-        <Box>
-          <Button onClick={onClose} variant="contained" color="primary">
-            Close
+          Update Status to {pendingStatus}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {pendingStatus === "Approved" &&
+              "Approve this return/exchange request for courier pickup and warehouse inspection."}
+            {pendingStatus === "Rejected" &&
+              "Please provide a reason for rejection. This note will be recorded in the audit history and sent to the customer."}
+            {pendingStatus === "Pickup Scheduled" &&
+              "Confirm courier pickup has been scheduled for this return package."}
+            {pendingStatus === "Received" &&
+              "Confirm the package has been received and inspected at the warehouse."}
+            {pendingStatus === "Completed" &&
+              (request.type === "Return"
+                ? "Complete this request and confirm the refund has been processed."
+                : "Complete this exchange request.")}
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label={
+              pendingStatus === "Rejected"
+                ? "Rejection Reason *"
+                : "Admin Note / Remarks (Optional)"
+            }
+            placeholder={
+              pendingStatus === "Rejected"
+                ? "e.g., Return window expired or items damaged by customer..."
+                : "Add internal note for this status update..."
+            }
+            value={statusDialogNote}
+            onChange={(e) => setStatusDialogNote(e.target.value)}
+            size="small"
+            required={pendingStatus === "Rejected"}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setStatusDialogOpen(false)} disabled={loading}>
+            Cancel
           </Button>
-        </Box>
-      </DialogActions>
-    </Dialog>
+          <Button
+            variant="contained"
+            color={
+              pendingStatus ? getStatusConfig(pendingStatus).color : "primary"
+            }
+            disabled={
+              loading ||
+              (pendingStatus === "Rejected" && !statusDialogNote.trim())
+            }
+            onClick={handleConfirmStatusUpdate}
+            startIcon={
+              loading ? <CircularProgress size={16} /> : <CheckCircle />
+            }
+          >
+            {loading ? "Updating..." : `Confirm ${pendingStatus}`}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

@@ -57,6 +57,8 @@ import {
   Reply,
   History,
   Print,
+  Forum,
+  SupportAgent,
 } from "@mui/icons-material";
 import { format, formatDistanceToNow } from "date-fns";
 import { useSelector } from "react-redux";
@@ -249,7 +251,7 @@ const ContactDetailsModal = ({
   useEffect(() => {
     if (open && contact) {
       setReplyMessage("");
-      setAdminNote(contact.adminNote || "");
+      setAdminNote(contact.adminNotes || contact.adminNote || "");
     }
   }, [open, contact]);
 
@@ -262,7 +264,11 @@ const ContactDetailsModal = ({
     try {
       await onReply(contact._id, replyMessage);
       setReplyMessage("");
-      showSnackbar("Reply sent successfully!", "success");
+      setActiveTab(0);
+      showSnackbar(
+        "Reply sent successfully and emailed to customer!",
+        "success",
+      );
     } catch (error) {
       showSnackbar(error.message || "Failed to send reply", "error");
     }
@@ -608,65 +614,297 @@ const ContactDetailsModal = ({
     </Grid>
   );
 
-  const renderReplyTab = () => (
-    <Paper sx={{ p: 3, borderRadius: 2 }}>
-      <Typography
-        variant="h6"
-        gutterBottom
-        sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}
-      >
-        <Reply /> Send Reply
-      </Typography>
+  const renderReplyTab = () => {
+    const allReplies =
+      contact.replies && contact.replies.length > 0
+        ? contact.replies
+        : contact.reply
+          ? [
+              {
+                message: contact.reply,
+                sender: "Support Team",
+                createdAt: contact.repliedAt || contact.updatedAt,
+              },
+            ]
+          : [];
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>Original Message from {contact.name}:</strong> "
-          {contact.message.substring(0, 100)}..."
-        </Typography>
-      </Alert>
+    const handleKeyDown = (e) => {
+      if (
+        e.ctrlKey &&
+        e.key === "Enter" &&
+        replyMessage.trim() &&
+        !isReplying
+      ) {
+        e.preventDefault();
+        handleSendReply();
+      }
+    };
 
-      <TextField
-        fullWidth
-        multiline
-        rows={10}
-        label="Your Reply"
-        value={replyMessage}
-        onChange={(e) => setReplyMessage(e.target.value)}
-        placeholder={`Type your reply to ${contact.name}...`}
-        disabled={isReplying}
-        sx={{ mb: 2 }}
-      />
-
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ display: "block", mb: 3 }}
-      >
-        <Email fontSize="small" sx={{ verticalAlign: "middle", mr: 0.5 }} />
-        This reply will be sent to: {contact.email}
-        {contact.phone && ` | Phone: ${contact.phone}`}
-      </Typography>
-
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={() => setReplyMessage("")}
-          disabled={isReplying || !replyMessage.trim()}
+    return (
+      <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
         >
-          Clear
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={isReplying ? <CircularProgress size={20} /> : <Send />}
-          onClick={handleSendReply}
-          disabled={isReplying || !replyMessage.trim()}
-          sx={{ ml: "auto" }}
+          <Typography
+            variant="h6"
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Forum color="primary" /> Conversation Thread ({allReplies.length + 1}{" "}
+            {allReplies.length === 0 ? "message" : "messages"})
+          </Typography>
+          <Chip
+            size="small"
+            icon={<Email sx={{ fontSize: "14px !important" }} />}
+            label={`Customer: ${contact.email}`}
+            variant="outlined"
+            color="primary"
+          />
+        </Box>
+
+        {/* Scrollable Conversation Stream */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            mb: 3,
+            p: 2.5,
+            maxHeight: 380,
+            overflowY: "auto",
+            bgcolor: "#F9FAFB",
+            borderRadius: 2,
+            border: "1px solid #E5E7EB",
+          }}
         >
-          {isReplying ? "Sending..." : "Send Reply"}
-        </Button>
-      </Box>
-    </Paper>
-  );
+          {/* Customer's Initial Inbound Message */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              maxWidth: "85%",
+              alignSelf: "flex-start",
+            }}
+          >
+            <Avatar
+              sx={{
+                bgcolor: "#2563EB",
+                width: 36,
+                height: 36,
+                fontSize: "0.9rem",
+              }}
+            >
+              {contact.name?.charAt(0).toUpperCase() || "C"}
+            </Avatar>
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 0.5,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  {contact.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {contact.createdAt
+                    ? format(new Date(contact.createdAt), "MMM d, h:mm a")
+                    : ""}
+                </Typography>
+                <Chip
+                  label="Inquiry"
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.65rem",
+                    bgcolor: "#E0E7FF",
+                    color: "#3730A3",
+                  }}
+                />
+              </Box>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  bgcolor: "#FFFFFF",
+                  borderRadius: "0px 12px 12px 12px",
+                  borderColor: "#E5E7EB",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                }}
+              >
+                {contact.subject && (
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="primary.main"
+                    gutterBottom
+                  >
+                    {contact.subject}
+                  </Typography>
+                )}
+                <Typography
+                  variant="body2"
+                  sx={{ whiteSpace: "pre-wrap", color: "#1F2937" }}
+                >
+                  {contact.message}
+                </Typography>
+              </Paper>
+            </Box>
+          </Box>
+
+          {/* Admin Support Replies */}
+          {allReplies.map((r, index) => (
+            <Box
+              key={index}
+              sx={{
+                display: "flex",
+                gap: 1.5,
+                maxWidth: "85%",
+                alignSelf: "flex-end",
+                flexDirection: "row-reverse",
+              }}
+            >
+              <Avatar
+                sx={{
+                  bgcolor: "#059669",
+                  width: 36,
+                  height: 36,
+                  fontSize: "0.9rem",
+                }}
+              >
+                <SupportAgent sx={{ fontSize: 20 }} />
+              </Avatar>
+              <Box sx={{ textAlign: "right" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 1,
+                    mb: 0.5,
+                  }}
+                >
+                  <Chip
+                    icon={
+                      <CheckCircle
+                        sx={{
+                          fontSize: "12px !important",
+                          color: "#059669 !important",
+                        }}
+                      />
+                    }
+                    label="Emailed"
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.65rem",
+                      bgcolor: "#DCFCE7",
+                      color: "#166534",
+                    }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    {r.createdAt
+                      ? format(new Date(r.createdAt), "MMM d, h:mm a")
+                      : ""}
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    {r.sender || "Support Team"}
+                  </Typography>
+                </Box>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    bgcolor: "#F0FDF4",
+                    borderRadius: "12px 0px 12px 12px",
+                    borderColor: "#BBF7D0",
+                    textAlign: "left",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ whiteSpace: "pre-wrap", color: "#14532D" }}
+                  >
+                    {r.message}
+                  </Typography>
+                </Paper>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Reply Composer */}
+        <Box sx={{ pt: 2, borderTop: "1px solid #E5E7EB" }}>
+          <Typography
+            variant="subtitle2"
+            fontWeight="bold"
+            gutterBottom
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <Reply fontSize="small" /> Write a Response
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            value={replyMessage}
+            onChange={(e) => setReplyMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={`Type your reply to ${contact.name}... (Press Ctrl + Enter to send)`}
+            disabled={isReplying}
+            sx={{ mb: 1.5 }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              <Email
+                fontSize="small"
+                sx={{ verticalAlign: "middle", mr: 0.5 }}
+              />
+              Delivers directly to <strong>{contact.email}</strong> via email
+              notification
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setReplyMessage("")}
+                disabled={isReplying || !replyMessage.trim()}
+                size="small"
+              >
+                Clear
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={
+                  isReplying ? <CircularProgress size={16} /> : <Send />
+                }
+                onClick={handleSendReply}
+                disabled={isReplying || !replyMessage.trim()}
+                size="small"
+              >
+                {isReplying ? "Sending..." : "Send Reply"}
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+    );
+  };
 
   return (
     <Dialog
@@ -752,9 +990,10 @@ const ContactDetailsModal = ({
           <IconButton
             onClick={onClose}
             sx={{
-              color: "white",
-              bgcolor: "rgba(255,255,255,0.1)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+              color: "#1C1B19",
+              bgcolor: "#FFFFFF",
+              border: "1px solid #E7E4DD",
+              "&:hover": { bgcolor: "#F5F5F0" },
             }}
           >
             <Close />
@@ -962,6 +1201,9 @@ const AdminContactManagement = () => {
       const data = await response.json();
       if (data.success) {
         fetchContacts();
+        if (selectedContact && selectedContact._id === contactId) {
+          setSelectedContact(data.data);
+        }
         return data;
       } else {
         throw new Error(data.message || "Failed to send reply");
