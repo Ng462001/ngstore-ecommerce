@@ -245,12 +245,17 @@ const ReturnTracking = ({ request, isFullPage = false }) => {
 
   return (
     <Container maxWidth={isFullPage ? "lg" : false} sx={{ p: 0 }}>
-      <Paper elevation={0} sx={{ bgcolor: "grey.50", borderRadius: 2, p: 4 }}>
+      <Paper
+        elevation={0}
+        sx={{ bgcolor: "grey.50", borderRadius: 2, p: { xs: 2, sm: 4 } }}
+      >
         <Box
           sx={{
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: { xs: 1, sm: 0 },
             mb: 2,
           }}
         >
@@ -280,12 +285,12 @@ const ReturnTracking = ({ request, isFullPage = false }) => {
         </Typography>
 
         {/* Vertical MUI Stepper Layout */}
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, md: 4 }}>
           {/* Left Column - Stepper */}
           <Grid item xs={12} md={4}>
             <Paper
               elevation={1}
-              sx={{ p: 4, bgcolor: "white", borderRadius: 2 }}
+              sx={{ p: { xs: 2, sm: 4 }, bgcolor: "white", borderRadius: 2 }}
             >
               <Stepper
                 activeStep={currentStep}
@@ -357,6 +362,7 @@ const ReturnTracking = ({ request, isFullPage = false }) => {
                       alignItems: "center",
                       gap: 1,
                       mb: 1,
+                      flexWrap: "wrap",
                     }}
                   >
                     <Typography

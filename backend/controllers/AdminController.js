@@ -73,10 +73,8 @@ class AdminController {
                     case 'Out for delivery':
                         return ['Delivered'];
                     case 'Delivered':
-                        return ['Returned'];
-                    case 'Returned':
-                        return ['Refunded'];
                     case 'Cancelled':
+                    case 'Returned':
                     case 'Refunded':
                     default:
                         return [];
@@ -94,7 +92,7 @@ class AdminController {
 
             order.status = status || order.status;
 
-            // Update timestamps based on status
+            // Update timestamps and payment status based on status
             const statusTimestamps = {
                 'Processing': { processingAt: Date.now() },
                 'Shipped': { shippedAt: Date.now() },
@@ -102,7 +100,9 @@ class AdminController {
                 'Delivered': {
                     deliveredAt: Date.now(),
                     isDelivered: true,
-                    isPaid: true
+                    isPaid: true,
+                    paymentStatus: 'Paid',
+                    paidAt: order.paidAt || Date.now()
                 },
                 'Cancelled': {
                     cancelledAt: Date.now()

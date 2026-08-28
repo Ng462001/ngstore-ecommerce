@@ -23,12 +23,13 @@ const returnExchangeSchema = new mongoose.Schema({
             required: true
         },
         name: String,
+        image: String,
         quantity: { type: Number, required: true },
         price: Number,
         reason: { type: String, required: true },
         condition: {
             type: String,
-            enum: ['Unopened', 'Opened', 'Damaged', 'Defective', 'Wrong Item'],
+            enum: ['Unopened', 'Opened', 'Damaged', 'Defective', 'Wrong Item', 'New', 'Like New', 'Used'],
             required: true
         },
         images: [String] // URLs for proof per item
@@ -41,7 +42,7 @@ const returnExchangeSchema = new mongoose.Schema({
     },
     refundDetails: {
         amount: Number,
-        method: { type: String, enum: ['Original Payment', 'Wallet', 'Bank Transfer'] },
+        method: { type: String, enum: ['Original Payment', 'Wallet', 'Bank Transfer'], default: 'Original Payment' },
         status: { type: String, enum: ['Pending', 'Processed', 'Failed'], default: 'Pending' },
         processedAt: Date
     },
@@ -51,6 +52,7 @@ const returnExchangeSchema = new mongoose.Schema({
         requestedProduct: mongoose.Schema.Types.Mixed // Store product ID or details user requested
     },
     pickupAddress: {
+        fullName: String,
         street: String,
         city: String,
         state: String,

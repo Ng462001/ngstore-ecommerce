@@ -98,9 +98,10 @@ const ReturnExchangeModal = ({ open, onClose, order, user, onRequestSubmitted })
         if (!order) return false
         // Must be delivered to be eligible for return/exchange
         if (order.status !== 'Delivered') return false
-        if (!order.deliveredAt) return false
 
-        const deliveryDate = new Date(order.deliveredAt)
+        const deliveryDate = order.deliveredAt
+            ? new Date(order.deliveredAt)
+            : (order.updatedAt ? new Date(order.updatedAt) : new Date())
         const currentDate = new Date()
         const daysDifference = (currentDate - deliveryDate) / (1000 * 60 * 60 * 24)
         return daysDifference <= 10 // 10-day return window
@@ -153,6 +154,7 @@ const ReturnExchangeModal = ({ open, onClose, order, user, onRequestSubmitted })
                 return {
                     product: item.product,
                     name: item.name,
+                    image: item.image || item.images?.[0]?.src || '',
                     quantity: quantity,
                     price: item.price,
                     reason: selectedReason === 'other' ? customReason : selectedReason,
@@ -165,8 +167,14 @@ const ReturnExchangeModal = ({ open, onClose, order, user, onRequestSubmitted })
             formData.append('type', requestType === 'return' ? 'Return' : 'Exchange')
             formData.append('items', JSON.stringify(itemsToSubmit))
             // Ensure pickup address is valid
-            const pickupAddr = order.shippingAddress || {
-                street: 'N/A', city: 'N/A', state: 'N/A', zipCode: 'N/A', country: 'N/A'
+            const pickupAddr = {
+                fullName: order.shippingAddress?.fullName || user?.name || 'Customer',
+                street: order.shippingAddress?.street || 'N/A',
+                city: order.shippingAddress?.city || 'N/A',
+                state: order.shippingAddress?.state || 'N/A',
+                zipCode: order.shippingAddress?.zipCode || 'N/A',
+                country: order.shippingAddress?.country || 'India',
+                mobile: order.shippingAddress?.mobile || user?.phone || ''
             }
             formData.append('pickupAddress', JSON.stringify(pickupAddr))
 

@@ -908,6 +908,65 @@ Message: ${contact.message}
             html: htmlMessage
         });
     }
+
+    /**
+     * Send Order Status Update / Return / Refund email.
+     */
+    async sendOrderStatusEmail(order, oldOrNewStatus, maybeNewStatusOrNote, maybeNote) {
+        if (!order) return { success: false, error: 'Order missing' };
+        
+        let newStatus = typeof maybeNewStatusOrNote === 'string' && ['Pending', 'Processing', 'Shipped', 'Out for delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(maybeNewStatusOrNote) 
+            ? maybeNewStatusOrNote 
+            : (typeof oldOrNewStatus === 'string' ? oldOrNewStatus : order.status);
+        let note = maybeNote || (typeof maybeNewStatusOrNote === 'string' && !['Pending', 'Processing', 'Shipped', 'Out for delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(maybeNewStatusOrNote) ? maybeNewStatusOrNote : '');
+
+        const recipientEmail = order.user?.email;
+        const recipientName = order.user?.name || 'Valued Customer';
+        if (!recipientEmail) return { success: false, error: 'Recipient email missing' };
+
+        const orderIdStr = order._id ? order._id.toString().slice(-8).toUpperCase() : 'N/A';
+
+        const plainMessage = `
+Hello ${recipientName},
+
+Your order #${orderIdStr} status has been updated to: ${newStatus}.
+${note ? `\nNote: ${note}\n` : ''}
+Order Total: ₹${order.totalPrice || 0}
+
+Thank you for shopping with us!
+${process.env.COMPANY_NAME || 'NGSTORE'}
+        `;
+
+        const htmlMessage = getBaseTemplate(
+            `📦 Order Status Update: ${newStatus}`,
+            `Order #${orderIdStr}`,
+            `
+            <div style="font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">
+                Hello ${recipientName}! 👋
+            </div>
+            <p style="color: #4a5568; font-size: 15px; margin-bottom: 20px; line-height: 1.6;">
+                The status of your order <strong>#${orderIdStr}</strong> has been updated to: <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 600; background: #e0f2fe; color: #0369a1;">${newStatus}</span>
+            </p>
+            ${note ? `
+            <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 14px 18px; margin-bottom: 20px; border-radius: 6px; font-size: 14px; color: #334155;">
+                <strong>Update Details:</strong> ${note}
+            </div>` : ''}
+            <div style="background: #f8fafc; border-radius: 12px; padding: 18px; margin-bottom: 25px; border: 1px solid #e2e8f0;">
+                <div style="margin-bottom: 8px; font-size: 14px;"><strong>Order ID:</strong> #${orderIdStr}</div>
+                <div style="margin-bottom: 8px; font-size: 14px;"><strong>Total Amount:</strong> ₹${order.totalPrice || 0}</div>
+                <div style="font-size: 14px;"><strong>Payment Status:</strong> ${order.paymentStatus || 'Pending'}</div>
+            </div>
+            `
+        );
+
+        return this.sendEmail({
+            email: recipientEmail,
+            subject: `Order #${orderIdStr} Update: ${newStatus}`,
+            message: plainMessage,
+            html: htmlMessage
+        });
+    }
 }
 
 module.exports = new EmailService();
+

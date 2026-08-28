@@ -172,9 +172,7 @@ const Orders = () => {
       case "Out for delivery":
         return ["Delivered"];
       case "Delivered":
-        return ["Returned"];
       case "Returned":
-        return ["Refunded"];
       case "Cancelled":
       case "Refunded":
       default:
@@ -238,12 +236,19 @@ const Orders = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await axios.put(
+      const isNowPaid =
+        newStatus === "Delivered" ||
+        orderToUpdate.isPaid ||
+        orderToUpdate.paymentStatus === "Paid";
+      const updatedPaymentStatus = isNowPaid
+        ? "Paid"
+        : orderToUpdate.paymentStatus || "Pending";
+
+      const res = await axios.put(
         `${API_URL}/admin/orders/${orderToUpdate._id}/status`,
         {
           status: newStatus,
           notifyCustomer: true,
-          isPaid: newStatus === "Delivered" ? true : false,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -254,10 +259,12 @@ const Orders = () => {
           order._id === orderToUpdate._id
             ? {
                 ...order,
+                ...(res.data || {}),
                 status: newStatus,
                 isDelivered:
                   newStatus === "Delivered" ? true : order.isDelivered,
-                isPaid: newStatus === "Delivered" ? true : false,
+                isPaid: isNowPaid,
+                paymentStatus: updatedPaymentStatus,
               }
             : order,
         ),

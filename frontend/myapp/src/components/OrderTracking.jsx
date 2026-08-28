@@ -1,6 +1,19 @@
-import { useState, useEffect } from 'react'
-import { Stepper, Step, StepLabel, Box, Typography, Paper, Container, Card, CardContent, Grid, Divider, Chip } from '@mui/material'
-import CheckIcon from '@mui/icons-material/Check'
+import { useState, useEffect } from "react";
+import {
+  Stepper,
+  Step,
+  StepLabel,
+  Box,
+  Typography,
+  Paper,
+  Container,
+  Card,
+  CardContent,
+  Grid,
+  Divider,
+  Chip,
+} from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
 import {
   Assignment as AssignmentIcon,
   CheckCircle as CheckCircleIcon,
@@ -11,8 +24,8 @@ import {
   CalendarToday as CalendarIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
-  AssignmentReturned as ReturnIcon
-} from '@mui/icons-material'
+  AssignmentReturned as ReturnIcon,
+} from "@mui/icons-material";
 
 // Custom Step Icon Component for Order Tracking
 function CustomStepIcon(props) {
@@ -20,57 +33,95 @@ function CustomStepIcon(props) {
 
   const stepIcons = [
     <AssignmentIcon sx={{ fontSize: 16 }} />, // 1: Order Placed
-    <StoreIcon sx={{ fontSize: 16 }} />,      // 2: Processing
-    <ShippingIcon sx={{ fontSize: 16 }} />,   // 3: Shipped
-    <BikeIcon sx={{ fontSize: 16 }} />,       // 4: Out for Delivery
-    <HomeIcon sx={{ fontSize: 16 }} />,       // 5: Delivered
-    <ReturnIcon sx={{ fontSize: 16 }} />      // 6: Returned
-  ]
+    <StoreIcon sx={{ fontSize: 16 }} />, // 2: Processing
+    <ShippingIcon sx={{ fontSize: 16 }} />, // 3: Shipped
+    <BikeIcon sx={{ fontSize: 16 }} />, // 4: Out for Delivery
+    <HomeIcon sx={{ fontSize: 16 }} />, // 5: Delivered
+    <ReturnIcon sx={{ fontSize: 16 }} />, // 6: Returned
+  ];
 
   return (
     <Box
       sx={{
         width: 28,
         height: 28,
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: completed ? '#3E7A55' : active ? '#B8925A' : '#F3F1EC',
-        border: '1px solid',
-        borderColor: completed ? '#3E7A55' : active ? '#B8925A' : '#E7E4DD',
-        color: active || completed ? 'white' : '#6B6862',
-        fontSize: '0.875rem',
-        fontWeight: 'bold',
-        transition: 'all 0.3s ease'
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: completed ? "#3E7A55" : active ? "#B8925A" : "#F3F1EC",
+        border: "1px solid",
+        borderColor: completed ? "#3E7A55" : active ? "#B8925A" : "#E7E4DD",
+        color: active || completed ? "white" : "#6B6862",
+        fontSize: "0.875rem",
+        fontWeight: "bold",
+        transition: "all 0.3s ease",
       }}
     >
-      {completed ? <CheckIcon sx={{ fontSize: 16 }} /> : (stepIcons[icon - 1] || <ReturnIcon sx={{ fontSize: 16 }} />)}
+      {completed ? (
+        <CheckIcon sx={{ fontSize: 16 }} />
+      ) : (
+        stepIcons[icon - 1] || <ReturnIcon sx={{ fontSize: 16 }} />
+      )}
     </Box>
   );
 }
 
 // Order Tracking Component
 const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
-  // Add "Returned" step if there's a return request
-  const baseSteps = ['Order Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered']
-  const steps = returnRequest ? [...baseSteps, 'Returned'] : baseSteps
+  // Add "Returned" step if there's a return request or order is returned
+  const baseSteps = [
+    "Order Placed",
+    "Processing",
+    "Shipped",
+    "Out for Delivery",
+    "Delivered",
+  ];
+  const hasReturn =
+    returnRequest &&
+    returnRequest.status !== "Cancelled" &&
+    returnRequest.status !== "Rejected";
+  const isReturnCompleted =
+    order.status === "Returned" ||
+    (returnRequest &&
+      (returnRequest.status === "Completed" ||
+        returnRequest.status === "Refunded"));
+  const steps = hasReturn
+    ? [
+        ...baseSteps,
+        isReturnCompleted
+          ? returnRequest?.type === "Exchange"
+            ? "Exchanged"
+            : "Returned"
+          : `${returnRequest?.type || "Return"} in Progress`,
+      ]
+    : order.status === "Returned"
+      ? [...baseSteps, "Returned"]
+      : baseSteps;
 
   // Get the actual current step based on order status
   const getCurrentStep = () => {
-    // If there's a return request, show the return step
-    if (returnRequest) {
-      return 5; // Return step index
+    if (order.status === "Returned" || isReturnCompleted) {
+      return 5; // Final Return/Exchange Completed step index
+    }
+    if (hasReturn) {
+      return 5; // Active return in progress step
     }
 
     switch (order.status) {
-      case 'Delivered': return 4;
-      case 'Out for delivery': return 3;
-      case 'Shipped': return 2;
-      case 'Confirmed':
-      case 'Processing': return 1;
-      case 'Cancelled': return -1;
-      default: return 0;
+      case "Delivered":
+        return 4;
+      case "Out for delivery":
+        return 3;
+      case "Shipped":
+        return 2;
+      case "Confirmed":
+      case "Processing":
+        return 1;
+      case "Cancelled":
+        return -1;
+      default:
+        return 0;
     }
   };
 
@@ -78,11 +129,14 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
   const [viewingStep, setViewingStep] = useState(currentStep);
 
   const isStepComplete = (stepIndex) => {
-    if (returnRequest && stepIndex <= 5) {
-      return stepIndex <= currentStep;
+    if (order.status === "Returned" || isReturnCompleted) {
+      return stepIndex <= 5;
     }
-    if (order.status === 'Delivered') {
-      return stepIndex <= currentStep;
+    if (hasReturn) {
+      return stepIndex <= 4; // Delivered is complete, return is in progress
+    }
+    if (order.status === "Delivered") {
+      return stepIndex <= 4;
     }
     return stepIndex < currentStep;
   };
@@ -98,138 +152,167 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
       {
         title: "Order Placed",
         description: "Your order has been successfully placed.",
-        date: new Date(order.createdAt).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
+        date: new Date(order.createdAt).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         }),
-        icon: <AssignmentIcon />
+        icon: <AssignmentIcon />,
       },
       {
         title: "Processing",
-        description: "Your order is being processed and packed at our facility.",
+        description:
+          "Your order is being processed and packed at our facility.",
         date: order.processingAt
-          ? new Date(order.processingAt).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          ? new Date(order.processingAt).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Processing will begin soon",
-        icon: <StoreIcon />
+        icon: <StoreIcon />,
       },
       {
         title: "Shipped",
         description: "Your order has been shipped and is on its way to you.",
         date: order.shippedAt
-          ? new Date(order.shippedAt).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          ? new Date(order.shippedAt).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Awaiting shipment",
-        icon: <ShippingIcon />
+        icon: <ShippingIcon />,
       },
       {
         title: "Out for Delivery",
         description: "Your order is out for delivery and will reach you today.",
         date: order.outForDeliveryAt
-          ? new Date(order.outForDeliveryAt).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          ? new Date(order.outForDeliveryAt).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Will be out for delivery soon",
-        icon: <BikeIcon />
+        icon: <BikeIcon />,
       },
       {
         title: "Delivered",
         description: "Your order has been delivered successfully.",
         date: order.deliveredAt
-          ? new Date(order.deliveredAt).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          ? new Date(order.deliveredAt).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           : "Expected delivery soon",
-        icon: <HomeIcon />
+        icon: <HomeIcon />,
       },
       {
-        title: "Returned",
-        description: returnRequest ? `${returnRequest.type} request has been ${returnRequest.status.toLowerCase()}.` : "Product return initiated.",
-        date: returnRequest?.createdAt
-          ? new Date(returnRequest.createdAt).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
-          : "Return pending",
-        icon: <ReturnIcon />
-      }
+        title: isReturnCompleted
+          ? returnRequest?.type === "Exchange"
+            ? "Exchange Completed"
+            : "Returned & Refunded"
+          : `${returnRequest?.type || "Return"} in Progress`,
+        description: returnRequest
+          ? `${returnRequest.type} request is currently in "${returnRequest.status}" state.`
+          : "Product return processed.",
+        date:
+          returnRequest?.updatedAt || returnRequest?.createdAt
+            ? new Date(
+                returnRequest.updatedAt || returnRequest.createdAt,
+              ).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Return update pending",
+        icon: <ReturnIcon />,
+      },
     ];
 
-    return stepContents[stepIndex] ? stepContents[stepIndex] : stepContents[stepContents.length - 1];
+    return stepContents[stepIndex]
+      ? stepContents[stepIndex]
+      : stepContents[stepContents.length - 1];
   };
 
   useEffect(() => {
     setViewingStep(currentStep);
   }, [currentStep]);
 
-  if (order.status === 'Cancelled') {
+  if (order.status === "Cancelled") {
     return (
       <Paper
         elevation={0}
         sx={{
-          bgcolor: 'error.light',
+          bgcolor: "error.light",
           border: 1,
-          borderColor: 'error.main',
+          borderColor: "error.main",
           borderRadius: 2,
           p: 4,
-          textAlign: 'center'
+          textAlign: "center",
         }}
       >
         <Box
           sx={{
             width: 64,
             height: 64,
-            bgcolor: 'error.main',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2
+            bgcolor: "error.main",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mx: "auto",
+            mb: 2,
           }}
         >
           <svg width="32" height="32" fill="white" viewBox="0 0 24 24">
-            <path stroke="currentColor" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              stroke="currentColor"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </Box>
-        <Typography variant="h6" sx={{ color: 'error.dark', fontWeight: 600, mb: 1 }} component="div">
+        <Typography
+          variant="h6"
+          sx={{ color: "error.dark", fontWeight: 600, mb: 1 }}
+          component="div"
+        >
           Order Cancelled
         </Typography>
-        <Typography variant="body2" sx={{ color: 'error.dark' }} component="div">
-          This order has been cancelled. Please contact customer support for more details.
+        <Typography
+          variant="body2"
+          sx={{ color: "error.dark" }}
+          component="div"
+        >
+          This order has been cancelled. Please contact customer support for
+          more details.
         </Typography>
         <Box sx={{ mt: 2 }}>
-          <Typography variant="body2" sx={{ color: 'error.dark', fontStyle: 'italic' }} component="div">
+          <Typography
+            variant="body2"
+            sx={{ color: "error.dark", fontStyle: "italic" }}
+            component="div"
+          >
             Order was placed on {new Date(order.createdAt).toLocaleDateString()}
           </Typography>
         </Box>
@@ -239,19 +322,31 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
 
   return (
     <Container maxWidth={isFullPage ? "lg" : false} sx={{ p: 0 }}>
-      <Paper elevation={0} sx={{ bgcolor: 'grey.50', borderRadius: 2, p: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary', mb: 2 }} component="div">
+      <Paper elevation={0} sx={{ bgcolor: "grey.50", borderRadius: 2, p: 4 }}>
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: 600, color: "text.primary", mb: 2 }}
+          component="div"
+        >
           Order Tracking
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }} component="div">
-          Order #{order._id.substring(0, 8).toUpperCase()} • Placed on {new Date(order.createdAt).toLocaleDateString()}
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", mb: 4 }}
+          component="div"
+        >
+          Order #{order._id.substring(0, 8).toUpperCase()} • Placed on{" "}
+          {new Date(order.createdAt).toLocaleDateString()}
         </Typography>
 
         {/* Vertical MUI Stepper Layout */}
         <Grid container spacing={4}>
           {/* Left Column - Stepper */}
           <Grid item xs={12} md={4}>
-            <Paper elevation={1} sx={{ p: 4, bgcolor: 'white', borderRadius: 2 }}>
+            <Paper
+              elevation={1}
+              sx={{ p: 4, bgcolor: "white", borderRadius: 2 }}
+            >
               <Stepper
                 activeStep={currentStep}
                 orientation="vertical"
@@ -263,17 +358,21 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
                       StepIconComponent={CustomStepIcon}
                       onClick={() => handleStepClick(index)}
                       sx={{
-                        cursor: index <= currentStep ? 'pointer' : 'default',
-                        '& .MuiStepLabel-label': {
-                          fontSize: '0.875rem',
+                        cursor: index <= currentStep ? "pointer" : "default",
+                        "& .MuiStepLabel-label": {
+                          fontSize: "0.875rem",
                           fontWeight: index === currentStep ? 600 : 400,
-                          color: index === currentStep ? 'primary.main' :
-                            isStepComplete(index) ? 'text.primary' : 'text.secondary'
+                          color:
+                            index === currentStep
+                              ? "primary.main"
+                              : isStepComplete(index)
+                                ? "text.primary"
+                                : "text.secondary",
                         },
-                        '& .MuiStepLabel-label.Mui-completed': {
-                          color: 'text.primary',
-                          fontWeight: 400
-                        }
+                        "& .MuiStepLabel-label.Mui-completed": {
+                          color: "text.primary",
+                          fontWeight: 400,
+                        },
                       }}
                     >
                       {label}
@@ -287,26 +386,44 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
           {/* Right Column - Content */}
           <Grid item xs={12} md={8}>
             {/* Current Step Content */}
-            <Paper elevation={0} sx={{ bgcolor: 'white', borderRadius: 2, p: 3, mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+            <Paper
+              elevation={0}
+              sx={{ bgcolor: "white", borderRadius: 2, p: 3, mb: 3 }}
+            >
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
                 <Box
                   sx={{
                     width: 48,
                     height: 48,
-                    bgcolor: viewingStep === currentStep ? 'primary.light' : 'grey.100',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    bgcolor:
+                      viewingStep === currentStep
+                        ? "primary.light"
+                        : "grey.100",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     flexShrink: 0,
-                    color: viewingStep === currentStep ? 'primary.main' : 'grey.600'
+                    color:
+                      viewingStep === currentStep ? "primary.main" : "grey.600",
                   }}
                 >
                   {getStepContent(viewingStep).icon}
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }} component="div">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, color: "text.primary" }}
+                      component="div"
+                    >
                       {getStepContent(viewingStep).title}
                     </Typography>
                     {viewingStep === currentStep && (
@@ -314,11 +431,11 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
                         sx={{
                           px: 1.5,
                           py: 0.5,
-                          bgcolor: 'primary.main',
-                          color: 'white',
+                          bgcolor: "primary.main",
+                          color: "white",
                           borderRadius: 1,
-                          fontSize: '0.75rem',
-                          fontWeight: 600
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
                         }}
                         component="div"
                       >
@@ -326,10 +443,22 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
                       </Box>
                     )}
                   </Box>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }} component="div">
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", mb: 2 }}
+                    component="div"
+                  >
                     {getStepContent(viewingStep).description}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontSize: '0.875rem' }} component="div">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      color: "text.secondary",
+                      fontSize: "0.875rem",
+                    }}
+                    component="div"
+                  >
                     <CalendarIcon sx={{ fontSize: 16, mr: 1 }} />
                     {getStepContent(viewingStep).date}
                   </Box>
@@ -338,25 +467,42 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
             </Paper>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <Card sx={{ border: 1, borderColor: 'grey.200' }}>
+                <Card sx={{ border: 1, borderColor: "grey.200" }}>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                    >
                       <LocationIcon color="primary" />
                       Shipping Address
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Typography variant="body1" paragraph>
-                        <strong>{order.shippingAddress.street || 'N/A'}</strong>
+                        <strong>{order.shippingAddress.street || "N/A"}</strong>
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {order.shippingAddress.city || ''} - {order.shippingAddress.zipCode || ''}<br /> {order.shippingAddress.state || ''}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        paragraph
+                      >
+                        {order.shippingAddress.city || ""} -{" "}
+                        {order.shippingAddress.zipCode || ""}
+                        <br /> {order.shippingAddress.state || ""}
                         <br />
-                        {order.shippingAddress.country || ''}
+                        {order.shippingAddress.country || ""}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mt: 2,
+                        }}
+                      >
                         <PhoneIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {order.shippingAddress.mobile || 'N/A'}
+                          {order.shippingAddress.mobile || "N/A"}
                         </Typography>
                       </Box>
                     </Box>
@@ -364,21 +510,54 @@ const OrderTracking = ({ order, isFullPage = false, returnRequest = null }) => {
                 </Card>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper sx={{ bgcolor: 'info.light', height: '100%', p: 3, borderRadius: 2, border: 1, borderColor: 'info.main' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'info.dark', mb: 1 }} component="div">
+                <Paper
+                  sx={{
+                    bgcolor: "info.light",
+                    height: "100%",
+                    p: 3,
+                    borderRadius: 2,
+                    border: 1,
+                    borderColor: "info.main",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, color: "info.dark", mb: 1 }}
+                    component="div"
+                  >
                     💡 Need Help?
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'info.dark', mb: 2 }} component="div">
-                    For any questions about your order, contact our customer support.
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "info.dark", mb: 2 }}
+                    component="div"
+                  >
+                    For any questions about your order, contact our customer
+                    support.
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} component="div">
-                    <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 500 }} component="span">
+                  <Box
+                    sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                    component="div"
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "info.dark", fontWeight: 500 }}
+                      component="span"
+                    >
                       📞 1-800-123-4567
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 500 }} component="span">
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "info.dark", fontWeight: 500 }}
+                      component="span"
+                    >
                       ✉️ support@example.com
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'info.dark', fontWeight: 500 }} component="span">
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "info.dark", fontWeight: 500 }}
+                      component="span"
+                    >
                       🕒 Mon-Fri: 9AM-6PM
                     </Typography>
                   </Box>

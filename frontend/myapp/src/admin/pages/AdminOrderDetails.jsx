@@ -299,9 +299,7 @@ const AdminOrderDetails = () => {
       case "Out for delivery":
         return ["Delivered"];
       case "Delivered":
-        return ["Returned"];
       case "Returned":
-        return ["Refunded"];
       case "Cancelled":
       case "Refunded":
       default:
