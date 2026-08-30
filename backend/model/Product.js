@@ -370,23 +370,73 @@ productSchema.pre('validate', function (next) {
         }
     }
 
+    // Ensure rating is valid and synchronized with reviews
+    if (this.reviews && Array.isArray(this.reviews) && this.reviews.length > 0) {
+        const validReviews = this.reviews.filter(
+            r => r && typeof r.rating === 'number' && !isNaN(r.rating) && r.rating >= 1 && r.rating <= 5
+        );
+        const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        if (validReviews.length > 0) {
+            const total = validReviews.reduce((sum, r) => {
+                const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+                breakdown[star] = (breakdown[star] || 0) + 1;
+                return sum + Number(r.rating);
+            }, 0);
+            this.rating = {
+                count: validReviews.length,
+                average: Math.min(5, Math.max(0, Number((total / validReviews.length).toFixed(1)))),
+                breakdown
+            };
+        } else {
+            this.rating = {
+                count: 0,
+                average: 0,
+                breakdown
+            };
+        }
+    } else if (this.rating) {
+        if (!this.rating.breakdown) {
+            this.rating.breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        }
+        if (this.rating.average > 5) {
+            this.rating.average = 5;
+        }
+        if (this.rating.average < 0 || isNaN(this.rating.average)) {
+            this.rating.average = 0;
+        }
+    }
+
     next();
 });
 
 // Instance methods
-productSchema.methods.updateRating = function (newRating) {
-    if (newRating < 1 || newRating > 5) {
-        throw new Error('Rating must be between 1 and 5');
+productSchema.methods.updateRating = function () {
+    const reviews = this.reviews || [];
+    const validReviews = reviews.filter(
+        r => r && typeof r.rating === 'number' && !isNaN(r.rating) && r.rating >= 1 && r.rating <= 5
+    );
+
+    const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    if (validReviews.length > 0) {
+        const total = validReviews.reduce((sum, r) => {
+            const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+            breakdown[star] = (breakdown[star] || 0) + 1;
+            return sum + Number(r.rating);
+        }, 0);
+
+        this.rating = {
+            count: validReviews.length,
+            average: Math.min(5, Math.max(0, Number((total / validReviews.length).toFixed(1)))),
+            breakdown
+        };
+    } else {
+        this.rating = {
+            count: 0,
+            average: 0,
+            breakdown
+        };
     }
-
-    this.rating.breakdown[newRating]++;
-    this.rating.count++;
-
-    const total = Object.entries(this.rating.breakdown).reduce((sum, [rating, count]) => {
-        return sum + (parseInt(rating) * count);
-    }, 0);
-
-    this.rating.average = total / this.rating.count;
 
     return this.save();
 };

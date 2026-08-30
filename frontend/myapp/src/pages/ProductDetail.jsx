@@ -13,6 +13,7 @@ import {
   SparklesIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
   HeartIcon as HeartIconSolid,
@@ -455,6 +456,31 @@ export default function ProductDetail() {
   const handleOpenEditModal = (rev) => {
     setEditingReview(rev || userReview);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteReviewAdmin = async (reviewId) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/users/reviews/${product._id || id}/${reviewId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${userInfo?.token || localStorage.getItem("token")}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Review deleted successfully");
+        await fetchProduct();
+      } else {
+        throw new Error(data.message || "Failed to delete review");
+      }
+    } catch (err) {
+      console.error("Error deleting review:", err);
+      toast.error(err.message || "Failed to delete review");
+    }
   };
 
   // Compute star counts
@@ -1631,18 +1657,38 @@ export default function ProductDetail() {
                                     </div>
                                   </div>
 
-                                  {isMyReview && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleOpenEditModal(review)
-                                      }
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                                      title="Edit this review"
-                                    >
-                                      <PencilSquareIcon className="h-3.5 w-3.5" />
-                                      <span>Edit</span>
-                                    </button>
+                                  {(isMyReview || userInfo?.role === "admin") && (
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleOpenEditModal(review)
+                                        }
+                                        className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
+                                        title={
+                                          userInfo?.role === "admin" && !isMyReview
+                                            ? "Edit review (Admin)"
+                                            : "Edit this review"
+                                        }
+                                      >
+                                        <PencilSquareIcon className="h-3.5 w-3.5" />
+                                        <span>Edit</span>
+                                      </button>
+
+                                      {userInfo?.role === "admin" && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleDeleteReviewAdmin(review._id)
+                                          }
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
+                                          title="Delete review (Admin)"
+                                        >
+                                          <TrashIcon className="h-3.5 w-3.5" />
+                                          <span>Delete</span>
+                                        </button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </div>

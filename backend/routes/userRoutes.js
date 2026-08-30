@@ -20,5 +20,7 @@ router.get('/verify-email/:token', UserController.verifyEmail);
 router.get('/wishlist', protect, UserController.getWishlist);
 router.post('/wishlist/:productId', protect, UserController.addToWishlist);
 router.delete('/wishlist/:productId', protect, UserController.removeFromWishlist);
+router.get('/reviews', protect, UserController.getUserReviews);
+router.delete('/reviews/:productId/:reviewId', protect, UserController.deleteUserReview);
 
 module.exports = router;

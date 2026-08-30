@@ -1,4 +1,6 @@
 const User = require('../model/User');
+const Product = require('../model/Product');
+const Order = require('../model/Order');
 const jwt = require('jsonwebtoken');
 const emailService = require('../services/emailService');
 const crypto = require('crypto');
@@ -374,6 +376,160 @@ class UserController {
         } catch (error) {
             console.error('Error in removeFromWishlist:', error);
             res.status(500).json({ message: 'Failed to remove item from wishlist' });
+        }
+    };
+
+    // Get User's Given and Pending Reviews
+    static getUserReviews = async (req, res) => {
+        try {
+            const userId = req.user._id;
+
+            // 1. Fetch products that have reviews submitted by this user
+            const productsWithReviews = await Product.find({
+                'reviews.user': userId
+            }).select('name image mainImage price category reviews rating');
+
+            const givenReviews = [];
+            productsWithReviews.forEach(product => {
+                if (product.reviews && Array.isArray(product.reviews)) {
+                    const userRevs = product.reviews.filter(
+                        r => r.user && r.user.toString() === userId.toString()
+                    );
+                    userRevs.forEach(rev => {
+                        givenReviews.push({
+                            _id: rev._id,
+                            reviewId: rev._id,
+                            productId: product._id,
+                            productName: product.name,
+                            productImage: product.mainImage || product.image,
+                            productPrice: product.price,
+                            productCategory: product.category,
+                            rating: rev.rating,
+                            comment: rev.comment,
+                            name: rev.name,
+                            date: rev.date || rev.createdAt || new Date()
+                        });
+                    });
+                }
+            });
+
+            // Sort given reviews by date newest first
+            givenReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // 2. Fetch User's Orders to determine pending reviews
+            const userOrders = await Order.find({
+                user: userId,
+                status: { $nin: ['Cancelled', 'Returned'] }
+            }).sort({ createdAt: -1 });
+
+            // Collect unique purchased products
+            const purchasedItemsMap = new Map();
+            userOrders.forEach(order => {
+                if (order.orderItems && Array.isArray(order.orderItems)) {
+                    order.orderItems.forEach(item => {
+                        const prodId = item.product ? item.product.toString() : null;
+                        if (prodId && !purchasedItemsMap.has(prodId)) {
+                            purchasedItemsMap.set(prodId, {
+                                productId: prodId,
+                                productName: item.name,
+                                productImage: item.image,
+                                productPrice: item.price,
+                                orderId: order._id,
+                                orderDate: order.createdAt,
+                                orderStatus: order.status,
+                                color: item.selectedColor,
+                                size: item.selectedSize
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Set of product IDs already reviewed by user
+            const reviewedProductIds = new Set(givenReviews.map(r => r.productId.toString()));
+
+            // Find pending product IDs
+            const pendingProductIds = Array.from(purchasedItemsMap.keys()).filter(
+                id => !reviewedProductIds.has(id)
+            );
+
+            // Fetch live details for pending products if they exist
+            const pendingProductsDocs = await Product.find({
+                _id: { $in: pendingProductIds }
+            }).select('name image mainImage price category');
+
+            const pendingReviews = pendingProductIds.map(id => {
+                const orderInfo = purchasedItemsMap.get(id);
+                const prodDoc = pendingProductsDocs.find(p => p._id.toString() === id);
+                return {
+                    productId: id,
+                    productName: prodDoc?.name || orderInfo.productName,
+                    productImage: prodDoc?.mainImage || prodDoc?.image || orderInfo.productImage,
+                    productPrice: prodDoc?.price || orderInfo.productPrice,
+                    productCategory: prodDoc?.category || 'General',
+                    orderId: orderInfo.orderId,
+                    orderDate: orderInfo.orderDate,
+                    orderStatus: orderInfo.orderStatus,
+                    color: orderInfo.color,
+                    size: orderInfo.size
+                };
+            });
+
+            res.status(200).json({
+                success: true,
+                givenReviews,
+                pendingReviews,
+                totalGiven: givenReviews.length,
+                totalPending: pendingReviews.length
+            });
+        } catch (error) {
+            console.error('Error fetching user reviews:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch user reviews',
+                error: error.message
+            });
+        }
+    };
+
+    // Delete User Review
+    static deleteUserReview = async (req, res) => {
+        try {
+            const { productId, reviewId } = req.params;
+            const userId = req.user._id;
+
+            const product = await Product.findById(productId);
+            if (!product) {
+                return res.status(404).json({ success: false, message: 'Product not found' });
+            }
+
+            const review = product.reviews.id(reviewId);
+            if (!review) {
+                return res.status(404).json({ success: false, message: 'Review not found' });
+            }
+
+            // Ensure this review belongs to the user or caller is an admin
+            const isAdmin = req.user?.role === 'admin';
+            if (!isAdmin && (!review.user || review.user.toString() !== userId.toString())) {
+                return res.status(403).json({ success: false, message: 'Not authorized to delete this review' });
+            }
+
+            product.reviews.pull({ _id: reviewId });
+
+            // Recalculate rating cleanly
+            await product.updateRating();
+
+            res.status(200).json({
+                success: true,
+                message: 'Review deleted successfully'
+            });
+        } catch (error) {
+            console.error('Error deleting user review:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to delete review',
+                error: error.message
+            });
         }
     };
 

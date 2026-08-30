@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react";
 import { StarIcon } from "@heroicons/react/20/solid";
 import {
@@ -23,6 +24,7 @@ export default function EditReviewModal({
   product,
   onReviewUpdated,
 }) {
+  const userInfo = useSelector((state) => state.productReducer?.userInfo);
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -57,17 +59,23 @@ export default function EditReviewModal({
     setErrorMsg("");
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (userInfo?.token) {
+        headers["Authorization"] = `Bearer ${userInfo.token}`;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products/${product._id}/reviews/${review._id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
             rating: Number(rating),
             comment: comment.trim(),
             name: name.trim() || review.name,
+            userId: userInfo?._id || userInfo?.id,
           }),
         },
       );
