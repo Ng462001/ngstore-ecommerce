@@ -10,13 +10,14 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlist } from "../Redux/action/action";
 import { toast } from "react-hot-toast";
 
 const ProductCard = ({ item }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const wishlistItems = useSelector((state) => {
     if (!state) return [];
@@ -41,30 +42,40 @@ const ProductCard = ({ item }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    dispatch(toggleWishlist(item));
     const token = localStorage.getItem("token");
-    if (isUserLoggedIn && token) {
-      try {
-        if (isWishlisted) {
-          await fetch(
-            `${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`,
-            {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-        } else {
-          await fetch(
-            `${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`,
-            {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-        }
-      } catch (err) {
-        console.error("Error syncing wishlist:", err);
+    if (!isUserLoggedIn || !token) {
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
+    dispatch(toggleWishlist(item));
+
+    if (isWishlisted) {
+      toast.success("Removed from wishlist 💔");
+    } else {
+      toast.success("Added to wishlist ❤️");
+    }
+
+    try {
+      if (isWishlisted) {
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+      } else {
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/api/users/wishlist/${itemId}`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
       }
+    } catch (err) {
+      console.error("Error syncing wishlist:", err);
     }
   };
 

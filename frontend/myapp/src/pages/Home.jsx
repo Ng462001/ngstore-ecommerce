@@ -229,6 +229,13 @@ const Home = () => {
   }
 
   const toggleFavorite = async (product) => {
+    const token = localStorage.getItem('token')
+    if (!isUserLoggedIn || !token) {
+      toast.error('Please login to save items to your wishlist ❤️')
+      navigate('/login', { state: { from: window.location.pathname } })
+      return
+    }
+
     const productId = product._id || product.id
     const isWishlisted = wishlistItems.some(item => (item._id || item.id) === productId)
 
@@ -239,23 +246,21 @@ const Home = () => {
     } else {
       toast.success('Added to wishlist ❤️')
     }
-    const token = localStorage.getItem('token')
-    if (isUserLoggedIn && token) {
-      try {
-        if (isWishlisted) {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        } else {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        }
-      } catch (err) {
-        console.error('Error syncing wishlist with backend:', err)
+
+    try {
+      if (isWishlisted) {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      } else {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        })
       }
+    } catch (err) {
+      console.error('Error syncing wishlist with backend:', err)
     }
   }
 

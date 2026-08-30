@@ -82,7 +82,7 @@ export default function RelatedProducts({
   }
 
   return (
-    <div className="mt-16 pt-12 border-t border-gray-100">
+    <div className="mt-16 pt-12 border-t border-gray-200">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider mb-2">

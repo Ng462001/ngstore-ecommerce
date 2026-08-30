@@ -11,6 +11,8 @@ import {
   CheckBadgeIcon,
   ChatBubbleBottomCenterTextIcon,
   SparklesIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import {
   HeartIcon as HeartIconSolid,
@@ -52,6 +54,7 @@ export default function ProductDetail() {
   const [reviewSortBy, setReviewSortBy] = useState("newest");
   const [onlyMyReviews, setOnlyMyReviews] = useState(false);
   const [reviewPage, setReviewPage] = useState(1);
+  const [isReviewsAccordionOpen, setIsReviewsAccordionOpen] = useState(true);
   const REVIEWS_PER_PAGE = 3;
 
   const dispatch = useDispatch();
@@ -76,6 +79,13 @@ export default function ProductDetail() {
 
   const handleWishlistToggle = async () => {
     if (!product) return;
+
+    const token = localStorage.getItem("token");
+    if (!isUserLoggedIn || !token) {
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
     const productId = product._id || id;
 
     const colorToSave =
@@ -100,29 +110,32 @@ export default function ProductDetail() {
 
     dispatch(toggleWishlist(wishlistItem));
 
-    const token = localStorage.getItem("token");
-    if (isUserLoggedIn && token) {
-      try {
-        if (isWishlisted) {
-          await fetch(
-            `${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`,
-            {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-        } else {
-          await fetch(
-            `${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`,
-            {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-        }
-      } catch (err) {
-        console.error("Error syncing wishlist:", err);
+    if (isWishlisted) {
+      toast.success("Removed from wishlist 💔");
+    } else {
+      toast.success("Added to wishlist ❤️");
+    }
+
+    try {
+      if (isWishlisted) {
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+      } else {
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/api/users/wishlist/${productId}`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
       }
+    } catch (err) {
+      console.error("Error syncing wishlist:", err);
     }
   };
 
@@ -728,12 +741,21 @@ export default function ProductDetail() {
                     ))}
                   </div>
                   <p className="sr-only">{reviews.average} out of 5 stars</p>
-                  <a
-                    href={reviews.href}
-                    className="ml-3 text-sm font-medium text-accent hover:underline"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReviewsAccordionOpen(true);
+                      const el = document.getElementById("reviews-section");
+                      if (el)
+                        el.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    }}
+                    className="ml-3 text-sm font-medium text-accent hover:underline cursor-pointer"
                   >
                     {reviews.totalCount} reviews
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -873,14 +895,25 @@ export default function ProductDetail() {
 
               {/* Stock status */}
               <div className="mt-6">
-                {product.quantity > 0 ? (
-                  <p className="text-green-600 text-sm font-medium">
-                    In Stock ({product.quantity} available)
-                  </p>
+                {product.quantity <= 0 ? (
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-semibold shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    <span>Out of Stock</span>
+                  </div>
+                ) : product.quantity <= 5 ? (
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm font-semibold shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>
+                      Hurry, only {product.quantity}{" "}
+                      {product.quantity === 1 ? "item" : "items"} left in stock
+                      — order soon!
+                    </span>
+                  </div>
                 ) : (
-                  <p className="text-red-600 text-sm font-medium">
-                    Out of Stock
-                  </p>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>In Stock</span>
+                  </div>
                 )}
               </div>
 
@@ -1024,650 +1057,701 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* ================= PREMIUM REVIEWS SECTION ================= */}
+        {/* ================= PREMIUM REVIEWS ACCORDION SECTION ================= */}
         <div
           id="reviews-section"
-          className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 border-t border-border-light"
+          className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 border-t border-border-light/30 scroll-mt-20"
         >
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider mb-2">
-                <ChatBubbleBottomCenterTextIcon className="h-3.5 w-3.5" />
-                <span>Verified Feedback</span>
-              </div>
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-text-primary">
-                Customer Ratings & Reviews
-              </h2>
-              <p className="text-text-secondary text-sm mt-1">
-                Authentic opinions from verified buyers ({reviews.totalCount}{" "}
-                {reviews.totalCount === 1 ? "review" : "reviews"})
-              </p>
-            </div>
-
-            {/* Quick stats pill */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-surface rounded-2xl border border-border-light px-4 py-2.5 shadow-xs">
-                <span className="text-2xl font-bold text-text-primary">
-                  {reviews.average > 0 ? reviews.average.toFixed(1) : "5.0"}
-                </span>
-                <div className="flex text-amber-400">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <StarIcon
-                      key={star}
-                      className={classNames(
-                        (reviews.average || 5) >= star
-                          ? "text-amber-400"
-                          : "text-gray-200",
-                        "h-4 w-4",
-                      )}
-                    />
-                  ))}
+          {/* Accordion Trigger Header */}
+          <div
+            onClick={() => setIsReviewsAccordionOpen((prev) => !prev)}
+            className="w-full bg-surface hover:bg-surface/80 border border-border-light rounded-3xl p-6 sm:p-7 shadow-card cursor-pointer transition-all duration-300 select-none group"
+            role="button"
+            aria-expanded={isReviewsAccordionOpen}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsReviewsAccordionOpen((prev) => !prev);
+              }
+            }}
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+              {/* Left: Title & Badge */}
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider">
+                  <ChatBubbleBottomCenterTextIcon className="h-3.5 w-3.5" />
+                  <span>Customer Opinions</span>
                 </div>
-                <span className="text-xs text-text-secondary font-medium pl-2 border-l border-border-light">
-                  {reviews.totalCount} ratings
-                </span>
+                <div className="flex items-center gap-3">
+                  <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors">
+                    Customer Ratings & Reviews
+                  </h2>
+                </div>
+                <p className="text-text-secondary text-xs sm:text-sm">
+                  {reviews.totalCount > 0
+                    ? `Based on ${reviews.totalCount} authentic verified customer ${reviews.totalCount === 1 ? "review" : "reviews"}`
+                    : "No reviews yet. Be the first to share your experience!"}
+                </p>
+              </div>
+
+              {/* Right: Stats & Accordion Toggle Button */}
+              <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
+                {/* Quick stats pill */}
+                <div className="flex items-center gap-2.5 bg-background rounded-2xl border border-border-light px-4 py-2.5 shadow-xs">
+                  <span className="text-2xl font-black text-text-primary">
+                    {reviews.average > 0 ? reviews.average.toFixed(1) : "5.0"}
+                  </span>
+                  <div className="flex text-amber-400">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <StarIcon
+                        key={star}
+                        className={classNames(
+                          (reviews.average || 5) >= star
+                            ? "text-amber-400"
+                            : "text-gray-200",
+                          "h-4 w-4",
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-text-secondary font-semibold pl-2 border-l border-border-light">
+                    {reviews.totalCount}{" "}
+                    {reviews.totalCount === 1 ? "rating" : "ratings"}
+                  </span>
+                </div>
+
+                {/* Accordion Expand/Collapse Button */}
+                <div className="flex items-center justify-center gap-2 bg-accent text-white group-hover:bg-accent-hover px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-soft shrink-0 min-w-[135px] sm:min-w-[140px]">
+                  <span>
+                    {isReviewsAccordionOpen ? "Hide Reviews" : "Show Reviews"}
+                  </span>
+                  <ChevronDownIcon
+                    className={classNames(
+                      "h-4 w-4 transition-transform duration-300 shrink-0",
+                      isReviewsAccordionOpen ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Main 2-Column Responsive Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* LEFT COLUMN: Rating Breakdown & Write Review Form (4 cols on lg) */}
-            <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-              {/* Rating Overview Card */}
-              <div className="bg-surface rounded-3xl p-6 border border-border-light shadow-card space-y-5">
-                <div className="flex items-center justify-between pb-4 border-b border-border-light/60">
-                  <div>
-                    <h3 className="text-base font-bold text-text-primary">
-                      Rating Overview
-                    </h3>
-                    <p className="text-xs text-text-secondary mt-0.5">
-                      Based on customer scores
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-3xl font-black text-text-primary tracking-tight">
-                      {reviews.average > 0 ? reviews.average.toFixed(1) : "5.0"}
-                    </span>
-                    <span className="text-xs font-semibold text-text-secondary">
-                      /5
-                    </span>
-                  </div>
-                </div>
-
-                {/* Rating Breakdown Bars */}
-                <div className="space-y-2.5">
-                  {[5, 4, 3, 2, 1].map((star) => {
-                    const count = ratingCounts[star] || 0;
-                    const percentage =
-                      reviews.totalCount > 0
-                        ? (count / reviews.totalCount) * 100
-                        : 0;
-                    const isSelected = selectedRatingFilter === String(star);
-
-                    return (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() =>
-                          setSelectedRatingFilter((prev) =>
-                            prev === String(star) ? "all" : String(star),
-                          )
-                        }
-                        className={classNames(
-                          isSelected
-                            ? "bg-accent/10 ring-1 ring-accent/40 font-semibold"
-                            : "hover:bg-surface-muted",
-                          "w-full flex items-center gap-3 py-2 px-3 rounded-xl transition-all cursor-pointer group text-left",
-                        )}
-                        title={`Filter by ${star} star (${count})`}
-                      >
-                        <div className="flex items-center gap-1 w-10 text-xs font-semibold text-text-primary">
-                          <span>{star}</span>
-                          <StarIcon className="h-3.5 w-3.5 text-amber-400" />
-                        </div>
-
-                        <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={classNames(
-                              isSelected
-                                ? "bg-accent"
-                                : "bg-amber-400 group-hover:bg-amber-500",
-                              "h-full rounded-full transition-all duration-500",
-                            )}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-
-                        <div className="w-12 text-right">
-                          <span className="text-xs text-text-secondary font-medium group-hover:text-text-primary">
-                            {count}
-                          </span>
-                          <span className="text-[10px] text-text-secondary/60 ml-0.5">
-                            ({Math.round(percentage)}%)
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {selectedRatingFilter !== "all" && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRatingFilter("all")}
-                    className="w-full text-xs text-accent font-semibold text-center hover:underline pt-1 flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <XMarkIcon className="h-3.5 w-3.5" />
-                    <span>Clear {selectedRatingFilter}★ Filter</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Write Review or Your Review Card */}
-              <div
-                id="write-review"
-                className="bg-surface rounded-3xl p-6 border border-border-light shadow-card"
-              >
-                <div className="flex items-center justify-between mb-5 pb-4 border-b border-border-light/60">
-                  <h3 className="font-heading text-lg font-bold text-text-primary">
-                    {hasUserReviewed
-                      ? "Your Product Review"
-                      : "Review This Product"}
-                  </h3>
-                  <span className="text-[11px] font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
-                    {hasUserReviewed ? "Submitted" : "Share Experience"}
-                  </span>
-                </div>
-
-                {reviewSuccess && (
-                  <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold flex items-center gap-2">
-                    <CheckBadgeIcon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                    <span>Thank you! Your review has been submitted.</span>
-                  </div>
-                )}
-
-                {!isUserLoggedIn ? (
-                  <div className="text-center py-6 px-4 bg-surface-muted rounded-2xl border border-border-light space-y-3">
-                    <p className="text-text-secondary text-xs leading-relaxed">
-                      Have you used this product? Log in to share your thoughts
-                      and help other shoppers.
-                    </p>
-                    <Link
-                      to="/login"
-                      className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-5 text-xs font-bold transition-all shadow-soft cursor-pointer"
-                    >
-                      Login to Write Review
-                    </Link>
-                  </div>
-                ) : hasUserReviewed ? (
-                  <div className="p-4 bg-surface-muted rounded-2xl border border-border-light space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-amber-400">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <StarIcon
-                            key={star}
-                            className={classNames(
-                              (userReview?.rating || 0) >= star
-                                ? "text-amber-400"
-                                : "text-gray-200",
-                              "h-4 w-4",
-                            )}
-                          />
-                        ))}
+          {/* Accordion Collapsible Content */}
+          {isReviewsAccordionOpen && (
+            <div className="mt-8 transition-all duration-300">
+              {/* Main 2-Column Responsive Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* LEFT COLUMN: Rating Breakdown & Write Review Form (4 cols on lg) */}
+                <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+                  {/* Rating Overview Card */}
+                  <div className="bg-surface rounded-3xl p-6 border border-border-light shadow-card space-y-5">
+                    <div className="flex items-center justify-between pb-4 border-b border-border-light/60">
+                      <div>
+                        <h3 className="text-base font-bold text-text-primary">
+                          Rating Overview
+                        </h3>
+                        <p className="text-xs text-text-secondary mt-0.5">
+                          Based on customer scores
+                        </p>
                       </div>
-                      <span className="text-[11px] text-text-secondary font-medium">
-                        {userReview?.date
-                          ? new Date(userReview.date).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )
-                          : "Recently"}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-text-primary italic leading-relaxed whitespace-pre-line bg-background p-3 rounded-xl border border-border-light">
-                      "{userReview?.comment}"
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditModal(userReview)}
-                      className="w-full inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft active:scale-[0.98] cursor-pointer"
-                    >
-                      <PencilSquareIcon className="h-4 w-4" />
-                      <span>Edit Your Review</span>
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleReviewSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                        Reviewer Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        disabled={isUserLoggedIn}
-                        placeholder="Your Name"
-                        value={
-                          isUserLoggedIn ? userInfo?.name : reviewForm.name
-                        }
-                        onChange={(e) =>
-                          setReviewForm({ ...reviewForm, name: e.target.value })
-                        }
-                        className="w-full rounded-xl border border-border-light bg-background p-2.5 text-xs text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-xs disabled:bg-surface-muted disabled:text-text-secondary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                        Overall Rating
-                      </label>
-                      <div className="flex items-center gap-1.5 py-1">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <button
-                            key={rating}
-                            type="button"
-                            onClick={() =>
-                              setReviewForm({ ...reviewForm, rating })
-                            }
-                            className="p-0.5 hover:scale-110 transition-transform cursor-pointer"
-                          >
-                            <StarIcon
-                              className={classNames(
-                                reviewForm.rating >= rating
-                                  ? "text-amber-400 fill-amber-400"
-                                  : "text-gray-200",
-                                "h-6 w-6 transition-colors",
-                              )}
-                            />
-                          </button>
-                        ))}
-                        <span className="text-xs font-bold text-accent ml-2">
-                          {reviewForm.rating} / 5 Stars
+                      <div className="text-right">
+                        <span className="text-3xl font-black text-text-primary tracking-tight">
+                          {reviews.average > 0
+                            ? reviews.average.toFixed(1)
+                            : "5.0"}
+                        </span>
+                        <span className="text-xs font-semibold text-text-secondary">
+                          /5
                         </span>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                        Detailed Review
-                      </label>
-                      <textarea
-                        rows={3}
-                        required
-                        placeholder="Write your thoughts about quality, comfort, fit, and design..."
-                        value={reviewForm.comment}
-                        onChange={(e) =>
-                          setReviewForm({
-                            ...reviewForm,
-                            comment: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-xl border border-border-light bg-background p-2.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none shadow-xs"
-                      />
+                    {/* Rating Breakdown Bars */}
+                    <div className="space-y-2.5">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = ratingCounts[star] || 0;
+                        const percentage =
+                          reviews.totalCount > 0
+                            ? (count / reviews.totalCount) * 100
+                            : 0;
+                        const isSelected =
+                          selectedRatingFilter === String(star);
+
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() =>
+                              setSelectedRatingFilter((prev) =>
+                                prev === String(star) ? "all" : String(star),
+                              )
+                            }
+                            className={classNames(
+                              isSelected
+                                ? "bg-accent/10 ring-1 ring-accent/40 font-semibold"
+                                : "hover:bg-surface-muted",
+                              "w-full flex items-center gap-3 py-2 px-3 rounded-xl transition-all cursor-pointer group text-left",
+                            )}
+                            title={`Filter by ${star} star (${count})`}
+                          >
+                            <div className="flex items-center gap-1 w-10 text-xs font-semibold text-text-primary">
+                              <span>{star}</span>
+                              <StarIcon className="h-3.5 w-3.5 text-amber-400" />
+                            </div>
+
+                            <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={classNames(
+                                  isSelected
+                                    ? "bg-accent"
+                                    : "bg-amber-400 group-hover:bg-amber-500",
+                                  "h-full rounded-full transition-all duration-500",
+                                )}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+
+                            <div className="w-12 text-right">
+                              <span className="text-xs text-text-secondary font-medium group-hover:text-text-primary">
+                                {count}
+                              </span>
+                              <span className="text-[10px] text-text-secondary/60 ml-0.5">
+                                ({Math.round(percentage)}%)
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={submittingReview || !reviewForm.comment.trim()}
-                      className="w-full bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      {submittingReview ? (
-                        <>
-                          <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
-                          <span>Submitting...</span>
-                        </>
-                      ) : (
-                        <span>Submit Product Review</span>
-                      )}
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN: Filter Toolbar & Review Cards List (8 cols on lg) */}
-            <div className="lg:col-span-8 space-y-6">
-              {/* Filter & Sort Bar */}
-              <div className="bg-surface rounded-3xl border border-border-light p-5 sm:p-6 shadow-card space-y-4">
-                {/* Search & Sort Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border-light/60">
-                  {/* Search Input */}
-                  <div className="relative flex-1">
-                    <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
-                    <input
-                      type="text"
-                      placeholder="Search reviews by keywords or reviewer name..."
-                      value={reviewSearchQuery}
-                      onChange={(e) => setReviewSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-9 py-2 text-xs bg-background border border-border-light rounded-xl text-text-primary placeholder:text-text-secondary/60 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-xs"
-                    />
-                    {reviewSearchQuery && (
+                    {selectedRatingFilter !== "all" && (
                       <button
                         type="button"
-                        onClick={() => setReviewSearchQuery("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-text-secondary hover:text-text-primary rounded-full cursor-pointer"
-                        title="Clear search"
+                        onClick={() => setSelectedRatingFilter("all")}
+                        className="w-full text-xs text-accent font-semibold text-center hover:underline pt-1 flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <XMarkIcon className="h-4 w-4" />
+                        <XMarkIcon className="h-3.5 w-3.5" />
+                        <span>Clear {selectedRatingFilter}★ Filter</span>
                       </button>
                     )}
                   </div>
 
-                  {/* Sort Dropdown */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <ArrowsUpDownIcon className="h-4 w-4 text-text-secondary" />
-                    <select
-                      id="review-sort"
-                      value={reviewSortBy}
-                      onChange={(e) => setReviewSortBy(e.target.value)}
-                      className="text-xs font-semibold bg-background border border-border-light rounded-xl px-3 py-2 text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none cursor-pointer shadow-xs"
-                      aria-label="Sort reviews by"
-                    >
-                      <option value="newest">Most Recent</option>
-                      <option value="highest">Highest Rating</option>
-                      <option value="lowest">Lowest Rating</option>
-                      <option value="oldest">Oldest First</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Filter Pills Row */}
-                <div className="flex items-center gap-2 flex-wrap text-xs">
-                  <span className="text-text-secondary font-semibold mr-1 flex items-center gap-1">
-                    <FunnelIcon className="h-3.5 w-3.5 text-accent" /> Filter:
-                  </span>
-
-                  {/* All Button */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRatingFilter("all")}
-                    className={classNames(
-                      selectedRatingFilter === "all"
-                        ? "bg-accent text-white shadow-xs font-bold"
-                        : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
-                      "px-3 py-1.5 rounded-xl transition-all cursor-pointer",
-                    )}
+                  {/* Write Review or Your Review Card */}
+                  <div
+                    id="write-review"
+                    className="bg-surface rounded-3xl p-6 border border-border-light shadow-card"
                   >
-                    All ({product.reviews?.length || 0})
-                  </button>
-
-                  {/* Star Rating Pills */}
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() =>
-                        setSelectedRatingFilter((prev) =>
-                          prev === String(star) ? "all" : String(star),
-                        )
-                      }
-                      className={classNames(
-                        selectedRatingFilter === String(star)
-                          ? "bg-accent text-white shadow-xs font-bold"
-                          : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
-                        "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1",
-                      )}
-                    >
-                      <span>{star}★</span>
-                      <span className="opacity-75">
-                        ({ratingCounts[star] || 0})
+                    <div className="flex items-center justify-between mb-5 pb-4 border-b border-border-light/60">
+                      <h3 className="font-heading text-lg font-bold text-text-primary">
+                        {hasUserReviewed
+                          ? "Your Product Review"
+                          : "Review This Product"}
+                      </h3>
+                      <span className="text-[11px] font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
+                        {hasUserReviewed ? "Submitted" : "Share Experience"}
                       </span>
-                    </button>
-                  ))}
+                    </div>
 
-                  {/* Only My Reviews */}
-                  {isUserLoggedIn && userReview && (
-                    <button
-                      type="button"
-                      onClick={() => setOnlyMyReviews((prev) => !prev)}
-                      className={classNames(
-                        onlyMyReviews
-                          ? "bg-accent text-white shadow-xs font-bold"
-                          : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
-                        "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1",
-                      )}
-                    >
-                      <span>My Review</span>
-                    </button>
-                  )}
-
-                  {/* Reset All */}
-                  {isAnyFilterActive && (
-                    <button
-                      type="button"
-                      onClick={handleClearReviewFilters}
-                      className="ml-auto inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-bold px-2.5 py-1 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <XMarkIcon className="h-3.5 w-3.5" />
-                      <span>Reset Filters</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Review Cards List */}
-              <div className="space-y-4">
-                {filteredReviews.length > 0 ? (
-                  <>
-                    {paginatedReviews.map((review, index) => {
-                      const isMyReview =
-                        isUserLoggedIn &&
-                        ((userReview &&
-                          (review._id === userReview._id ||
-                            review.id === userReview._id)) ||
-                          (userInfo?.name &&
-                            review.name?.trim().toLowerCase() ===
-                              userInfo.name.trim().toLowerCase()) ||
-                          (review.user &&
-                            (review.user === (userInfo?._id || userInfo?.id) ||
-                              review.user?._id ===
-                                (userInfo?._id || userInfo?.id))));
-
-                      const reviewerInitial = (review.name || "U")
-                        .trim()
-                        .charAt(0)
-                        .toUpperCase();
-
-                      return (
-                        <div
-                          key={review._id || index}
-                          className={classNames(
-                            isMyReview
-                              ? "bg-accent/[0.02] border-accent/30 ring-1 ring-accent/20"
-                              : "bg-surface border-border-light",
-                            "rounded-3xl border p-6 shadow-card hover:shadow-md transition-all space-y-3.5",
-                          )}
-                        >
-                          {/* Header: User Avatar + Name + Date + Rating */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              {/* Avatar Badge */}
-                              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/40 text-accent font-bold flex items-center justify-center text-sm border border-accent/20 shadow-xs flex-shrink-0">
-                                {reviewerInitial}
-                              </div>
-
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="font-bold text-text-primary text-sm">
-                                    {review.name || "Verified Customer"}
-                                  </h4>
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
-                                    <CheckBadgeIcon className="h-3.5 w-3.5 text-emerald-600" />
-                                    <span>Verified Buyer</span>
-                                  </span>
-                                  {isMyReview && (
-                                    <span className="inline-flex items-center gap-1 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                                      Your Review
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-text-secondary mt-0.5">
-                                  Reviewed on{" "}
-                                  {review.date
-                                    ? new Date(review.date).toLocaleDateString(
-                                        "en-US",
-                                        {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                        },
-                                      )
-                                    : "Recent Date"}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Star Rating and Edit button */}
-                            <div className="flex items-center gap-3 self-start sm:self-auto">
-                              <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
-                                <span className="text-xs font-bold text-amber-700">
-                                  {Number(review.rating).toFixed(1)}
-                                </span>
-                                <div className="flex text-amber-400">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <StarIcon
-                                      key={star}
-                                      className={classNames(
-                                        review.rating >= star
-                                          ? "text-amber-400"
-                                          : "text-gray-200",
-                                        "h-3.5 w-3.5",
-                                      )}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-
-                              {isMyReview && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenEditModal(review)}
-                                  className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                                  title="Edit this review"
-                                >
-                                  <PencilSquareIcon className="h-3.5 w-3.5" />
-                                  <span>Edit</span>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Review Comment Body */}
-                          <p className="text-text-primary text-sm leading-relaxed whitespace-pre-line pl-0 sm:pl-13">
-                            {review.comment}
-                          </p>
-                        </div>
-                      );
-                    })}
-
-                    {/* Pagination Controls */}
-                    {totalReviewPages > 1 && (
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-2 border-t border-border-light/60">
-                        <p className="text-xs text-text-secondary font-medium">
-                          Showing{" "}
-                          <span className="font-bold text-text-primary">
-                            {(reviewPage - 1) * REVIEWS_PER_PAGE + 1}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-bold text-text-primary">
-                            {Math.min(
-                              reviewPage * REVIEWS_PER_PAGE,
-                              filteredReviews.length,
-                            )}
-                          </span>{" "}
-                          of{" "}
-                          <span className="font-bold text-text-primary">
-                            {filteredReviews.length}
-                          </span>{" "}
-                          reviews
-                        </p>
-
-                        <Pagination
-                          count={totalReviewPages}
-                          page={reviewPage}
-                          onChange={(e, val) => {
-                            setReviewPage(val);
-                            const el =
-                              document.getElementById("reviews-section");
-                            if (el) {
-                              el.scrollIntoView({
-                                behavior: "smooth",
-                                block: "start",
-                              });
-                            }
-                          }}
-                          color="primary"
-                          size="medium"
-                          shape="rounded"
-                          showFirstButton
-                          showLastButton
-                          sx={{
-                            "& .MuiPaginationItem-root": {
-                              fontFamily: "inherit",
-                              fontWeight: 600,
-                              fontSize: "0.825rem",
-                              borderRadius: "12px",
-                            },
-                            "& .MuiPaginationItem-root.Mui-selected": {
-                              backgroundColor: "#1C1B19",
-                              color: "#FFFFFF",
-                              "&:hover": {
-                                backgroundColor: "#000000",
-                              },
-                            },
-                          }}
-                        />
+                    {reviewSuccess && (
+                      <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                        <CheckBadgeIcon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                        <span>Thank you! Your review has been submitted.</span>
                       </div>
                     )}
-                  </>
-                ) : product.reviews?.length > 0 ? (
-                  <div className="text-center py-12 px-6 bg-surface rounded-3xl border border-border-light shadow-card space-y-3.5">
-                    <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
-                      <FunnelIcon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-bold text-text-primary">
-                        No reviews match your selected filters
-                      </h4>
-                      <p className="text-xs text-text-secondary mt-1 max-w-sm mx-auto">
-                        Try changing the star rating filter or clearing the
-                        search query to see more reviews.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleClearReviewFilters}
-                      className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-soft cursor-pointer active:scale-[0.98]"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                      <span>Clear All Filters</span>
-                    </button>
+
+                    {!isUserLoggedIn ? (
+                      <div className="text-center py-6 px-4 bg-surface-muted rounded-2xl border border-border-light space-y-3">
+                        <p className="text-text-secondary text-xs leading-relaxed">
+                          Have you used this product? Log in to share your
+                          thoughts and help other shoppers.
+                        </p>
+                        <Link
+                          to="/login"
+                          className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-5 text-xs font-bold transition-all shadow-soft cursor-pointer"
+                        >
+                          Login to Write Review
+                        </Link>
+                      </div>
+                    ) : hasUserReviewed ? (
+                      <div className="p-4 bg-surface-muted rounded-2xl border border-border-light space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 text-amber-400">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <StarIcon
+                                key={star}
+                                className={classNames(
+                                  (userReview?.rating || 0) >= star
+                                    ? "text-amber-400"
+                                    : "text-gray-200",
+                                  "h-4 w-4",
+                                )}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-text-secondary font-medium">
+                            {userReview?.date
+                              ? new Date(userReview.date).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "Recently"}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-text-primary italic leading-relaxed whitespace-pre-line bg-background p-3 rounded-xl border border-border-light">
+                          "{userReview?.comment}"
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(userReview)}
+                          className="w-full inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft active:scale-[0.98] cursor-pointer"
+                        >
+                          <PencilSquareIcon className="h-4 w-4" />
+                          <span>Edit Your Review</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleReviewSubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
+                            Reviewer Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            disabled={isUserLoggedIn}
+                            placeholder="Your Name"
+                            value={
+                              isUserLoggedIn ? userInfo?.name : reviewForm.name
+                            }
+                            onChange={(e) =>
+                              setReviewForm({
+                                ...reviewForm,
+                                name: e.target.value,
+                              })
+                            }
+                            className="w-full rounded-xl border border-border-light bg-background p-2.5 text-xs text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none shadow-xs disabled:bg-surface-muted disabled:text-text-secondary"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
+                            Overall Rating
+                          </label>
+                          <div className="flex items-center gap-1.5 py-1">
+                            {[1, 2, 3, 4, 5].map((rating) => (
+                              <button
+                                key={rating}
+                                type="button"
+                                onClick={() =>
+                                  setReviewForm({ ...reviewForm, rating })
+                                }
+                                className="p-0.5 hover:scale-110 transition-transform cursor-pointer"
+                              >
+                                <StarIcon
+                                  className={classNames(
+                                    reviewForm.rating >= rating
+                                      ? "text-amber-400 fill-amber-400"
+                                      : "text-gray-200",
+                                    "h-6 w-6 transition-colors",
+                                  )}
+                                />
+                              </button>
+                            ))}
+                            <span className="text-xs font-bold text-accent ml-2">
+                              {reviewForm.rating} / 5 Stars
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
+                            Detailed Review
+                          </label>
+                          <textarea
+                            rows={3}
+                            required
+                            placeholder="Write your thoughts about quality, comfort, fit, and design..."
+                            value={reviewForm.comment}
+                            onChange={(e) =>
+                              setReviewForm({
+                                ...reviewForm,
+                                comment: e.target.value,
+                              })
+                            }
+                            className="w-full rounded-xl border border-border-light bg-background p-2.5 text-xs text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none shadow-xs"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={
+                            submittingReview || !reviewForm.comment.trim()
+                          }
+                          className="w-full bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          {submittingReview ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                              <span>Submitting...</span>
+                            </>
+                          ) : (
+                            <span>Submit Product Review</span>
+                          )}
+                        </button>
+                      </form>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-center py-16 px-6 bg-surface rounded-3xl border border-border-light shadow-card space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto">
-                      <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
+                </div>
+
+                {/* RIGHT COLUMN: Filter Toolbar & Review Cards List (8 cols on lg) */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Filter & Sort Bar */}
+                  <div className="bg-surface rounded-3xl border border-border-light p-5 sm:p-6 shadow-card space-y-4">
+                    {/* Search & Sort Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border-light/60">
+                      {/* Search Input */}
+                      <div className="relative flex-1">
+                        <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-secondary" />
+                        <input
+                          type="text"
+                          placeholder="Search reviews by keywords or reviewer name..."
+                          value={reviewSearchQuery}
+                          onChange={(e) => setReviewSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-9 py-2 text-xs bg-background border border-border-light rounded-xl text-text-primary placeholder:text-text-secondary/60 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-xs"
+                        />
+                        {reviewSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setReviewSearchQuery("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-text-secondary hover:text-text-primary rounded-full cursor-pointer"
+                            title="Clear search"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Sort Dropdown */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <ArrowsUpDownIcon className="h-4 w-4 text-text-secondary" />
+                        <select
+                          id="review-sort"
+                          value={reviewSortBy}
+                          onChange={(e) => setReviewSortBy(e.target.value)}
+                          className="text-xs font-semibold bg-background border border-border-light rounded-xl px-3 py-2 text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none cursor-pointer shadow-xs"
+                          aria-label="Sort reviews by"
+                        >
+                          <option value="newest">Most Recent</option>
+                          <option value="highest">Highest Rating</option>
+                          <option value="lowest">Lowest Rating</option>
+                          <option value="oldest">Oldest First</option>
+                        </select>
+                      </div>
                     </div>
-                    <h4 className="text-base font-bold text-text-primary">
-                      No Reviews Yet
-                    </h4>
-                    <p className="text-xs text-text-secondary max-w-xs mx-auto">
-                      Be the first person to share feedback and review this
-                      product.
-                    </p>
+
+                    {/* Filter Pills Row */}
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="text-text-secondary font-semibold mr-1 flex items-center gap-1">
+                        <FunnelIcon className="h-3.5 w-3.5 text-accent" />{" "}
+                        Filter:
+                      </span>
+
+                      {/* All Button */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRatingFilter("all")}
+                        className={classNames(
+                          selectedRatingFilter === "all"
+                            ? "bg-accent text-white shadow-xs font-bold"
+                            : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
+                          "px-3 py-1.5 rounded-xl transition-all cursor-pointer",
+                        )}
+                      >
+                        All ({product.reviews?.length || 0})
+                      </button>
+
+                      {/* Star Rating Pills */}
+                      {[5, 4, 3, 2, 1].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() =>
+                            setSelectedRatingFilter((prev) =>
+                              prev === String(star) ? "all" : String(star),
+                            )
+                          }
+                          className={classNames(
+                            selectedRatingFilter === String(star)
+                              ? "bg-accent text-white shadow-xs font-bold"
+                              : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
+                            "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1",
+                          )}
+                        >
+                          <span>{star}★</span>
+                          <span className="opacity-75">
+                            ({ratingCounts[star] || 0})
+                          </span>
+                        </button>
+                      ))}
+
+                      {/* Only My Reviews */}
+                      {isUserLoggedIn && userReview && (
+                        <button
+                          type="button"
+                          onClick={() => setOnlyMyReviews((prev) => !prev)}
+                          className={classNames(
+                            onlyMyReviews
+                              ? "bg-accent text-white shadow-xs font-bold"
+                              : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
+                            "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1",
+                          )}
+                        >
+                          <span>My Review</span>
+                        </button>
+                      )}
+
+                      {/* Reset All */}
+                      {isAnyFilterActive && (
+                        <button
+                          type="button"
+                          onClick={handleClearReviewFilters}
+                          className="ml-auto inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-bold px-2.5 py-1 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                        >
+                          <XMarkIcon className="h-3.5 w-3.5" />
+                          <span>Reset Filters</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
+
+                  {/* Review Cards List */}
+                  <div className="space-y-4">
+                    {filteredReviews.length > 0 ? (
+                      <>
+                        {paginatedReviews.map((review, index) => {
+                          const isMyReview =
+                            isUserLoggedIn &&
+                            ((userReview &&
+                              (review._id === userReview._id ||
+                                review.id === userReview._id)) ||
+                              (userInfo?.name &&
+                                review.name?.trim().toLowerCase() ===
+                                  userInfo.name.trim().toLowerCase()) ||
+                              (review.user &&
+                                (review.user ===
+                                  (userInfo?._id || userInfo?.id) ||
+                                  review.user?._id ===
+                                    (userInfo?._id || userInfo?.id))));
+
+                          const reviewerInitial = (review.name || "U")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase();
+
+                          return (
+                            <div
+                              key={review._id || index}
+                              className={classNames(
+                                isMyReview
+                                  ? "bg-accent/[0.02] border-accent/30 ring-1 ring-accent/20"
+                                  : "bg-surface border-border-light",
+                                "rounded-3xl border p-6 shadow-card hover:shadow-md transition-all space-y-3.5",
+                              )}
+                            >
+                              {/* Header: User Avatar + Name + Date + Rating */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  {/* Avatar Badge */}
+                                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/40 text-accent font-bold flex items-center justify-center text-sm border border-accent/20 shadow-xs flex-shrink-0">
+                                    {reviewerInitial}
+                                  </div>
+
+                                  <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h4 className="font-bold text-text-primary text-sm">
+                                        {review.name || "Verified Customer"}
+                                      </h4>
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                                        <CheckBadgeIcon className="h-3.5 w-3.5 text-emerald-600" />
+                                        <span>Verified Buyer</span>
+                                      </span>
+                                      {isMyReview && (
+                                        <span className="inline-flex items-center gap-1 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                                          Your Review
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-text-secondary mt-0.5">
+                                      Reviewed on{" "}
+                                      {review.date
+                                        ? new Date(
+                                            review.date,
+                                          ).toLocaleDateString("en-US", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                          })
+                                        : "Recent Date"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Star Rating and Edit button */}
+                                <div className="flex items-center gap-3 self-start sm:self-auto">
+                                  <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
+                                    <span className="text-xs font-bold text-amber-700">
+                                      {Number(review.rating).toFixed(1)}
+                                    </span>
+                                    <div className="flex text-amber-400">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <StarIcon
+                                          key={star}
+                                          className={classNames(
+                                            review.rating >= star
+                                              ? "text-amber-400"
+                                              : "text-gray-200",
+                                            "h-3.5 w-3.5",
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {isMyReview && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleOpenEditModal(review)
+                                      }
+                                      className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                                      title="Edit this review"
+                                    >
+                                      <PencilSquareIcon className="h-3.5 w-3.5" />
+                                      <span>Edit</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Review Comment Body */}
+                              <p className="text-text-primary text-sm leading-relaxed whitespace-pre-line pl-0 sm:pl-13">
+                                {review.comment}
+                              </p>
+                            </div>
+                          );
+                        })}
+
+                        {/* Pagination Controls */}
+                        {totalReviewPages > 1 && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-2">
+                            <p className="text-xs text-text-secondary font-medium">
+                              Showing{" "}
+                              <span className="font-bold text-text-primary">
+                                {(reviewPage - 1) * REVIEWS_PER_PAGE + 1}
+                              </span>{" "}
+                              to{" "}
+                              <span className="font-bold text-text-primary">
+                                {Math.min(
+                                  reviewPage * REVIEWS_PER_PAGE,
+                                  filteredReviews.length,
+                                )}
+                              </span>{" "}
+                              of{" "}
+                              <span className="font-bold text-text-primary">
+                                {filteredReviews.length}
+                              </span>{" "}
+                              reviews
+                            </p>
+
+                            <Pagination
+                              count={totalReviewPages}
+                              page={reviewPage}
+                              onChange={(e, val) => {
+                                setReviewPage(val);
+                                const el =
+                                  document.getElementById("reviews-section");
+                                if (el) {
+                                  el.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                  });
+                                }
+                              }}
+                              color="primary"
+                              size="medium"
+                              shape="rounded"
+                              siblingCount={1}
+                              boundaryCount={0}
+                              showFirstButton
+                              showLastButton
+                              sx={{
+                                "& .MuiPaginationItem-root": {
+                                  fontFamily: "inherit",
+                                  fontWeight: 600,
+                                  fontSize: "0.825rem",
+                                  borderRadius: "12px",
+                                },
+                                "& .MuiPaginationItem-root.Mui-selected": {
+                                  backgroundColor: "#1C1B19",
+                                  color: "#FFFFFF",
+                                  "&:hover": {
+                                    backgroundColor: "#000000",
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : product.reviews?.length > 0 ? (
+                      <div className="text-center py-12 px-6 bg-surface rounded-3xl border border-border-light shadow-card space-y-3.5">
+                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
+                          <FunnelIcon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-text-primary">
+                            No reviews match your selected filters
+                          </h4>
+                          <p className="text-xs text-text-secondary mt-1 max-w-sm mx-auto">
+                            Try changing the star rating filter or clearing the
+                            search query to see more reviews.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleClearReviewFilters}
+                          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-soft cursor-pointer active:scale-[0.98]"
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                          <span>Clear All Filters</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-16 px-6 bg-surface rounded-3xl border border-border-light shadow-card space-y-3">
+                        <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto">
+                          <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
+                        </div>
+                        <h4 className="text-base font-bold text-text-primary">
+                          No Reviews Yet
+                        </h4>
+                        <p className="text-xs text-text-secondary max-w-xs mx-auto">
+                          Be the first person to share feedback and review this
+                          product.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Related / Similar Products Section (Flipkart & Amazon style) */}
