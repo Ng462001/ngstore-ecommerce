@@ -62,6 +62,10 @@ const sizeSchema = new mongoose.Schema({
 
 // Review schema
 const reviewSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     name: {
         type: String,
         required: [true, 'Reviewer name is required'],

@@ -23,6 +23,7 @@ import {
   UserIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { NavLink, useNavigate } from "react-router-dom";
 import CartDetail from "./CartDetail";
 import AISearchModal from "./AISearchModal";
@@ -61,9 +62,6 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -138,36 +136,6 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Fetch search suggestions with debouncing
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    const delayDebounceFn = setTimeout(async () => {
-      setSuggestionsLoading(true);
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`,
-        );
-        const result = await response.json();
-        if (result.success && result.data) {
-          setSuggestions(result.data);
-        } else {
-          setSuggestions([]);
-        }
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-        setSuggestions([]);
-      } finally {
-        setSuggestionsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
   const handleLogout = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -203,19 +171,6 @@ export default function Navbar() {
       }
     },
     [handleLogout, navigate],
-  );
-
-  const handleSearch = useCallback(
-    (e) => {
-      e.preventDefault();
-      if (searchQuery.trim()) {
-        navigate(`/store?search=${encodeURIComponent(searchQuery)}`);
-        setSearchOpen(false);
-        setSearchQuery("");
-        setSuggestions([]);
-      }
-    },
-    [searchQuery, navigate],
   );
 
   const renderUserMenu = () => {
@@ -593,12 +548,6 @@ export default function Navbar() {
     </PopoverGroup>
   );
 
-  const handleSearchClose = () => {
-    setSearchOpen(false);
-    setSearchQuery("");
-    setSuggestions([]);
-  };
-
   return (
     <>
       <div className="sticky-header border-b border-border-light sticky top-0 z-40 bg-background/90 backdrop-blur-md">
@@ -685,18 +634,23 @@ export default function Navbar() {
                     <NavLink
                       to="/wishlist"
                       className="group -m-2 flex items-center p-2 relative"
-                      aria-label={`View wishlist with ${totalWishlistItems} items`}
+                      aria-label="View wishlist"
                     >
-                      <HeartIcon
-                        aria-hidden="true"
-                        className="size-6 shrink-0 text-text-secondary group-hover:text-accent transition-colors"
-                      />
+                      {totalWishlistItems > 0 ? (
+                        <HeartIconSolid
+                          aria-hidden="true"
+                          className="size-6 shrink-0 text-accent group-hover:text-accent-hover transition-transform group-hover:scale-110"
+                        />
+                      ) : (
+                        <HeartIcon
+                          aria-hidden="true"
+                          className="size-6 shrink-0 text-text-secondary group-hover:text-accent transition-colors"
+                        />
+                      )}
                       {totalWishlistItems > 0 && (
-                        <span
-                          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white transition-transform group-hover:scale-110 shadow-xs"
-                          aria-label={`${totalWishlistItems} items in wishlist`}
-                        >
-                          {totalWishlistItems}
+                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent ring-2 ring-background"></span>
                         </span>
                       )}
                       <span className="sr-only">items in wishlist</span>

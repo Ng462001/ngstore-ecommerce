@@ -525,8 +525,8 @@ class ProductController {
                 date: new Date()
             };
 
-            if (userId) {
-                review.user = userId;
+            if (userId || req.user?._id) {
+                review.user = userId || req.user?._id;
             }
 
             product.reviews.push(review);
@@ -547,6 +547,85 @@ class ProductController {
             res.status(500).json({
                 success: false,
                 message: 'Failed to add rating',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            });
+        }
+    };
+
+    // Update product rating and review
+    static updateReview = async (req, res) => {
+        try {
+            const { id, reviewId } = req.params;
+            const { rating, comment, name } = req.body;
+
+            if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(reviewId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid product or review ID format'
+                });
+            }
+
+            if (rating && (Number(rating) < 1 || Number(rating) > 5)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Rating must be between 1 and 5'
+                });
+            }
+
+            const product = await Product.findById(id);
+            if (!product) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Product not found'
+                });
+            }
+
+            const review = product.reviews.id(reviewId);
+            if (!review) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Review not found'
+                });
+            }
+
+            const oldRating = review.rating;
+            const newRating = rating !== undefined ? Number(rating) : oldRating;
+
+            if (name) review.name = name;
+            if (comment !== undefined) review.comment = comment;
+            review.rating = newRating;
+            review.date = new Date();
+
+            // Update rating breakdown & average if rating changed
+            if (oldRating !== newRating) {
+                if (product.rating && product.rating.breakdown) {
+                    if (product.rating.breakdown[oldRating] > 0) {
+                        product.rating.breakdown[oldRating]--;
+                    }
+                    product.rating.breakdown[newRating] = (product.rating.breakdown[newRating] || 0) + 1;
+
+                    const totalRatings = Object.entries(product.rating.breakdown).reduce((sum, [star, count]) => {
+                        return sum + (parseInt(star) * count);
+                    }, 0);
+
+                    product.rating.average = product.rating.count > 0 ? (totalRatings / product.rating.count) : 0;
+                }
+            }
+
+            await product.save();
+            const updatedProduct = await Product.findById(id).select('-__v');
+
+            res.json({
+                success: true,
+                message: 'Review updated successfully',
+                data: updatedProduct
+            });
+
+        } catch (error) {
+            console.error('Update review error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to update review',
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
@@ -659,6 +738,84 @@ class ProductController {
             res.status(500).json({
                 success: false,
                 message: 'Smart search failed',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            });
+        }
+    };
+
+    // Get related/similar products for product details page
+    static getRelatedProducts = async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { limit = 10 } = req.query;
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid product ID format'
+                });
+            }
+
+            const currentProduct = await Product.findById(id);
+            if (!currentProduct) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Product not found'
+                });
+            }
+
+            const maxLimit = Math.min(parseInt(limit) || 10, 20);
+
+            // 1. Primary Criteria: Matching category or tags, excluding current product
+            const filterConditions = [];
+            if (currentProduct.category) {
+                filterConditions.push({ category: { $regex: `^${currentProduct.category.trim()}$`, $options: 'i' } });
+            }
+            if (currentProduct.tags && Array.isArray(currentProduct.tags) && currentProduct.tags.length > 0) {
+                filterConditions.push({ tags: { $in: currentProduct.tags } });
+            }
+
+            const primaryFilter = {
+                _id: { $ne: currentProduct._id },
+                status: 'active'
+            };
+
+            if (filterConditions.length > 0) {
+                primaryFilter.$or = filterConditions;
+            }
+
+            let relatedProducts = await Product.find(primaryFilter)
+                .sort({ 'rating.average': -1, createdAt: -1 })
+                .limit(maxLimit)
+                .select('-__v');
+
+            // 2. Backfill with top-rated/active products if we have fewer than maxLimit
+            if (relatedProducts.length < maxLimit) {
+                const needed = maxLimit - relatedProducts.length;
+                const excludeIds = [currentProduct._id, ...relatedProducts.map(p => p._id)];
+
+                const backfill = await Product.find({
+                    _id: { $nin: excludeIds },
+                    status: 'active'
+                })
+                .sort({ 'rating.average': -1, createdAt: -1 })
+                .limit(needed)
+                .select('-__v');
+
+                relatedProducts = [...relatedProducts, ...backfill];
+            }
+
+            res.json({
+                success: true,
+                count: relatedProducts.length,
+                data: relatedProducts
+            });
+
+        } catch (error) {
+            console.error('Error fetching related products:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch related products',
                 error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }

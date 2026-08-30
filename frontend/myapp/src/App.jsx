@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
 import MainLayout from './pages/MainLayout'
 import About from './pages/About'
@@ -46,15 +46,16 @@ const PrivateAdminRoute = ({ children }) => {
 
 // Private Route Wrapper
 const PrivateUserRoute = ({ children }) => {
+  const location = useLocation();
   const userInfo = localStorage.getItem('userInfo');
-  const user = JSON.parse(userInfo);
+  const user = userInfo ? JSON.parse(userInfo) : null;
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   if (user.role === 'user') {
     return children;
   }
-  return <Navigate to="/" />;
+  return <Navigate to="/" replace />;
 };
 
 // Prevent Admin from accessing non-admin pages

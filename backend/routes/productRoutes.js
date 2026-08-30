@@ -13,10 +13,13 @@ router.post("/", upload.fields([
 // Featured and special collections
 router.get("/smart-search", ProductController.smartSearch);
 
-// Rating management
+// Rating & Review management
 router.patch("/:id/rating", ProductController.addRating);
+router.put("/:id/reviews/:reviewId", ProductController.updateReview);
+router.patch("/:id/reviews/:reviewId", ProductController.updateReview);
 
 // Instance routes
+router.get("/:id/related", ProductController.getRelatedProducts);
 router.get("/:id", ProductController.getProductById);
 router.put("/:id", upload.fields([
     { name: 'image', maxCount: 1 },

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { loginUser } from "../Redux/action/action"
 import { toast } from 'react-hot-toast';
@@ -12,6 +12,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
 
   const handleSubmit = async (event) => {
@@ -37,7 +38,8 @@ export default function Login() {
         } else {
           setLoading(false);
           toast.success("Login successful!");
-          navigate('/')
+          const from = location.state?.from?.pathname ? `${location.state.from.pathname}${location.state.from.search || ''}` : '/';
+          navigate(from, { replace: true })
         }
       } else {
         toast.error(data.message || 'Login failed');

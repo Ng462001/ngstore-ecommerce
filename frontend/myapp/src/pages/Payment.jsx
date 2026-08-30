@@ -17,7 +17,12 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import { CreditCard, Lock, Payment as PaymentIcon } from "@mui/icons-material";
+import {
+  CreditCardOutlined as CreditCardOutlinedIcon,
+  PaymentsOutlined as PaymentsOutlinedIcon,
+  Lock,
+  Payment as PaymentIcon,
+} from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 
 export default function Payment({ onBack, selectedAddress }) {
@@ -225,7 +230,7 @@ export default function Payment({ onBack, selectedAddress }) {
                   }
                   label={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CreditCard sx={{ color: "#B8925A" }} />
+                      <CreditCardOutlinedIcon sx={{ color: "#B8925A" }} />
                       <Typography sx={{ fontWeight: 500, color: "#1C1B19" }}>
                         Credit/Debit Card (Stripe Checkout)
                       </Typography>
@@ -243,9 +248,12 @@ export default function Payment({ onBack, selectedAddress }) {
                     />
                   }
                   label={
-                    <Typography sx={{ fontWeight: 500, color: "#1C1B19" }}>
-                      Cash on Delivery
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <PaymentsOutlinedIcon sx={{ color: "#B8925A" }} />
+                      <Typography sx={{ fontWeight: 500, color: "#1C1B19" }}>
+                        Cash on Delivery
+                      </Typography>
+                    </Box>
                   }
                 />
               </RadioGroup>
