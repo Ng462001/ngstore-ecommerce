@@ -517,6 +517,25 @@ class ProductController {
                 });
             }
 
+            // Check if user already submitted a review by user ID
+            const currentUserId = userId || req.user?._id;
+            if (currentUserId) {
+                const alreadyReviewed = product.reviews.some((r) => {
+                    if (!r.user) return false;
+                    const rUserId =
+                        typeof r.user === 'object' && r.user._id
+                            ? r.user._id.toString()
+                            : r.user.toString();
+                    return rUserId === currentUserId.toString();
+                });
+                if (alreadyReviewed) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'You have already reviewed this product'
+                    });
+                }
+            }
+
             // Add review to reviews array
             const review = {
                 name: name || 'Anonymous',
@@ -525,8 +544,8 @@ class ProductController {
                 date: new Date()
             };
 
-            if (userId || req.user?._id) {
-                review.user = userId || req.user?._id;
+            if (currentUserId) {
+                review.user = currentUserId;
             }
 
             product.reviews.push(review);

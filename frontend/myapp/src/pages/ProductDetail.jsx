@@ -110,12 +110,6 @@ export default function ProductDetail() {
 
     dispatch(toggleWishlist(wishlistItem));
 
-    if (isWishlisted) {
-      toast.success("Removed from wishlist 💔");
-    } else {
-      toast.success("Added to wishlist ❤️");
-    }
-
     try {
       if (isWishlisted) {
         await fetch(
@@ -287,6 +281,12 @@ export default function ProductDetail() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+    if (!isUserLoggedIn || !token) {
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
     const cartProduct = {
       _id: product._id,
       cartId: `${product._id}-${selectedColor?.name || "no-color"}-${selectedSize?.name || "no-size"}`,
@@ -326,6 +326,12 @@ export default function ProductDetail() {
     }
     if (hasSizes && !selectedSize) {
       toast.error("Please select a size before buying");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!isUserLoggedIn || !token) {
+      navigate("/login", { state: { from: window.location.pathname } });
       return;
     }
 
@@ -430,18 +436,18 @@ export default function ProductDetail() {
     };
   }, [product?.reviews, product?.rating?.average, product?.rating?.count]);
 
+  const currentUserId = userInfo?._id || userInfo?.id;
+
   const userReview =
-    isUserLoggedIn && userInfo
-      ? product?.reviews?.find(
-          (review) =>
-            (review.user &&
-              (review.user === (userInfo._id || userInfo.id) ||
-                review.user?._id === (userInfo._id || userInfo.id))) ||
-            (review.name &&
-              userInfo.name &&
-              review.name.trim().toLowerCase() ===
-                userInfo.name.trim().toLowerCase()),
-        )
+    isUserLoggedIn && currentUserId
+      ? product?.reviews?.find((review) => {
+          if (!review?.user) return false;
+          const reviewUserId =
+            typeof review.user === "object"
+              ? review.user._id || review.user.id
+              : review.user;
+          return String(reviewUserId) === String(currentUserId);
+        })
       : null;
 
   const hasUserReviewed = Boolean(userReview);
@@ -502,18 +508,19 @@ export default function ProductDetail() {
     }
 
     // Filter by "only my reviews"
-    if (onlyMyReviews && isUserLoggedIn && userInfo) {
-      list = list.filter(
-        (r) =>
-          (userReview &&
-            (r._id === userReview._id || r.id === userReview._id)) ||
-          (userInfo?.name &&
-            r.name?.trim().toLowerCase() ===
-              userInfo.name.trim().toLowerCase()) ||
-          (r.user &&
-            (r.user === (userInfo._id || userInfo.id) ||
-              r.user?._id === (userInfo._id || userInfo.id))),
-      );
+    if (onlyMyReviews && isUserLoggedIn && currentUserId) {
+      list = list.filter((r) => {
+        if (
+          userReview &&
+          (r._id === userReview._id || r.id === userReview._id)
+        ) {
+          return true;
+        }
+        if (!r?.user) return false;
+        const reviewUserId =
+          typeof r.user === "object" ? r.user._id || r.user.id : r.user;
+        return String(reviewUserId) === String(currentUserId);
+      });
     }
 
     // Filter by search query
@@ -1536,19 +1543,19 @@ export default function ProductDetail() {
                     {filteredReviews.length > 0 ? (
                       <>
                         {paginatedReviews.map((review, index) => {
+                          const reviewUserId =
+                            typeof review?.user === "object"
+                              ? review.user._id || review.user.id
+                              : review?.user;
                           const isMyReview =
                             isUserLoggedIn &&
+                            Boolean(currentUserId) &&
                             ((userReview &&
                               (review._id === userReview._id ||
                                 review.id === userReview._id)) ||
-                              (userInfo?.name &&
-                                review.name?.trim().toLowerCase() ===
-                                  userInfo.name.trim().toLowerCase()) ||
-                              (review.user &&
-                                (review.user ===
-                                  (userInfo?._id || userInfo?.id) ||
-                                  review.user?._id ===
-                                    (userInfo?._id || userInfo?.id))));
+                              (reviewUserId &&
+                                String(reviewUserId) ===
+                                  String(currentUserId)));
 
                           const reviewerInitial = (review.name || "U")
                             .trim()
