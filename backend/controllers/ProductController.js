@@ -534,7 +534,7 @@ class ProductController {
     }
   };
 
-  // Add product rating and review
+  // Add product rating and review (with upsert behavior for existing user ratings)
   static addRating = async (req, res) => {
     try {
       const { id } = req.params;
@@ -547,10 +547,17 @@ class ProductController {
         });
       }
 
-      if (!rating || rating < 1 || rating > 5) {
+      const numRating = Number(rating);
+      if (
+        !rating ||
+        isNaN(numRating) ||
+        numRating < 1 ||
+        numRating > 5 ||
+        !Number.isInteger(numRating)
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Rating must be between 1 and 5",
+          message: "Rating is required and must be an integer between 1 and 5",
         });
       }
 
@@ -562,10 +569,20 @@ class ProductController {
         });
       }
 
-      // Check if user already submitted a review by user ID
+      // Process comment: Trim whitespace and treat empty string as null (rating-only)
+      const trimmedComment = typeof comment === "string" ? comment.trim() : "";
+      const finalComment = trimmedComment.length > 0 ? trimmedComment : null;
+      const reviewerName =
+        typeof name === "string" && name.trim().length > 0
+          ? name.trim()
+          : "Anonymous";
+
+      // Check if user already submitted a rating/review
       const currentUserId = userId || req.user?._id;
-      if (currentUserId) {
-        const alreadyReviewed = product.reviews.some((r) => {
+      let existingReview = null;
+
+      if (currentUserId && Array.isArray(product.reviews)) {
+        existingReview = product.reviews.find((r) => {
           if (!r.user) return false;
           const rUserId =
             typeof r.user === "object" && r.user._id
@@ -573,19 +590,34 @@ class ProductController {
               : r.user.toString();
           return rUserId === currentUserId.toString();
         });
-        if (alreadyReviewed) {
-          return res.status(400).json({
-            success: false,
-            message: "You have already reviewed this product",
-          });
-        }
       }
 
-      // Add review to reviews array
+      if (existingReview) {
+        // Upsert: Update existing review record
+        existingReview.rating = numRating;
+        existingReview.comment = finalComment;
+        if (reviewerName !== "Anonymous" || !existingReview.name) {
+          existingReview.name = reviewerName;
+        }
+        existingReview.date = new Date();
+
+        await product.updateRating();
+        const updatedProduct = await Product.findById(id).select("-__v");
+
+        return res.json({
+          success: true,
+          message: finalComment
+            ? "Review updated successfully"
+            : "Rating updated successfully",
+          data: updatedProduct,
+        });
+      }
+
+      // First time submission: Create new record
       const review = {
-        name: name || "Anonymous",
-        rating: Number(rating),
-        comment: comment || "",
+        name: reviewerName,
+        rating: numRating,
+        comment: finalComment,
         date: new Date(),
       };
 
@@ -594,15 +626,15 @@ class ProductController {
       }
 
       product.reviews.push(review);
-
-      // Update aggregate rating
       await product.updateRating();
 
       const updatedProduct = await Product.findById(id).select("-__v");
 
-      res.json({
+      return res.json({
         success: true,
-        message: "Review added successfully",
+        message: finalComment
+          ? "Review added successfully"
+          : "Rating added successfully",
         data: updatedProduct,
       });
     } catch (error) {
@@ -634,11 +666,19 @@ class ProductController {
         });
       }
 
-      if (rating && (Number(rating) < 1 || Number(rating) > 5)) {
-        return res.status(400).json({
-          success: false,
-          message: "Rating must be between 1 and 5",
-        });
+      if (rating !== undefined) {
+        const numRating = Number(rating);
+        if (
+          isNaN(numRating) ||
+          numRating < 1 ||
+          numRating > 5 ||
+          !Number.isInteger(numRating)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: "Rating must be an integer between 1 and 5",
+          });
+        }
       }
 
       const product = await Product.findById(id);
@@ -676,12 +716,20 @@ class ProductController {
         }
       }
 
-      const oldRating = review.rating;
-      const newRating = rating !== undefined ? Number(rating) : oldRating;
+      if (rating !== undefined) {
+        review.rating = Number(rating);
+      }
 
-      if (name) review.name = name;
-      if (comment !== undefined) review.comment = comment;
-      review.rating = newRating;
+      if (comment !== undefined) {
+        const trimmedComment =
+          typeof comment === "string" ? comment.trim() : "";
+        review.comment = trimmedComment.length > 0 ? trimmedComment : null;
+      }
+
+      if (name && typeof name === "string" && name.trim().length > 0) {
+        review.name = name.trim();
+      }
+
       review.date = new Date();
 
       // Recalculate product rating using instance method
@@ -690,7 +738,9 @@ class ProductController {
 
       res.json({
         success: true,
-        message: "Review updated successfully",
+        message: review.comment
+          ? "Review updated successfully"
+          : "Rating updated successfully",
         data: updatedProduct,
       });
     } catch (error) {

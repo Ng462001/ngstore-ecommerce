@@ -115,7 +115,9 @@ export default function UserReviews() {
     let list = [...givenReviews];
 
     if (ratingFilter !== "all") {
-      list = list.filter((r) => Math.round(Number(r.rating)) === Number(ratingFilter));
+      list = list.filter(
+        (r) => Math.round(Number(r.rating)) === Number(ratingFilter),
+      );
     }
 
     if (searchQuery.trim()) {
@@ -149,13 +151,16 @@ export default function UserReviews() {
   const handleSubmitWriteReview = async (e) => {
     e.preventDefault();
     if (!selectedPendingItem?.productId) return;
-    if (!writeComment.trim() || writeComment.trim().length < 5) {
-      toast.error("Please write a review of at least 5 characters");
+    if (!writeRating || Number(writeRating) < 1 || Number(writeRating) > 5) {
+      toast.error("Please select a star rating between 1 and 5");
       return;
     }
 
     setIsSubmittingWrite(true);
     try {
+      const trimmedComment =
+        typeof writeComment === "string" ? writeComment.trim() : "";
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products/${selectedPendingItem.productId}/rating`,
         {
@@ -166,7 +171,7 @@ export default function UserReviews() {
           },
           body: JSON.stringify({
             rating: Number(writeRating),
-            comment: writeComment.trim(),
+            comment: trimmedComment,
             name: userInfo?.name || "Customer",
             userId: userInfo?._id || userInfo?.id,
           }),
@@ -175,7 +180,11 @@ export default function UserReviews() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Review submitted successfully! 🎉");
+        toast.success(
+          trimmedComment
+            ? "Review submitted successfully!"
+            : "Rating submitted successfully!",
+        );
         handleCloseWriteModal();
         await fetchUserReviews();
         setActiveSubTab("given");
@@ -211,13 +220,16 @@ export default function UserReviews() {
       toast.error("Review identifier missing");
       return;
     }
-    if (!editComment.trim() || editComment.trim().length < 5) {
-      toast.error("Review must be at least 5 characters long");
+    if (!editRating || Number(editRating) < 1 || Number(editRating) > 5) {
+      toast.error("Please select a star rating between 1 and 5");
       return;
     }
 
     setIsSubmittingEdit(true);
     try {
+      const trimmedComment =
+        typeof editComment === "string" ? editComment.trim() : "";
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products/${selectedReviewToEdit.productId}/reviews/${selectedReviewToEdit.reviewId}`,
         {
@@ -228,7 +240,7 @@ export default function UserReviews() {
           },
           body: JSON.stringify({
             rating: Number(editRating),
-            comment: editComment.trim(),
+            comment: trimmedComment,
             name: userInfo?.name || selectedReviewToEdit.name,
           }),
         },
@@ -236,7 +248,7 @@ export default function UserReviews() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Review updated successfully! ✨");
+        toast.success("Rating/review updated successfully!");
         handleCloseEditModal();
         await fetchUserReviews();
       } else {
@@ -316,7 +328,7 @@ export default function UserReviews() {
                 <ChatBubbleBottomCenterTextIcon className="h-5 w-5" />
               </div>
               <h3 className="font-heading text-xl font-bold text-text-primary">
-                My Reviews & Ratings
+                My Reviews
               </h3>
             </div>
             <p className="text-text-secondary text-xs mt-1">
@@ -496,7 +508,10 @@ export default function UserReviews() {
                           </span>
                           {(item.color || item.size) && (
                             <span className="text-[11px]">
-                              • {[item.color, item.size].filter(Boolean).join(" / ")}
+                              •{" "}
+                              {[item.color, item.size]
+                                .filter(Boolean)
+                                .join(" / ")}
                             </span>
                           )}
                         </div>
@@ -504,11 +519,14 @@ export default function UserReviews() {
                         {item.orderDate && (
                           <p className="text-[11px] text-text-secondary/80 mt-1">
                             Purchased on{" "}
-                            {new Date(item.orderDate).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
+                            {new Date(item.orderDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
                           </p>
                         )}
                       </div>
@@ -680,9 +698,15 @@ export default function UserReviews() {
 
                     {/* Review Body */}
                     <div className="bg-background rounded-xl p-3.5 border border-border-light">
-                      <p className="text-xs sm:text-sm text-text-primary leading-relaxed whitespace-pre-line">
-                        "{review.comment}"
-                      </p>
+                      {review.comment && review.comment.trim() ? (
+                        <p className="text-xs sm:text-sm text-text-primary leading-relaxed whitespace-pre-line">
+                          "{review.comment}"
+                        </p>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-text-secondary italic">
+                          ⭐ Star rating only (no written comment).
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -788,7 +812,10 @@ export default function UserReviews() {
                     {selectedPendingItem.productName}
                   </h4>
                   <p className="text-xs text-text-secondary">
-                    ₹{Number(selectedPendingItem.productPrice || 0).toLocaleString()}{" "}
+                    ₹
+                    {Number(
+                      selectedPendingItem.productPrice || 0,
+                    ).toLocaleString()}{" "}
                     • {selectedPendingItem.productCategory || "Product"}
                   </p>
                 </div>
@@ -854,15 +881,16 @@ export default function UserReviews() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Your Review
+                    Your Review{" "}
+                    <span className="text-text-secondary/60 font-normal lowercase">
+                      (optional)
+                    </span>
                   </label>
                   <span
                     className={`text-xs ${
-                      writeComment.length < 5
-                        ? "text-amber-500 font-medium"
-                        : writeComment.length > 1000
-                          ? "text-red-500 font-medium"
-                          : "text-text-secondary"
+                      writeComment.length > 1000
+                        ? "text-red-500 font-medium"
+                        : "text-text-secondary"
                     }`}
                   >
                     {writeComment.length} / 1000 characters
@@ -870,9 +898,8 @@ export default function UserReviews() {
                 </div>
                 <textarea
                   rows={4}
-                  required
                   maxLength={1000}
-                  placeholder="Share details about the quality, sizing, comfort, and why you liked or disliked it..."
+                  placeholder="Share details about the quality, sizing, comfort (optional)..."
                   value={writeComment}
                   onChange={(e) => setWriteComment(e.target.value)}
                   className="w-full rounded-xl border border-border-light bg-background p-3 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none transition-all shadow-xs"
@@ -892,7 +919,12 @@ export default function UserReviews() {
 
                 <button
                   type="submit"
-                  disabled={isSubmittingWrite || writeComment.trim().length < 5}
+                  disabled={
+                    isSubmittingWrite ||
+                    !writeRating ||
+                    writeRating < 1 ||
+                    writeRating > 5
+                  }
                   className="px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs sm:text-sm font-semibold transition-all shadow-soft hover:shadow-card active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmittingWrite ? (
@@ -903,7 +935,11 @@ export default function UserReviews() {
                   ) : (
                     <>
                       <CheckIcon className="h-4 w-4 stroke-2" />
-                      <span>Submit Review</span>
+                      <span>
+                        {writeComment.trim()
+                          ? "Submit Review"
+                          : "Submit Rating"}
+                      </span>
                     </>
                   )}
                 </button>
@@ -1018,15 +1054,16 @@ export default function UserReviews() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Your Review
+                    Your Review{" "}
+                    <span className="text-text-secondary/60 font-normal lowercase">
+                      (optional - clear to remove review text)
+                    </span>
                   </label>
                   <span
                     className={`text-xs ${
-                      editComment.length < 5
-                        ? "text-amber-500 font-medium"
-                        : editComment.length > 1000
-                          ? "text-red-500 font-medium"
-                          : "text-text-secondary"
+                      editComment.length > 1000
+                        ? "text-red-500 font-medium"
+                        : "text-text-secondary"
                     }`}
                   >
                     {editComment.length} / 1000 characters
@@ -1034,9 +1071,8 @@ export default function UserReviews() {
                 </div>
                 <textarea
                   rows={4}
-                  required
                   maxLength={1000}
-                  placeholder="Update your review details..."
+                  placeholder="Update your review details (leave empty for rating only)..."
                   value={editComment}
                   onChange={(e) => setEditComment(e.target.value)}
                   className="w-full rounded-xl border border-border-light bg-background p-3 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none transition-all shadow-xs"
@@ -1056,7 +1092,12 @@ export default function UserReviews() {
 
                 <button
                   type="submit"
-                  disabled={isSubmittingEdit || editComment.trim().length < 5}
+                  disabled={
+                    isSubmittingEdit ||
+                    !editRating ||
+                    editRating < 1 ||
+                    editRating > 5
+                  }
                   className="px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs sm:text-sm font-semibold transition-all shadow-soft hover:shadow-card active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmittingEdit ? (

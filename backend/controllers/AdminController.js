@@ -831,24 +831,10 @@ class AdminController {
 
       const { name, rating, comment } = req.body;
 
-      if (!name || !rating || !comment) {
+      if (rating === undefined || Number(rating) < 1 || Number(rating) > 5) {
         return res.status(400).json({
           success: false,
-          message: "Name, rating, and comment are required",
-        });
-      }
-
-      if (rating < 1 || rating > 5) {
-        return res.status(400).json({
-          success: false,
-          message: "Rating must be between 1 and 5",
-        });
-      }
-
-      if (comment.length < 5) {
-        return res.status(400).json({
-          success: false,
-          message: "Comment must be at least 5 characters long",
+          message: "Rating is required and must be between 1 and 5",
         });
       }
 
@@ -874,35 +860,18 @@ class AdminController {
         });
       }
 
-      // Store old rating for stats update
-      const oldRating = review.rating;
-
-      // Update review
-      review.name = name;
+      if (name && typeof name === "string" && name.trim().length > 0) {
+        review.name = name.trim();
+      }
       review.rating = parseInt(rating);
-      review.comment = comment;
+      if (comment !== undefined) {
+        const trimmedComment = typeof comment === "string" ? comment.trim() : "";
+        review.comment = trimmedComment.length > 0 ? trimmedComment : null;
+      }
       review.date = new Date();
 
-      // Update product rating stats if rating changed
-      if (oldRating !== parseInt(rating)) {
-        // Update rating breakdown
-        if (product.rating.breakdown[oldRating] > 0) {
-          product.rating.breakdown[oldRating]--;
-        }
-        product.rating.breakdown[rating]++;
-
-        // Recalculate average rating
-        const totalRatings = Object.entries(product.rating.breakdown).reduce(
-          (sum, [star, count]) => {
-            return sum + parseInt(star) * count;
-          },
-          0,
-        );
-
-        product.rating.average = totalRatings / product.rating.count;
-      }
-
-      await product.save();
+      // Recalculate product rating cleanly
+      await product.updateRating();
       res.json({
         success: true,
         message: "Review updated successfully",
@@ -960,36 +929,11 @@ class AdminController {
         });
       }
 
-      // Store review info for logging
-      const reviewInfo = {
-        rating: review.rating,
-        customerName: review.name,
-        productName: product.name,
-      };
-
       // Remove review from array
       product.reviews.pull({ _id: reviewId });
 
-      // Update product rating stats
-      product.rating.count--;
-      if (product.rating.breakdown[reviewInfo.rating] > 0) {
-        product.rating.breakdown[reviewInfo.rating]--;
-      }
-
-      // Recalculate average if there are still reviews
-      if (product.rating.count > 0) {
-        const totalRatings = Object.entries(product.rating.breakdown).reduce(
-          (sum, [star, count]) => {
-            return sum + parseInt(star) * count;
-          },
-          0,
-        );
-        product.rating.average = totalRatings / product.rating.count;
-      } else {
-        product.rating.average = 0;
-      }
-
-      await product.save();
+      // Cleanly recalculate ratings
+      await product.updateRating();
       res.json({
         success: true,
         message: "Review deleted successfully",
@@ -1160,7 +1104,21 @@ const calculateReviewStats = async () => {
       {
         $group: {
           _id: null,
-          totalReviews: { $sum: 1 },
+          totalRatings: { $sum: 1 },
+          totalReviews: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ["$reviews.comment", null] },
+                    { $ne: ["$reviews.comment", ""] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
           averageRating: { $avg: "$reviews.rating" },
           ratingBreakdown: {
             $push: "$reviews.rating",
@@ -1218,6 +1176,10 @@ const calculateReviewStats = async () => {
 
     return {
       totalReviews: result.totalReviews || 0,
+      totalRatings: result.totalRatings || 0,
+      count: result.totalRatings || 0,
+      ratingCount: result.totalRatings || 0,
+      reviewCount: result.totalReviews || 0,
       averageRating: result.averageRating
         ? Number(result.averageRating.toFixed(1))
         : 0,

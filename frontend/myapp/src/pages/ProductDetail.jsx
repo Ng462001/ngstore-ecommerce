@@ -302,11 +302,11 @@ export default function ProductDetail() {
 
     dispatch(addProduct(cartProduct));
     setAddedToCart(true);
-    toast.success("Added to cart! 🛒", { autoClose: 2000 });
+    toast.success("Added to cart!", { autoClose: 1000 });
 
     setTimeout(() => {
       setAddedToCart(false);
-    }, 3000);
+    }, 2000);
   };
 
   const handleBuyNow = () => {
@@ -349,38 +349,38 @@ export default function ProductDetail() {
     };
 
     dispatch(addProduct(cartProduct));
-    toast.success("Proceeding to checkout... ⚡", { autoClose: 1500 });
     navigate("/checkout");
-  };
-
-  const handleColorChange = (color) => {
-    setSelectedColor(color);
-    setAddedToCart(false);
-  };
-
-  const handleSizeChange = (size) => {
-    setSelectedSize(size);
-    setAddedToCart(false);
   };
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    if (!reviewForm.rating || reviewForm.rating < 1 || reviewForm.rating > 5) {
+      toast.error("Please select a rating between 1 and 5 stars");
+      return;
+    }
+
     setSubmittingReview(true);
 
     const reviewData = {
-      ...reviewForm,
-      name: isUserLoggedIn ? userInfo?.name : reviewForm.name,
+      rating: Number(reviewForm.rating),
+      comment: reviewForm.comment ? reviewForm.comment.trim() : "",
+      name: isUserLoggedIn ? userInfo?.name : reviewForm.name || "Customer",
       userId: isUserLoggedIn ? userInfo?._id || userInfo?.id : undefined,
     };
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (userInfo?.token) {
+        headers["Authorization"] = `Bearer ${userInfo.token}`;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products/${id}/rating`,
         {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify(reviewData),
         },
       );
@@ -390,52 +390,68 @@ export default function ProductDetail() {
         await fetchProduct(); // refresh reviews after submit
         setReviewForm({ rating: 5, comment: "", name: "" });
         setReviewSuccess(true);
-        toast.success("Review submitted! Thank you.", { autoClose: 3000 });
+        toast.success(
+          reviewData.comment
+            ? "Rating & review submitted! Thank you."
+            : "Star rating submitted! Thank you.",
+          { autoClose: 3000 },
+        );
         setTimeout(() => setReviewSuccess(false), 4000);
       } else {
         throw new Error(result.message);
       }
     } catch (err) {
       console.error("Error submitting review:", err);
-      toast.error(err.message || "Failed to submit review. Please try again.", {
-        autoClose: 4000,
-      });
+      toast.error(
+        err.message || "Failed to submit rating/review. Please try again.",
+        {
+          autoClose: 4000,
+        },
+      );
     } finally {
       setSubmittingReview(false);
     }
   };
 
   const reviews = useMemo(() => {
-    if (
-      product?.reviews &&
-      Array.isArray(product.reviews) &&
-      product.reviews.length > 0
-    ) {
-      const validRatings = product.reviews
-        .map((r) => Number(r?.rating))
-        .filter((r) => !isNaN(r) && r > 0);
+    const revs = product?.reviews || [];
+    const validRatings = revs
+      .map((r) => Number(r?.rating))
+      .filter((r) => !isNaN(r) && r >= 1 && r <= 5);
 
-      const totalCount = product.reviews.length;
-      const average =
-        validRatings.length > 0
+    const ratingCount =
+      product?.rating?.count !== undefined && product?.rating?.count !== null
+        ? Number(product.rating.count)
+        : validRatings.length;
+
+    const reviewCount =
+      product?.rating?.reviewCount !== undefined &&
+      product?.rating?.reviewCount !== null
+        ? Number(product.rating.reviewCount)
+        : revs.filter(
+            (r) =>
+              r?.comment &&
+              typeof r.comment === "string" &&
+              r.comment.trim().length > 0,
+          ).length;
+
+    const average =
+      product?.rating?.average !== undefined &&
+      product?.rating?.average !== null
+        ? Number(product.rating.average)
+        : validRatings.length > 0
           ? validRatings.reduce((sum, val) => sum + val, 0) /
             validRatings.length
-          : Number(product?.rating?.average) || 0;
-
-      return {
-        href: "#reviews-section",
-        average: parseFloat(average.toFixed(1)),
-        totalCount,
-      };
-    }
+          : 0;
 
     return {
       href: "#reviews-section",
-      average: Number(product?.rating?.average) || 0,
-      totalCount:
-        Number(product?.rating?.count) || product?.reviews?.length || 0,
+      average: parseFloat(Number(average).toFixed(1)),
+      ratingCount,
+      reviewCount,
+      totalCount: ratingCount,
     };
-  }, [product?.reviews, product?.rating?.average, product?.rating?.count]);
+  }, [product?.reviews, product?.rating]);
 
   const currentUserId = userInfo?._id || userInfo?.id;
 
@@ -483,11 +499,17 @@ export default function ProductDetail() {
     }
   };
 
-  // Compute star counts
+  // Compute star counts from product rating breakdown or reviews
   const ratingCounts = useMemo(() => {
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
-    // If product has reviews array, count directly from reviews
+    if (product?.rating?.breakdown) {
+      for (let i = 1; i <= 5; i++) {
+        counts[i] = Number(product.rating.breakdown[i]) || 0;
+      }
+      return counts;
+    }
+
     if (
       product?.reviews &&
       Array.isArray(product.reviews) &&
@@ -502,24 +524,25 @@ export default function ProductDetail() {
           counts[star]++;
         }
       });
-      return counts;
-    }
-
-    // Fallback to product.rating.breakdown if available
-    if (product?.rating?.breakdown) {
-      for (let i = 1; i <= 5; i++) {
-        counts[i] = Number(product.rating.breakdown[i]) || 0;
-      }
     }
 
     return counts;
   }, [product?.reviews, product?.rating?.breakdown]);
 
-  // Filtered and sorted reviews
-  const filteredReviews = useMemo(() => {
+  // Filter only reviews that have non-empty written comments for the customer review cards list
+  const writtenReviews = useMemo(() => {
     if (!product?.reviews || !Array.isArray(product.reviews)) return [];
+    return product.reviews.filter(
+      (r) =>
+        r?.comment &&
+        typeof r.comment === "string" &&
+        r.comment.trim().length > 0,
+    );
+  }, [product?.reviews]);
 
-    let list = [...product.reviews];
+  // Filtered and sorted written reviews
+  const filteredReviews = useMemo(() => {
+    let list = [...writtenReviews];
 
     // Filter by star rating
     if (selectedRatingFilter !== "all") {
@@ -581,14 +604,13 @@ export default function ProductDetail() {
 
     return list;
   }, [
-    product?.reviews,
-    product?.rating?.breakdown,
+    writtenReviews,
     selectedRatingFilter,
     onlyMyReviews,
     reviewSearchQuery,
     reviewSortBy,
     isUserLoggedIn,
-    userInfo,
+    currentUserId,
     userReview,
   ]);
 
@@ -754,42 +776,40 @@ export default function ProductDetail() {
           <div className="mt-4 lg:row-span-3 lg:mt-0">
             <h2 className="sr-only">Product information</h2>
 
-            {/* Reviews */}
-            {reviews.totalCount > 0 && (
-              <div className="mt-6">
+            {/* Rating & Review Pill Badge */}
+            {reviews.ratingCount > 0 && (
+              <div className="mt-4">
                 <h3 className="sr-only">Reviews</h3>
-                <div className="flex items-center">
-                  <div className="flex items-center">
-                    {[0, 1, 2, 3, 4].map((rating) => (
-                      <StarIcon
-                        key={rating}
-                        aria-hidden="true"
-                        className={classNames(
-                          reviews.average > rating
-                            ? "text-accent"
-                            : "text-border-light",
-                          "size-5 shrink-0",
-                        )}
-                      />
-                    ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReviewsAccordionOpen(true);
+                    const el = document.getElementById("reviews-section");
+                    if (el)
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                  }}
+                  className="inline-flex items-center gap-2.5 px-3 py-1.5 bg-[#F6F6F6] hover:bg-[#EFEFEF] dark:bg-surface dark:hover:bg-surface-muted rounded-xl border border-border-light shadow-2xs hover:shadow-xs transition-all cursor-pointer group active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-1 font-bold text-sm text-text-primary">
+                    <span>
+                      {reviews.average > 0 ? reviews.average.toFixed(1) : "0.0"}
+                    </span>
+                    <StarIcon
+                      aria-hidden="true"
+                      className="size-4 text-amber-400 fill-amber-400 shrink-0"
+                    />
                   </div>
-                  <p className="sr-only">{reviews.average} out of 5 stars</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsReviewsAccordionOpen(true);
-                      const el = document.getElementById("reviews-section");
-                      if (el)
-                        el.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                    }}
-                    className="ml-3 text-sm font-medium text-accent hover:underline cursor-pointer"
-                  >
-                    {reviews.totalCount} reviews
-                  </button>
-                </div>
+
+                  <span className="h-4 w-[1px] bg-border-light group-hover:bg-border transition-colors" />
+
+                  <span className="text-sm font-medium text-text-secondary group-hover:text-text-primary transition-colors">
+                    {reviews.ratingCount.toLocaleString()}{" "}
+                    {reviews.ratingCount === 1 ? "Rating" : "Ratings"}
+                  </span>
+                </button>
               </div>
             )}
 
@@ -1122,9 +1142,9 @@ export default function ProductDetail() {
                   </h2>
                 </div>
                 <p className="text-text-secondary text-xs sm:text-sm">
-                  {reviews.totalCount > 0
-                    ? `Based on ${reviews.totalCount} authentic verified customer ${reviews.totalCount === 1 ? "review" : "reviews"}`
-                    : "No reviews yet. Be the first to share your experience!"}
+                  {reviews.ratingCount > 0
+                    ? `Based on ${reviews.ratingCount} authentic verified customer ${reviews.ratingCount === 1 ? "rating" : "ratings"}${reviews.reviewCount > 0 ? ` (${reviews.reviewCount} written ${reviews.reviewCount === 1 ? "review" : "reviews"})` : ""}`
+                    : "No ratings or reviews yet. Be the first to share your experience!"}
                 </p>
               </div>
 
@@ -1133,14 +1153,14 @@ export default function ProductDetail() {
                 {/* Quick stats pill */}
                 <div className="flex items-center gap-2.5 bg-background rounded-2xl border border-border-light px-4 py-2.5 shadow-xs">
                   <span className="text-2xl font-black text-text-primary">
-                    {reviews.average > 0 ? reviews.average.toFixed(1) : "5.0"}
+                    {reviews.average > 0 ? reviews.average.toFixed(1) : "0.0"}
                   </span>
                   <div className="flex text-amber-400">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <StarIcon
                         key={star}
                         className={classNames(
-                          (reviews.average || 5) >= star
+                          (reviews.average || 0) >= star
                             ? "text-amber-400"
                             : "text-gray-200",
                           "h-4 w-4",
@@ -1149,8 +1169,8 @@ export default function ProductDetail() {
                     ))}
                   </div>
                   <span className="text-xs text-text-secondary font-semibold pl-2 border-l border-border-light">
-                    {reviews.totalCount}{" "}
-                    {reviews.totalCount === 1 ? "rating" : "ratings"}
+                    {reviews.ratingCount}{" "}
+                    {reviews.ratingCount === 1 ? "rating" : "ratings"}
                   </span>
                 </div>
 
@@ -1192,7 +1212,7 @@ export default function ProductDetail() {
                         <span className="text-3xl font-black text-text-primary tracking-tight">
                           {reviews.average > 0
                             ? reviews.average.toFixed(1)
-                            : "5.0"}
+                            : "0.0"}
                         </span>
                         <span className="text-xs font-semibold text-text-secondary">
                           /5
@@ -1205,8 +1225,8 @@ export default function ProductDetail() {
                       {[5, 4, 3, 2, 1].map((star) => {
                         const count = ratingCounts[star] || 0;
                         const percentage =
-                          reviews.totalCount > 0
-                            ? (count / reviews.totalCount) * 100
+                          reviews.ratingCount > 0
+                            ? (count / reviews.ratingCount) * 100
                             : 0;
                         const isSelected =
                           selectedRatingFilter === String(star);
@@ -1278,8 +1298,8 @@ export default function ProductDetail() {
                     <div className="flex items-center justify-between mb-5 pb-4 border-b border-border-light/60">
                       <h3 className="font-heading text-lg font-bold text-text-primary">
                         {hasUserReviewed
-                          ? "Your Product Review"
-                          : "Review This Product"}
+                          ? "Your Rating & Review"
+                          : "Rate & Review"}
                       </h3>
                       <span className="text-[11px] font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
                         {hasUserReviewed ? "Submitted" : "Share Experience"}
@@ -1289,21 +1309,23 @@ export default function ProductDetail() {
                     {reviewSuccess && (
                       <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold flex items-center gap-2">
                         <CheckBadgeIcon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                        <span>Thank you! Your review has been submitted.</span>
+                        <span>
+                          Thank you! Your rating/review has been submitted.
+                        </span>
                       </div>
                     )}
 
                     {!isUserLoggedIn ? (
                       <div className="text-center py-6 px-4 bg-surface-muted rounded-2xl border border-border-light space-y-3">
                         <p className="text-text-secondary text-xs leading-relaxed">
-                          Have you used this product? Log in to share your
-                          thoughts and help other shoppers.
+                          Have you used this product? Log in to give a star
+                          rating or share your thoughts to help other shoppers.
                         </p>
                         <Link
                           to="/login"
                           className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-5 text-xs font-bold transition-all shadow-soft cursor-pointer"
                         >
-                          Login to Write Review
+                          Login to Rate & Review
                         </Link>
                       </div>
                     ) : hasUserReviewed ? (
@@ -1321,6 +1343,9 @@ export default function ProductDetail() {
                                 )}
                               />
                             ))}
+                            <span className="text-xs font-bold text-text-primary ml-1.5">
+                              {userReview?.rating} / 5
+                            </span>
                           </div>
                           <span className="text-[11px] text-text-secondary font-medium">
                             {userReview?.date
@@ -1336,9 +1361,16 @@ export default function ProductDetail() {
                           </span>
                         </div>
 
-                        <p className="text-xs text-text-primary italic leading-relaxed whitespace-pre-line bg-background p-3 rounded-xl border border-border-light">
-                          "{userReview?.comment}"
-                        </p>
+                        {userReview?.comment && userReview.comment.trim() ? (
+                          <p className="text-xs text-text-primary italic leading-relaxed whitespace-pre-line bg-background p-3 rounded-xl border border-border-light">
+                            "{userReview.comment}"
+                          </p>
+                        ) : (
+                          <p className="text-xs text-text-secondary italic bg-background p-2.5 rounded-xl border border-border-light">
+                            ⭐ You submitted a star rating without a written
+                            review.
+                          </p>
+                        )}
 
                         <button
                           type="button"
@@ -1346,7 +1378,11 @@ export default function ProductDetail() {
                           className="w-full inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft active:scale-[0.98] cursor-pointer"
                         >
                           <PencilSquareIcon className="h-4 w-4" />
-                          <span>Edit Your Review</span>
+                          <span>
+                            {userReview?.comment && userReview.comment.trim()
+                              ? "Edit Your Rating & Review"
+                              : "Edit Rating / Add Written Review"}
+                          </span>
                         </button>
                       </div>
                     ) : (
@@ -1357,7 +1393,6 @@ export default function ProductDetail() {
                           </label>
                           <input
                             type="text"
-                            required
                             disabled={isUserLoggedIn}
                             placeholder="Your Name"
                             value={
@@ -1375,7 +1410,8 @@ export default function ProductDetail() {
 
                         <div>
                           <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                            Overall Rating
+                            Overall Rating{" "}
+                            <span className="text-rose-500">*</span>
                           </label>
                           <div className="flex items-center gap-1.5 py-1">
                             {[1, 2, 3, 4, 5].map((rating) => (
@@ -1405,12 +1441,14 @@ export default function ProductDetail() {
 
                         <div>
                           <label className="block text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                            Detailed Review
+                            Detailed Review{" "}
+                            <span className="text-text-secondary/60 font-normal lowercase">
+                              (optional)
+                            </span>
                           </label>
                           <textarea
                             rows={3}
-                            required
-                            placeholder="Write your thoughts about quality, comfort, fit, and design..."
+                            placeholder="Write your thoughts about quality, comfort, fit, and design (optional)..."
                             value={reviewForm.comment}
                             onChange={(e) =>
                               setReviewForm({
@@ -1425,7 +1463,10 @@ export default function ProductDetail() {
                         <button
                           type="submit"
                           disabled={
-                            submittingReview || !reviewForm.comment.trim()
+                            submittingReview ||
+                            !reviewForm.rating ||
+                            reviewForm.rating < 1 ||
+                            reviewForm.rating > 5
                           }
                           className="w-full bg-accent hover:bg-accent-hover text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-soft disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
                         >
@@ -1435,7 +1476,11 @@ export default function ProductDetail() {
                               <span>Submitting...</span>
                             </>
                           ) : (
-                            <span>Submit Product Review</span>
+                            <span>
+                              {reviewForm.comment && reviewForm.comment.trim()
+                                ? "Submit Rating & Review"
+                                : "Submit Star Rating"}
+                            </span>
                           )}
                         </button>
                       </form>
@@ -1507,7 +1552,7 @@ export default function ProductDetail() {
                           "px-3 py-1.5 rounded-xl transition-all cursor-pointer",
                         )}
                       >
-                        All ({product.reviews?.length || 0})
+                        All ({writtenReviews.length})
                       </button>
 
                       {/* Star Rating Pills */}
@@ -1657,7 +1702,8 @@ export default function ProductDetail() {
                                     </div>
                                   </div>
 
-                                  {(isMyReview || userInfo?.role === "admin") && (
+                                  {(isMyReview ||
+                                    userInfo?.role === "admin") && (
                                     <div className="flex items-center gap-1.5">
                                       <button
                                         type="button"
@@ -1666,7 +1712,8 @@ export default function ProductDetail() {
                                         }
                                         className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 hover:bg-accent/20 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
                                         title={
-                                          userInfo?.role === "admin" && !isMyReview
+                                          userInfo?.role === "admin" &&
+                                          !isMyReview
                                             ? "Edit review (Admin)"
                                             : "Edit this review"
                                         }
@@ -1763,7 +1810,7 @@ export default function ProductDetail() {
                           </div>
                         )}
                       </>
-                    ) : product.reviews?.length > 0 ? (
+                    ) : isAnyFilterActive || writtenReviews.length > 0 ? (
                       <div className="text-center py-12 px-6 bg-surface rounded-3xl border border-border-light shadow-card space-y-3.5">
                         <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto">
                           <FunnelIcon className="h-6 w-6" />
@@ -1792,11 +1839,14 @@ export default function ProductDetail() {
                           <ChatBubbleBottomCenterTextIcon className="h-6 w-6" />
                         </div>
                         <h4 className="text-base font-bold text-text-primary">
-                          No Reviews Yet
+                          {reviews.ratingCount > 0
+                            ? "No Written Reviews Yet"
+                            : "No Ratings or Reviews Yet"}
                         </h4>
                         <p className="text-xs text-text-secondary max-w-xs mx-auto">
-                          Be the first person to share feedback and review this
-                          product.
+                          {reviews.ratingCount > 0
+                            ? `This item has received ${reviews.ratingCount} star ${reviews.ratingCount === 1 ? "rating" : "ratings"}, but no customer has written a review yet. Be the first to share your thoughts!`
+                            : "Be the first person to share a star rating or written review for this product."}
                         </p>
                       </div>
                     )}

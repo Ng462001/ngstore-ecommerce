@@ -47,8 +47,10 @@ import {
 import ClearIcon from "@mui/icons-material/Clear";
 import axios from "axios";
 import { format } from "date-fns";
+import { useOutletContext } from "react-router-dom";
 
 const Reviews = () => {
+  const { showSnackbar } = useOutletContext() || {};
   const [totalPages, setTotalPages] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -194,25 +196,25 @@ const Reviews = () => {
       setReviewToDelete(null);
 
       // Show success message
-      alert("Review deleted successfully");
+      if (showSnackbar) {
+        showSnackbar("Review deleted successfully", "success");
+      }
     } catch (err) {
       console.error("Error deleting review:", err);
-      alert(err.response?.data?.message || "Failed to delete review");
+      if (showSnackbar) {
+        showSnackbar(
+          err.response?.data?.message || "Failed to delete review",
+          "error",
+        );
+      }
     }
   };
 
   const handleUpdateReview = async () => {
-    if (
-      !editReviewData.rating ||
-      !editReviewData.name ||
-      !editReviewData.comment
-    ) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    if (editReviewData.comment.length < 5) {
-      alert("Comment must be at least 5 characters long");
+    if (!editReviewData.rating || !editReviewData.name) {
+      if (showSnackbar) {
+        showSnackbar("Name and rating are required", "warning");
+      }
       return;
     }
 
@@ -232,10 +234,17 @@ const Reviews = () => {
       fetchStats();
 
       setEditDialogOpen(false);
-      alert("Review updated successfully");
+      if (showSnackbar) {
+        showSnackbar("Review updated successfully", "success");
+      }
     } catch (err) {
       console.error("Error updating review:", err);
-      alert(err.response?.data?.message || "Failed to update review");
+      if (showSnackbar) {
+        showSnackbar(
+          err.response?.data?.message || "Failed to update review",
+          "error",
+        );
+      }
     }
   };
 
@@ -808,8 +817,19 @@ const Reviews = () => {
                       Review Comment
                     </Typography>
                     <Card variant="outlined" className="mt-2 p-3">
-                      <Typography variant="body1">
-                        {selectedReview.comment}
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontStyle: selectedReview.comment
+                            ? "normal"
+                            : "italic",
+                          color: selectedReview.comment
+                            ? "inherit"
+                            : "text.secondary",
+                        }}
+                      >
+                        {selectedReview.comment ||
+                          "⭐ Star rating only (no written comment)."}
                       </Typography>
                     </Card>
                   </div>
@@ -873,7 +893,7 @@ const Reviews = () => {
 
                 <TextField
                   fullWidth
-                  label="Comment"
+                  label="Comment (Optional)"
                   variant="outlined"
                   multiline
                   rows={4}
@@ -884,8 +904,7 @@ const Reviews = () => {
                       comment: e.target.value,
                     })
                   }
-                  required
-                  helperText="Minimum 5 characters"
+                  helperText="Leave empty for rating only"
                 />
               </Box>
             </DialogContent>

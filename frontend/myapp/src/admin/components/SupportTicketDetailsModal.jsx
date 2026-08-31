@@ -215,8 +215,6 @@ const SupportTicketDetailsModal = ({
       setEditMode(false);
     } catch (error) {
       console.error("Error updating ticket:", error);
-      // alert('Error updating ticket: ' + (error.response?.data?.message || error.message));
-    } finally {
       setLoading(false);
     }
   };
@@ -1136,7 +1134,8 @@ const SupportTicketDetailsModal = ({
                             color="text.secondary"
                             sx={{ mt: 1, display: "block" }}
                           >
-                            By {item.user} • {formatDate(item.timestamp)} ({formatDistanceToNowSafe(item.timestamp)})
+                            By {item.user} • {formatDate(item.timestamp)} (
+                            {formatDistanceToNowSafe(item.timestamp)})
                           </Typography>
                         </Box>
                         {item.status && (

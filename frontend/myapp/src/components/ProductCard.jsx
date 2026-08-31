@@ -50,12 +50,6 @@ const ProductCard = ({ item }) => {
 
     dispatch(toggleWishlist(item));
 
-    if (isWishlisted) {
-      toast.success("Removed from wishlist 💔");
-    } else {
-      toast.success("Added to wishlist ❤️");
-    }
-
     try {
       if (isWishlisted) {
         await fetch(

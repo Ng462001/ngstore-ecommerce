@@ -14,7 +14,10 @@ router.post("/", upload.fields([
 router.get("/smart-search", ProductController.smartSearch);
 
 // Rating & Review management
+router.post("/:id/rating", ProductController.addRating);
+router.post("/:id/reviews", ProductController.addRating);
 router.patch("/:id/rating", ProductController.addRating);
+router.patch("/:id/reviews", ProductController.addRating);
 router.put("/:id/reviews/:reviewId", ProductController.updateReview);
 router.patch("/:id/reviews/:reviewId", ProductController.updateReview);
 

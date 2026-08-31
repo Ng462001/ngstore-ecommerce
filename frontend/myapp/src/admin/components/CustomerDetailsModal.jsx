@@ -671,10 +671,6 @@ const CustomerDetailsModal = ({
       await fetchCustomerDetails(); // Refresh data
     } catch (error) {
       console.error("Error updating customer:", error);
-      alert(
-        "Error updating customer details: " +
-          (error.response?.data?.message || error.message),
-      );
     } finally {
       setSaving(false);
     }

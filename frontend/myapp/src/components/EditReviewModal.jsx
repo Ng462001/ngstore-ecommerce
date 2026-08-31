@@ -45,8 +45,8 @@ export default function EditReviewModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!comment.trim() || comment.trim().length < 5) {
-      setErrorMsg("Review comment must be at least 5 characters long.");
+    if (!rating || Number(rating) < 1 || Number(rating) > 5) {
+      setErrorMsg("Please select a valid star rating (1–5).");
       return;
     }
 
@@ -66,6 +66,8 @@ export default function EditReviewModal({
         headers["Authorization"] = `Bearer ${userInfo.token}`;
       }
 
+      const trimmedComment = typeof comment === "string" ? comment.trim() : "";
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products/${product._id}/reviews/${review._id}`,
         {
@@ -73,7 +75,7 @@ export default function EditReviewModal({
           headers,
           body: JSON.stringify({
             rating: Number(rating),
-            comment: comment.trim(),
+            comment: trimmedComment,
             name: name.trim() || review.name,
             userId: userInfo?._id || userInfo?.id,
           }),
@@ -83,7 +85,7 @@ export default function EditReviewModal({
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Review updated successfully! ✨", {
+        toast.success("Rating/review updated successfully! ✨", {
           duration: 3500,
         });
         if (onReviewUpdated) {
@@ -128,10 +130,10 @@ export default function EditReviewModal({
               </div>
               <div>
                 <h3 className="font-heading text-lg font-bold text-text-primary">
-                  Edit Your Review
+                  Edit Your Rating & Review
                 </h3>
                 <p className="text-xs text-text-secondary">
-                  Update your rating and thoughts on this item
+                  Update your star rating or written thoughts
                 </p>
               </div>
             </div>
@@ -188,7 +190,7 @@ export default function EditReviewModal({
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                  Overall Rating
+                  Overall Rating <span className="text-rose-500">*</span>
                 </label>
                 <span className="text-xs font-semibold text-accent px-2 py-0.5 bg-accent/10 rounded-md">
                   {RATING_LABELS[currentDisplayRating] ||
@@ -228,15 +230,13 @@ export default function EditReviewModal({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                  Your Review
+                  Your Review <span className="text-text-secondary/60 font-normal lowercase">(optional - clear to remove review text)</span>
                 </label>
                 <span
                   className={`text-xs ${
-                    comment.length < 5
-                      ? "text-amber-500 font-medium"
-                      : comment.length > 1000
-                        ? "text-red-500 font-medium"
-                        : "text-text-secondary"
+                    comment.length > 1000
+                      ? "text-red-500 font-medium"
+                      : "text-text-secondary"
                   }`}
                 >
                   {comment.length} / 1000 characters
@@ -244,9 +244,8 @@ export default function EditReviewModal({
               </div>
               <textarea
                 rows={4}
-                required
                 maxLength={1000}
-                placeholder="What did you like or dislike? How was the quality, fit, and delivery?"
+                placeholder="What did you like or dislike? (Leave empty for rating only)"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full rounded-xl border border-border-light bg-background p-3 text-sm text-text-primary placeholder:text-text-secondary/50 focus:border-accent focus:ring-1 focus:ring-accent outline-none resize-none transition-all shadow-xs"
@@ -266,7 +265,7 @@ export default function EditReviewModal({
 
               <button
                 type="submit"
-                disabled={isSubmitting || comment.trim().length < 5}
+                disabled={isSubmitting || !rating || rating < 1 || rating > 5}
                 className="px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-semibold transition-all shadow-soft hover:shadow-card active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmitting ? (

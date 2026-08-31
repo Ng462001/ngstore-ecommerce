@@ -691,7 +691,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                             sx={{ mb: 1 }}
                                         />
                                         <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            Based on {product.rating?.count || 0} reviews
+                                            Based on {product.rating?.count || product.ratingCount || 0} ratings ({product.rating?.reviewCount || product.reviewCount || 0} written reviews)
                                         </Typography>
 
                                         {product.rating?.breakdown && (
@@ -724,13 +724,13 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                 <Grid item xs={12} md={8}>
                                     <Paper sx={{ p: 3, borderRadius: 2, maxHeight: '55vh', overflowY: 'auto' }}>
                                         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, fontWeight: 600 }}>
-                                            <Star sx={{ color: '#FFB020' }} /> Reviews ({product.reviews?.length || 0})
+                                            <Star sx={{ color: '#FFB020' }} /> Customer Ratings & Reviews ({product.rating?.count || product.reviews?.length || 0})
                                         </Typography>
 
                                         {!product.reviews || product.reviews.length === 0 ? (
                                             <Box sx={{ textAlign: 'center', py: 4 }}>
                                                 <Typography variant="body1" color="text.secondary">
-                                                    No reviews yet for this product.
+                                                    No ratings or reviews yet for this product.
                                                 </Typography>
                                             </Box>
                                         ) : (
@@ -744,7 +744,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                                 </Avatar>
                                                                 <Box>
                                                                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                                                        {review.name}
+                                                                        {review.name || 'Anonymous'}
                                                                     </Typography>
                                                                     <Rating
                                                                         value={review.rating}
@@ -757,8 +757,8 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
                                                                 {formatDate(review.date)}
                                                             </Typography>
                                                         </Box>
-                                                        <Typography variant="body2" color="text.secondary" sx={{ pl: 6.5 }}>
-                                                            {review.comment}
+                                                        <Typography variant="body2" color={review.comment ? "text.primary" : "text.secondary"} sx={{ pl: 6.5, fontStyle: review.comment ? 'normal' : 'italic' }}>
+                                                            {review.comment || "⭐ Star rating only (no written comment)."}
                                                         </Typography>
                                                         {idx < product.reviews.length - 1 && <Divider sx={{ mt: 2 }} />}
                                                     </Box>
