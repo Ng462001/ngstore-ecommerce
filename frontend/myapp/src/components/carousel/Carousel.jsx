@@ -6,7 +6,6 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
-import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
 
 /* ---------------------------------------------------------------- constants */
 
