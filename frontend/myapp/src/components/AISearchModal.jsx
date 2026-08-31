@@ -263,7 +263,7 @@ export default function AISearchModal({ open, onClose }) {
                 <h3 className="font-heading text-base sm:text-lg font-semibold text-text-primary flex items-center gap-1.5 sm:gap-2">
                   <span className="truncate">Smart Search</span>
                   <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-accent-light text-accent font-semibold border border-accent/30 shrink-0">
-                    ✨ AI
+                    AI
                   </span>
                 </h3>
                 <p className="text-[11px] sm:text-xs text-text-secondary truncate hidden sm:block">
