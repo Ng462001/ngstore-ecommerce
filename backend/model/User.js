@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product'
     }],
+    recentSearches: {
+        type: [String],
+        default: []
+    },
     createdAt: {
         type: Date,
         default: Date.now

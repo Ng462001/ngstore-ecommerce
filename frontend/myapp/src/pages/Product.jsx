@@ -746,46 +746,46 @@ export default function Product() {
 
           {/* AI Smart Search Insights Banner */}
           {aiMetadata && (
-            <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white shadow-xl border border-indigo-700/50">
+            <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-accent-light/50 border border-accent/20 text-text-primary shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <SparklesIcon className="h-5 w-5 sm:h-6 sm:w-6 text-amber-300 animate-pulse" />
-                  <h3 className="font-bold text-xs sm:text-base text-white tracking-wide">
+                  <SparklesIcon className="h-4 sm:h-5 w-4 sm:w-5 text-accent" />
+                  <h3 className="font-heading font-bold text-xs sm:text-sm text-text-primary flex items-center gap-1.5">
                     ✨ AI Smart Search Active
                   </h3>
                 </div>
-                <span className="text-[10px] sm:text-xs bg-white/20 text-white font-medium px-2.5 py-0.5 sm:py-1 rounded-full backdrop-blur-sm border border-white/10 shrink-0">
+                <span className="text-[10px] sm:text-xs bg-accent/10 text-accent font-bold px-2.5 py-0.5 rounded-full border border-accent/20 shrink-0">
                   {aiMetadata.isAiPowered ? "Gemini AI" : "Smart NLP"}
                 </span>
               </div>
-              <p className="mt-1.5 text-xs sm:text-sm text-indigo-100 italic font-medium">
+              <p className="text-text-secondary font-medium italic text-[11px] sm:text-xs">
                 "{aiMetadata.explanation}"
               </p>
-              <div className="flex flex-wrap gap-1.5 mt-2.5 text-[11px] sm:text-xs">
+              <div className="flex flex-wrap gap-1.5 pt-1 text-[11px] sm:text-xs">
                 {aiMetadata.category && (
-                  <span className="bg-white/15 px-2.5 py-0.5 sm:py-1 rounded-lg border border-white/20 font-semibold">
+                  <span className="px-2.5 py-0.5 rounded-md bg-surface border border-border-light text-accent font-semibold text-[10px] sm:text-xs">
                     Category:{" "}
-                    <span className="text-amber-300 uppercase">
+                    <span className="uppercase text-accent font-bold">
                       {aiMetadata.category}
                     </span>
                   </span>
                 )}
                 {aiMetadata.color && (
-                  <span className="bg-white/15 px-2.5 py-0.5 sm:py-1 rounded-lg border border-white/20 font-semibold">
+                  <span className="px-2.5 py-0.5 rounded-md bg-surface border border-border-light text-accent font-semibold text-[10px] sm:text-xs">
                     Color:{" "}
-                    <span className="text-amber-300 capitalize">
+                    <span className="capitalize text-accent font-bold">
                       {aiMetadata.color}
                     </span>
                   </span>
                 )}
                 {(aiMetadata.maxPrice || aiMetadata.minPrice) && (
-                  <span className="bg-white/15 px-2.5 py-0.5 sm:py-1 rounded-lg border border-white/20 font-semibold">
+                  <span className="px-2.5 py-0.5 rounded-md bg-surface border border-border-light text-success font-semibold text-[10px] sm:text-xs">
                     Price:{" "}
-                    <span className="text-emerald-300">
-                      ₹{aiMetadata.minPrice || 0} -{" "}
+                    <span className="font-bold">
+                      {aiMetadata.minPrice ? `₹${aiMetadata.minPrice}` : "₹0"} -{" "}
                       {aiMetadata.maxPrice
                         ? `₹${aiMetadata.maxPrice}`
-                        : "Unlimited"}
+                        : "Any"}
                     </span>
                   </span>
                 )}

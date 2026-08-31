@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import StarIcon from "@mui/icons-material/Star";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleWishlist } from "../Redux/action/action";
@@ -114,6 +115,16 @@ const ProductCard = ({ item }) => {
   };
 
   const discountPercentage = calculateDiscount();
+
+  // Extract rating average
+  const ratingAverage =
+    typeof item.rating === "number"
+      ? item.rating
+      : typeof item.rating?.average === "number"
+        ? item.rating.average
+        : typeof item.averageRating === "number"
+          ? item.averageRating
+          : 0;
 
   // Helper to format currency consistently
   const formatAmount = (val) => {
@@ -233,6 +244,46 @@ const ProductCard = ({ item }) => {
                   "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=280&h=200&fit=crop";
               }}
             />
+
+            {/* Rating Badge Overlay at Bottom Left */}
+            {ratingAverage > 0 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 10,
+                  left: 10,
+                  zIndex: 4,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "2px",
+                  bgcolor: "rgba(255, 255, 255, 0.95)",
+                  backdropFilter: "blur(4px)",
+                  px: "6px",
+                  py: "2px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(231, 228, 221, 0.8)",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                }}
+              >
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "#1C1B19",
+                    lineHeight: 1,
+                  }}
+                >
+                  {ratingAverage.toFixed(1)}
+                </Typography>
+                <StarIcon
+                  className="text-amber-400"
+                  sx={{
+                    fontSize: 13,
+                  }}
+                />
+              </Box>
+            )}
           </Box>
 
           {/* Card content with consistent spacing */}
