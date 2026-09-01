@@ -1,5 +1,6 @@
 const Product = require("../model/Product");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 const {
   uploadToCloudinary,
   deleteFromCloudinary,
@@ -748,6 +749,153 @@ class ProductController {
       res.status(500).json({
         success: false,
         message: "Failed to update review",
+        error:
+          process.env.NODE_ENV === "development"
+            ? error.message
+            : "Internal server error",
+      });
+    }
+  };
+
+  // Like or dislike a review comment
+  static reactToReview = async (req, res) => {
+    try {
+      const { id, reviewId } = req.params;
+      const { action } = req.body; // 'like' or 'dislike'
+
+      let userId = req.user?._id;
+      if (!userId && req.headers.authorization?.startsWith("Bearer")) {
+        try {
+          const token = req.headers.authorization.split(" ")[1];
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          userId = decoded.id;
+        } catch (err) {
+          // invalid token
+        }
+      }
+      if (!userId && req.body.userId) {
+        userId = req.body.userId;
+      }
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Please log in to like or dislike reviews",
+        });
+      }
+
+      if (
+        !mongoose.Types.ObjectId.isValid(id) ||
+        !mongoose.Types.ObjectId.isValid(reviewId)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product or review ID format",
+        });
+      }
+
+      if (!["like", "dislike"].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          message: "Action must be either 'like' or 'dislike'",
+        });
+      }
+
+      const product = await Product.findById(id);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+
+      const review = product.reviews.id(reviewId);
+      if (!review) {
+        return res.status(404).json({
+          success: false,
+          message: "Review not found",
+        });
+      }
+
+      // Prevent user from liking or disliking their own review
+      if (review.user) {
+        const reviewUserId =
+          typeof review.user === "object" && review.user._id
+            ? review.user._id.toString()
+            : review.user.toString();
+        if (reviewUserId === userId.toString()) {
+          return res.status(400).json({
+            success: false,
+            message: "You cannot like or dislike your own review",
+          });
+        }
+      }
+
+      if (!Array.isArray(review.likes)) {
+        review.likes = [];
+      }
+      if (!Array.isArray(review.dislikes)) {
+        review.dislikes = [];
+      }
+
+      const userIdStr = userId.toString();
+      const hasLiked = review.likes.some((uid) => uid.toString() === userIdStr);
+      const hasDisliked = review.dislikes.some(
+        (uid) => uid.toString() === userIdStr,
+      );
+
+      if (action === "like") {
+        if (hasLiked) {
+          // Toggle off like
+          review.likes = review.likes.filter(
+            (uid) => uid.toString() !== userIdStr,
+          );
+        } else {
+          // Add like and remove dislike if present
+          review.likes.push(userId);
+          if (hasDisliked) {
+            review.dislikes = review.dislikes.filter(
+              (uid) => uid.toString() !== userIdStr,
+            );
+          }
+        }
+      } else if (action === "dislike") {
+        if (hasDisliked) {
+          // Toggle off dislike
+          review.dislikes = review.dislikes.filter(
+            (uid) => uid.toString() !== userIdStr,
+          );
+        } else {
+          // Add dislike and remove like if present
+          review.dislikes.push(userId);
+          if (hasLiked) {
+            review.likes = review.likes.filter(
+              (uid) => uid.toString() !== userIdStr,
+            );
+          }
+        }
+      }
+
+      await product.save();
+      const updatedProduct = await Product.findById(id).select("-__v");
+
+      res.json({
+        success: true,
+        message:
+          action === "like"
+            ? hasLiked
+              ? "Like removed"
+              : "Review liked!"
+            : hasDisliked
+              ? "Dislike removed"
+              : "Review disliked!",
+        data: updatedProduct,
+      });
+    } catch (error) {
+      console.error("React to review error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update review reaction",
         error:
           process.env.NODE_ENV === "development"
             ? error.message

@@ -14,10 +14,14 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   TrashIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
 } from "@heroicons/react/24/outline";
 import {
   HeartIcon as HeartIconSolid,
   BoltIcon as BoltIconSolid,
+  HandThumbUpIcon as HandThumbUpIconSolid,
+  HandThumbDownIcon as HandThumbDownIconSolid,
 } from "@heroicons/react/24/solid";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -48,6 +52,7 @@ export default function ProductDetail() {
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [reactingReviewId, setReactingReviewId] = useState(null);
 
   // Review Filter & Sort States
   const [selectedRatingFilter, setSelectedRatingFilter] = useState("all");
@@ -499,6 +504,58 @@ export default function ProductDetail() {
     }
   };
 
+  const handleReviewReaction = async (reviewId, action) => {
+    if (!isUserLoggedIn) {
+      toast.error("Please log in to like or dislike reviews");
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
+    const token = userInfo?.token || localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to react to reviews");
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
+    try {
+      setReactingReviewId(reviewId);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/products/${product._id || id}/reviews/${reviewId}/react`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action,
+            userId: currentUserId,
+          }),
+        },
+      );
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to update reaction");
+      }
+
+      if (result.data) {
+        setProduct((prev) => ({
+          ...prev,
+          reviews: result.data.reviews || prev.reviews,
+        }));
+      } else {
+        await fetchProduct();
+      }
+    } catch (err) {
+      console.error("Error reacting to review:", err);
+      toast.error(err.message || "Failed to react to review");
+    } finally {
+      setReactingReviewId(null);
+    }
+  };
+
   // Compute star counts from product rating breakdown or reviews
   const ratingCounts = useMemo(() => {
     const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -540,20 +597,53 @@ export default function ProductDetail() {
     );
   }, [product?.reviews]);
 
+  // Counts of positive (>= 4 stars) and negative (<= 3 stars) reviews
+  const positiveReviewCount = useMemo(() => {
+    return writtenReviews.filter((r) => {
+      const star = Math.min(5, Math.max(1, Math.round(Number(r?.rating) || 0)));
+      return star >= 4;
+    }).length;
+  }, [writtenReviews]);
+
+  const negativeReviewCount = useMemo(() => {
+    return writtenReviews.filter((r) => {
+      const star = Math.min(5, Math.max(1, Math.round(Number(r?.rating) || 0)));
+      return star <= 3;
+    }).length;
+  }, [writtenReviews]);
+
   // Filtered and sorted written reviews
   const filteredReviews = useMemo(() => {
     let list = [...writtenReviews];
 
-    // Filter by star rating
-    if (selectedRatingFilter !== "all") {
-      const targetStar = Number(selectedRatingFilter);
+    // Filter by rating sentiment (all, positive, negative) or star rating
+    if (selectedRatingFilter === "positive") {
       list = list.filter((r) => {
         const star = Math.min(
           5,
           Math.max(1, Math.round(Number(r?.rating) || 0)),
         );
-        return star === targetStar;
+        return star >= 4;
       });
+    } else if (selectedRatingFilter === "negative") {
+      list = list.filter((r) => {
+        const star = Math.min(
+          5,
+          Math.max(1, Math.round(Number(r?.rating) || 0)),
+        );
+        return star <= 3;
+      });
+    } else if (selectedRatingFilter !== "all") {
+      const targetStar = Number(selectedRatingFilter);
+      if (!isNaN(targetStar)) {
+        list = list.filter((r) => {
+          const star = Math.min(
+            5,
+            Math.max(1, Math.round(Number(r?.rating) || 0)),
+          );
+          return star === targetStar;
+        });
+      }
     }
 
     // Filter by "only my reviews"
@@ -1228,25 +1318,11 @@ export default function ProductDetail() {
                           reviews.ratingCount > 0
                             ? (count / reviews.ratingCount) * 100
                             : 0;
-                        const isSelected =
-                          selectedRatingFilter === String(star);
 
                         return (
-                          <button
+                          <div
                             key={star}
-                            type="button"
-                            onClick={() =>
-                              setSelectedRatingFilter((prev) =>
-                                prev === String(star) ? "all" : String(star),
-                              )
-                            }
-                            className={classNames(
-                              isSelected
-                                ? "bg-accent/10 ring-1 ring-accent/40 font-semibold"
-                                : "hover:bg-surface-muted",
-                              "w-full flex items-center gap-3 py-2 px-3 rounded-xl transition-all cursor-pointer group text-left",
-                            )}
-                            title={`Filter by ${star} star (${count})`}
+                            className="w-full flex items-center gap-3 py-1.5 px-1 text-left"
                           >
                             <div className="flex items-center gap-1 w-10 text-xs font-semibold text-text-primary">
                               <span>{star}</span>
@@ -1255,39 +1331,23 @@ export default function ProductDetail() {
 
                             <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
                               <div
-                                className={classNames(
-                                  isSelected
-                                    ? "bg-accent"
-                                    : "bg-amber-400 group-hover:bg-amber-500",
-                                  "h-full rounded-full transition-all duration-500",
-                                )}
+                                className="h-full bg-amber-400 rounded-full transition-all duration-500"
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
 
                             <div className="w-12 text-right">
-                              <span className="text-xs text-text-secondary font-medium group-hover:text-text-primary">
+                              <span className="text-xs text-text-secondary font-medium">
                                 {count}
                               </span>
                               <span className="text-[10px] text-text-secondary/60 ml-0.5">
                                 ({Math.round(percentage)}%)
                               </span>
                             </div>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
-
-                    {selectedRatingFilter !== "all" && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRatingFilter("all")}
-                        className="w-full text-xs text-accent font-semibold text-center hover:underline pt-1 flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <XMarkIcon className="h-3.5 w-3.5" />
-                        <span>Clear {selectedRatingFilter}★ Filter</span>
-                      </button>
-                    )}
                   </div>
 
                   {/* Write Review or Your Review Card */}
@@ -1555,29 +1615,57 @@ export default function ProductDetail() {
                         All ({writtenReviews.length})
                       </button>
 
-                      {/* Star Rating Pills */}
-                      {[5, 4, 3, 2, 1].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() =>
-                            setSelectedRatingFilter((prev) =>
-                              prev === String(star) ? "all" : String(star),
-                            )
-                          }
+                      {/* Positive Reviews Pill */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedRatingFilter((prev) =>
+                            prev === "positive" ? "all" : "positive",
+                          )
+                        }
+                        className={classNames(
+                          selectedRatingFilter === "positive"
+                            ? "bg-emerald-600 text-white shadow-xs font-bold"
+                            : "bg-emerald-50 text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100 font-medium",
+                          "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
+                        )}
+                      >
+                        <HandThumbUpIcon className="h-3.5 w-3.5" />
+                        <span>Positive</span>
+                        <span
                           className={classNames(
-                            selectedRatingFilter === String(star)
-                              ? "bg-accent text-white shadow-xs font-bold"
-                              : "bg-surface-muted text-text-secondary hover:bg-gray-200 font-medium",
-                            "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1",
+                            selectedRatingFilter === "positive"
+                              ? "text-emerald-100"
+                              : "text-emerald-700 font-bold",
                           )}
-                        >
-                          <span>{star}★</span>
-                          <span className="opacity-75">
-                            ({ratingCounts[star] || 0})
-                          </span>
-                        </button>
-                      ))}
+                        ></span>
+                      </button>
+
+                      {/* Negative Reviews Pill */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedRatingFilter((prev) =>
+                            prev === "negative" ? "all" : "negative",
+                          )
+                        }
+                        className={classNames(
+                          selectedRatingFilter === "negative"
+                            ? "bg-rose-600 text-white shadow-xs font-bold"
+                            : "bg-rose-50 text-rose-800 border border-rose-200/80 hover:bg-rose-100 font-medium",
+                          "px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
+                        )}
+                      >
+                        <HandThumbDownIcon className="h-3.5 w-3.5" />
+                        <span>Negative</span>
+                        <span
+                          className={classNames(
+                            selectedRatingFilter === "negative"
+                              ? "text-rose-100"
+                              : "text-rose-700 font-bold",
+                          )}
+                        ></span>
+                      </button>
 
                       {/* Only My Reviews */}
                       {isUserLoggedIn && userReview && (
@@ -1744,6 +1832,139 @@ export default function ProductDetail() {
                               <p className="text-text-primary text-sm leading-relaxed whitespace-pre-line pl-0 sm:pl-13">
                                 {review.comment}
                               </p>
+
+                              {/* Review Reaction (Like / Dislike) Row - Hidden for user's own review */}
+                              {!isMyReview && (() => {
+                                const likesArr = Array.isArray(review.likes)
+                                  ? review.likes
+                                  : [];
+                                const dislikesArr = Array.isArray(
+                                  review.dislikes,
+                                )
+                                  ? review.dislikes
+                                  : [];
+                                const likesCount = likesArr.length;
+                                const dislikesCount = dislikesArr.length;
+
+                                const hasLiked =
+                                  isUserLoggedIn &&
+                                  Boolean(currentUserId) &&
+                                  likesArr.some((uid) => {
+                                    const uidStr =
+                                      typeof uid === "object" && uid
+                                        ? uid._id || uid.id
+                                        : uid;
+                                    return (
+                                      String(uidStr) === String(currentUserId)
+                                    );
+                                  });
+
+                                const hasDisliked =
+                                  isUserLoggedIn &&
+                                  Boolean(currentUserId) &&
+                                  dislikesArr.some((uid) => {
+                                    const uidStr =
+                                      typeof uid === "object" && uid
+                                        ? uid._id || uid.id
+                                        : uid;
+                                    return (
+                                      String(uidStr) === String(currentUserId)
+                                    );
+                                  });
+
+                                const isReacting =
+                                  reactingReviewId === review._id;
+
+                                return (
+                                  <div className="flex items-center justify-between pt-3 border-t border-border-light/60 pl-0 sm:pl-13 text-xs">
+                                    <span className="text-[11px] font-medium text-text-secondary/70">
+                                      Was this review helpful?
+                                    </span>
+
+                                    <div className="flex items-center gap-2">
+                                      {/* Like Button */}
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleReviewReaction(
+                                            review._id,
+                                            "like",
+                                          )
+                                        }
+                                        disabled={isReacting}
+                                        className={classNames(
+                                          hasLiked
+                                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold shadow-xs"
+                                            : "bg-surface-muted/70 text-text-secondary hover:text-text-primary hover:bg-gray-200 border-border-light/40 font-medium",
+                                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95",
+                                        )}
+                                        title={
+                                          hasLiked ? "Liked" : "Helpful (Like)"
+                                        }
+                                      >
+                                        {hasLiked ? (
+                                          <HandThumbUpIconSolid className="h-3.5 w-3.5 text-emerald-600" />
+                                        ) : (
+                                          <HandThumbUpIcon className="h-3.5 w-3.5" />
+                                        )}
+                                        {likesCount > 0 && (
+                                          <span
+                                            className={classNames(
+                                              hasLiked
+                                                ? "text-emerald-800 font-bold"
+                                                : "text-text-secondary font-semibold",
+                                              "text-[11px]",
+                                            )}
+                                          >
+                                            {likesCount}
+                                          </span>
+                                        )}
+                                      </button>
+
+                                      {/* Dislike Button */}
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleReviewReaction(
+                                            review._id,
+                                            "dislike",
+                                          )
+                                        }
+                                        disabled={isReacting}
+                                        className={classNames(
+                                          hasDisliked
+                                            ? "bg-rose-50 text-rose-700 border-rose-300 font-bold shadow-xs"
+                                            : "bg-surface-muted/70 text-text-secondary hover:text-text-primary hover:bg-gray-200 border-border-light/40 font-medium",
+                                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95",
+                                        )}
+                                        title={
+                                          hasDisliked
+                                            ? "Disliked"
+                                            : "Not helpful (Dislike)"
+                                        }
+                                      >
+                                        {hasDisliked ? (
+                                          <HandThumbDownIconSolid className="h-3.5 w-3.5 text-rose-600" />
+                                        ) : (
+                                          <HandThumbDownIcon className="h-3.5 w-3.5" />
+                                        )}
+                                        {dislikesCount > 0 && (
+                                          <span
+                                            className={classNames(
+                                              hasDisliked
+                                                ? "text-rose-800 font-bold"
+                                                : "text-text-secondary font-semibold",
+                                              "text-[11px]",
+                                            )}
+                                          >
+                                            {dislikesCount}
+                                          </span>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })}

@@ -212,7 +212,6 @@ export const RotundaCarousel = ({
   const canvasRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isWebGlSupported, setIsWebGlSupported] = useState(true);
-  const impulseRef = useRef(null);
 
   const srcKey = JSON.stringify(
     (Array.isArray(images) ? images : []).map((i) => i?.image ?? ""),

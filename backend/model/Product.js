@@ -100,6 +100,18 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       maxlength: [1000, "Comment cannot exceed 1000 characters"],
     },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    dislikes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     date: {
       type: Date,
       default: Date.now,
