@@ -598,10 +598,16 @@ const AdminOrderDetails = () => {
                                 <td colspan="3" style="text-align: right;">Shipping:</td>
                                 <td>₹${order?.shippingPrice || 0}</td>
                             </tr>
+                            ${
+                              order?.taxPrice && order?.taxPrice > 0
+                                ? `
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Tax:</td>
-                                <td>₹${order?.taxPrice || 0}</td>
+                                <td>₹${order?.taxPrice}</td>
                             </tr>
+                            `
+                                : ""
+                            }
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Total:</td>
                                 <td>₹${order?.totalPrice || 0}</td>
@@ -1198,18 +1204,20 @@ const AdminOrderDetails = () => {
                                   {formatCurrency(order.shippingPrice || 0)}
                                 </Typography>
                               </Box>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Typography>Tax:</Typography>
-                                <Typography fontWeight="bold">
-                                  {formatCurrency(order.taxPrice || 0)}
-                                </Typography>
-                              </Box>
+                              {order?.taxPrice > 0 && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Typography>Tax:</Typography>
+                                  <Typography fontWeight="bold">
+                                    {formatCurrency(order.taxPrice)}
+                                  </Typography>
+                                </Box>
+                              )}
                               <Divider />
                               <Box
                                 sx={{

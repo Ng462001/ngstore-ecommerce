@@ -55,10 +55,31 @@ class ProductController {
 
       // Category filter
       if (category) {
-        if (category.includes(",")) {
+        const catTrimmed = category.trim().toLowerCase();
+        if (catTrimmed === "collection" || catTrimmed === "fashion-collection") {
           filter.category = {
-            $in: category.split(",").map((cat) => cat.trim().toLowerCase()),
+            $in: ["men", "women", "accessories", "cloths", "clothing", "collection"],
           };
+        } else if (category.includes(",")) {
+          const catList = category
+            .split(",")
+            .map((cat) => cat.trim().toLowerCase());
+          if (catList.includes("collection") || catList.includes("fashion-collection")) {
+            const combined = Array.from(
+              new Set([
+                ...catList.filter((c) => c !== "collection" && c !== "fashion-collection"),
+                "men",
+                "women",
+                "accessories",
+                "cloths",
+                "clothing",
+                "collection",
+              ])
+            );
+            filter.category = { $in: combined };
+          } else {
+            filter.category = { $in: catList };
+          }
         } else {
           filter.category = { $regex: `^${category.trim()}$`, $options: "i" };
         }
@@ -937,10 +958,17 @@ class ProductController {
 
       // Category filter
       if (aiParsed.category) {
-        filter.category = {
-          $regex: `^${aiParsed.category.trim()}$`,
-          $options: "i",
-        };
+        const catTrimmed = aiParsed.category.trim().toLowerCase();
+        if (catTrimmed === "collection" || catTrimmed === "fashion-collection") {
+          filter.category = {
+            $in: ["men", "women", "accessories", "cloths", "clothing", "collection"],
+          };
+        } else {
+          filter.category = {
+            $regex: `^${aiParsed.category.trim()}$`,
+            $options: "i",
+          };
+        }
       }
 
       // Color filter

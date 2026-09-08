@@ -116,13 +116,51 @@ export default function CategoryPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const categoryName = id ? id.replace(/-/g, " ") : "Category";
+  const isCollection =
+    id?.toLowerCase() === "collection" ||
+    id?.toLowerCase() === "fashion-collection";
+
+  const categoryName = isCollection
+    ? "Fashion & Lifestyle Collection"
+    : id
+      ? id.replace(/-/g, " ")
+      : "Category";
 
   // Categories that should show size filter
-  const clothingCategories = ["men", "women", "cloths"];
+  const clothingCategories = [
+    "men",
+    "women",
+    "cloths",
+    "collection",
+    "fashion-collection",
+  ];
+
+  const collectionTabs = [
+    { label: "All Collection", value: "" },
+    { label: "👔 Men", value: "men" },
+    { label: "👗 Women", value: "women" },
+    { label: "💍 Accessories", value: "accessories" },
+    { label: "👕 Cloths", value: "cloths" },
+  ];
+
+  const baseFilters = isCollection
+    ? [
+        {
+          id: "department",
+          name: "Department",
+          options: [
+            { value: "men", label: "Men" },
+            { value: "women", label: "Women" },
+            { value: "accessories", label: "Accessories" },
+            { value: "cloths", label: "Cloths" },
+          ],
+        },
+        ...allFilters,
+      ]
+    : allFilters;
 
   // Filter available filters based on category
-  const filters = allFilters.filter((section) => {
+  const filters = baseFilters.filter((section) => {
     if (section.id === "size") {
       // Only show size for clothing categories
       return clothingCategories.some((cat) => id?.toLowerCase().includes(cat));
@@ -206,12 +244,20 @@ export default function CategoryPage() {
 
     // Force category filter
     if (id) {
-      apiQueryParams.set("category", id);
+      if (
+        isCollection &&
+        newFilters.department &&
+        newFilters.department.length > 0
+      ) {
+        apiQueryParams.set("category", newFilters.department.join(","));
+      } else {
+        apiQueryParams.set("category", id);
+      }
     }
 
     // Add filters
     Object.entries(newFilters).forEach(([key, values]) => {
-      if (values.length > 0) {
+      if (key !== "department" && values.length > 0) {
         apiQueryParams.set(key, values.join(","));
       }
     });
@@ -230,7 +276,7 @@ export default function CategoryPage() {
 
     const queryString = apiQueryParams.toString();
     fetchProducts(queryString ? `?${queryString}` : "");
-  }, [location.search, fetchProducts, id]);
+  }, [location.search, fetchProducts, id, isCollection]);
 
   const handleFilter = useCallback(
     (value, sectionId) => {
@@ -501,11 +547,7 @@ export default function CategoryPage() {
 
               <form className="mt-2 divide-y divide-border-light">
                 {filters.map((section) => (
-                  <Disclosure
-                    key={section.id}
-                    as="div"
-                    className="px-4 py-4"
-                  >
+                  <Disclosure key={section.id} as="div" className="px-4 py-4">
                     <h3 className="-mx-2 -my-2 flow-root">
                       <DisclosureButton className="group flex w-full items-center justify-between bg-transparent px-2 py-2 text-text-secondary hover:text-accent transition-colors">
                         <span className="font-heading text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">
@@ -536,14 +578,23 @@ export default function CategoryPage() {
         <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between border-b border-border-light pt-6 sm:pt-10 pb-4 sm:pb-6 gap-3">
             <div>
-              <h1 className="font-heading text-2xl sm:text-4xl font-semibold tracking-tight text-text-primary capitalize">
-                {categoryName}
-              </h1>
-              {pagination.total !== undefined && (
-                <p className="mt-1 text-xs sm:text-sm text-text-secondary">
-                  Showing {products.length} of {pagination.total} products
-                </p>
-              )}
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="font-heading text-2xl sm:text-4xl font-semibold tracking-tight text-text-primary capitalize">
+                  {categoryName}
+                </h1>
+              </div>
+              <p className="mt-1 text-xs sm:text-sm text-text-secondary">
+                {isCollection
+                  ? "Explore masterfully crafted garments, footwear & accessories across Men, Women & Cloths."
+                  : pagination.total !== undefined
+                    ? `Showing ${products.length} of ${pagination.total} products`
+                    : null}
+                {isCollection && pagination.total !== undefined && (
+                  <span className="ml-2 font-medium text-text-primary">
+                    ({pagination.total} total items)
+                  </span>
+                )}
+              </p>
             </div>
 
             <div className="flex items-center justify-between sm:justify-end gap-2.5">
@@ -628,7 +679,10 @@ export default function CategoryPage() {
             </div>
           )}
 
-          <section aria-labelledby="products-heading" className="pt-4 sm:pt-6 pb-20 sm:pb-24">
+          <section
+            aria-labelledby="products-heading"
+            className="pt-4 sm:pt-6 pb-20 sm:pb-24"
+          >
             <h2 id="products-heading" className="sr-only">
               Products
             </h2>
@@ -642,11 +696,7 @@ export default function CategoryPage() {
                 </h2>
                 <form className="divide-y divide-border-light">
                   {filters.map((section) => (
-                    <Disclosure
-                      key={section.id}
-                      as="div"
-                      className="py-4"
-                    >
+                    <Disclosure key={section.id} as="div" className="py-4">
                       <h3 className="-my-1 flow-root">
                         <DisclosureButton className="group flex w-full items-center justify-between bg-transparent py-2 text-sm text-text-secondary hover:text-accent transition-colors">
                           <span className="font-heading text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">
@@ -680,7 +730,9 @@ export default function CategoryPage() {
                   </div>
                 ) : error ? (
                   <div className="text-center py-12">
-                    <p className="text-red-600 mb-4 text-sm font-medium">Error: {error}</p>
+                    <p className="text-red-600 mb-4 text-sm font-medium">
+                      Error: {error}
+                    </p>
                     <button
                       onClick={() => fetchProducts(location.search.slice(1))}
                       className="px-5 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold transition-all shadow-soft"

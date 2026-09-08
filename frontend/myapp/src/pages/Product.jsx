@@ -36,14 +36,15 @@ const filters = [
     id: "category",
     name: "Category",
     options: [
+      { value: "collection", label: "Collection" },
       { value: "men", label: "Men" },
       { value: "women", label: "Women" },
       { value: "accessories", label: "Accessories" },
+      { value: "cloths", label: "Cloths" },
       { value: "electronic device", label: "Electronics" },
       { value: "mobile", label: "Mobile" },
       { value: "sports", label: "Sports" },
       { value: "home", label: "Home" },
-      { value: "cloths", label: "Cloths" },
     ],
   },
   {

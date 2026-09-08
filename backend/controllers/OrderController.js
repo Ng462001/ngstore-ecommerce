@@ -26,7 +26,7 @@ class OrderController {
                 shippingAddress,
                 paymentMethod,
                 itemsPrice,
-                taxPrice,
+                taxPrice: taxPrice || 0,
                 shippingPrice,
                 totalPrice,
                 isPaid,

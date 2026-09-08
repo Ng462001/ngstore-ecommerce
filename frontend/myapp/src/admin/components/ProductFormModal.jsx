@@ -224,15 +224,16 @@ const ProductFormModal = ({ open, onClose, product, onSuccess }) => {
     const [newSize, setNewSize] = useState('');
 
     // Categories that have sizes
-    const sizeCategories = ['cloths', 'men', 'women', 'sports'];
+    const sizeCategories = ['cloths', 'men', 'women', 'sports', 'collection'];
 
     // Categories that have colors
-    const colorCategories = ['cloths', 'men', 'women', 'accessories', 'sports', 'mobile'];
+    const colorCategories = ['cloths', 'men', 'women', 'accessories', 'sports', 'mobile', 'collection'];
 
     // Categories that have both sizes and colors
-    const variantCategories = ['cloths', 'men', 'women', 'sports'];
+    const variantCategories = ['cloths', 'men', 'women', 'sports', 'collection'];
 
     const categories = [
+        { value: 'collection', label: '✨ Collection', icon: '✨' },
         { value: 'electronic device', label: '📱 Electronic Device', icon: '📱' },
         { value: 'mobile', label: '📱 Mobile', icon: '📱' },
         { value: 'cloths', label: '👕 Cloths', icon: '👕' },

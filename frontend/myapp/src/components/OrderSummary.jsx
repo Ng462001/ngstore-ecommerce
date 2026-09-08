@@ -42,8 +42,7 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
     sum + (getItemPrice(item) * item.quantity), 0
   )
   const shipping = subtotal > 500 ? 0 : 50 // Free shipping over ₹500
-  const tax = subtotal * 0.18 // 18% GST
-  const total = subtotal + shipping + tax
+  const total = subtotal + shipping
 
   // Get item image
   const getItemImage = (item) => {
@@ -248,13 +247,6 @@ export default function OrderSummary({ onNext, onBack, selectedAddress }) {
                 <Typography variant="body2" fontWeight="500" sx={{ color: shipping === 0 ? '#3E7A55' : 'inherit' }}>
                   {shipping === 0 ? 'FREE' : `₹${fmt(shipping)}`}
                 </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Tax
-                </Typography>
-                <Typography variant="body2" fontWeight="500">₹{fmt(tax)}</Typography>
               </Box>
 
               <Divider sx={{ my: 2, borderColor: '#E7E4DD' }} />

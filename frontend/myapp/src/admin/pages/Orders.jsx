@@ -796,12 +796,14 @@ const Orders = () => {
                         .toFixed(2) || "0.00"}
                     </Typography>
                   </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Tax:</Typography>
-                    <Typography variant="body2">
-                      ₹{viewOrder.taxPrice?.toFixed(2) || "0.00"}
-                    </Typography>
-                  </Box>
+                  {viewOrder.taxPrice > 0 && (
+                    <Box display="flex" justifyContent="space-between">
+                      <Typography variant="body2">Tax:</Typography>
+                      <Typography variant="body2">
+                        ₹{viewOrder.taxPrice?.toFixed(2)}
+                      </Typography>
+                    </Box>
+                  )}
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="body2">Shipping:</Typography>
                     <Typography variant="body2">

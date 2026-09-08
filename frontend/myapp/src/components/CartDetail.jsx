@@ -231,7 +231,7 @@ export default function CartDetail({ open, setOpen }) {
                       </p>
                     </div>
                     <p className="mt-0.5 text-xs text-text-secondary">
-                      Shipping and taxes calculated at checkout.
+                      Shipping calculated at checkout.
                     </p>
                     <div className="mt-6">
                       <NavLink

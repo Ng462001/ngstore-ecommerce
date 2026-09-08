@@ -728,7 +728,7 @@ export const RotundaCarousel = ({
           {/* Action Button */}
           <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto w-full sm:w-auto justify-between sm:justify-end">
             <button
-              onClick={() => navigate("/store")}
+              onClick={() => navigate("/category/collection")}
               className="flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#B8925A] to-[#9E7B47] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 border border-[#D4AF37]/30 cursor-pointer"
             >
               <ShoppingBagOutlinedIcon sx={{ fontSize: 18 }} />

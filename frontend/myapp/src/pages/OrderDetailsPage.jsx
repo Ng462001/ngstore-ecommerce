@@ -274,10 +274,16 @@ const OrderDetailsPage = () => {
                                 <td colspan="3" style="text-align: right;">Shipping:</td>
                                 <td>₹${formatMoney(order.shippingPrice || 0)}</td>
                             </tr>
+                            ${
+                              order.taxPrice && order.taxPrice > 0
+                                ? `
                             <tr class="total-row">
                                 <td colspan="3" style="text-align: right;">Tax:</td>
-                                <td>₹${formatMoney(order.taxPrice || 0)}</td>
+                                <td>₹${formatMoney(order.taxPrice)}</td>
                             </tr>
+                            `
+                                : ""
+                            }
                             ${
                               order.discount && order.discount > 0
                                 ? `
@@ -646,20 +652,22 @@ const OrderDetailsPage = () => {
                       ₹{formatMoney(order.shippingPrice || 0)}
                     </Typography>
                   </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1.5,
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Tax:
-                    </Typography>
-                    <Typography variant="body2" fontWeight={500}>
-                      ₹{formatMoney(order.taxPrice || 0)}
-                    </Typography>
-                  </Box>
+                  {order.taxPrice > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1.5,
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Tax:
+                      </Typography>
+                      <Typography variant="body2" fontWeight={500}>
+                        ₹{formatMoney(order.taxPrice)}
+                      </Typography>
+                    </Box>
+                  )}
                   {order.discount && order.discount > 0 && (
                     <Box
                       sx={{

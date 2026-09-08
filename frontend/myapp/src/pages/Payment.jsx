@@ -54,8 +54,7 @@ export default function Payment({ onBack, selectedAddress }) {
     0,
   );
   const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
-  const tax = Number((subtotal * 0.18).toFixed(2)); // 18% GST
-  const total = Number((subtotal + shipping + tax).toFixed(2));
+  const total = Number((subtotal + shipping).toFixed(2));
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +86,7 @@ export default function Payment({ onBack, selectedAddress }) {
         shippingAddress: selectedAddress,
         paymentMethod: paymentMethod === "card" ? "Card" : "CashOnDelivery",
         itemsPrice: subtotal,
-        taxPrice: tax,
+        taxPrice: 0,
         shippingPrice: shipping,
         totalPrice: total,
         isPaid: paymentMethod === "card",
@@ -397,21 +396,6 @@ export default function Payment({ onBack, selectedAddress }) {
                   sx={{ color: shipping === 0 ? "#3E7A55" : "inherit" }}
                 >
                   {shipping === 0 ? "FREE" : `₹${fmt(shipping)}`}
-                </Typography>
-              </Box>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 1.5,
-                }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Tax
-                </Typography>
-                <Typography variant="body2" fontWeight="500">
-                  ₹{fmt(tax)}
                 </Typography>
               </Box>
 

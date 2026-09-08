@@ -249,9 +249,10 @@ const productSchema = new mongoose.Schema(
           "electronic device",
           "mobile",
           "cloths",
+          "collection",
         ],
         message:
-          "Category must be one of: men, women, kids, clothing, accessories, electronics, home, sports, electronic device, mobile, cloths",
+          "Category must be one of: men, women, kids, clothing, accessories, electronics, home, sports, electronic device, mobile, cloths, collection",
       },
       index: true,
     },

@@ -42,6 +42,7 @@ const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 // Constants
 // Must match backend Product model enum exactly
 const PRODUCT_CATEGORIES = [
+  { value: "collection", label: "Collection" },
   { value: "electronic device", label: "Electronic Device" },
   { value: "mobile", label: "Mobile" },
   { value: "electronics", label: "Electronics" },
