@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
 import {
   Facebook as FacebookIcon,
   Twitter as TwitterIcon,
@@ -7,11 +7,10 @@ import {
   LinkedIn as LinkedInIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  LocationOn as LocationIcon
-} from '@mui/icons-material'
+  LocationOn as LocationIcon,
+} from "@mui/icons-material";
 
 const Footer = () => {
-
   return (
     <footer className="bg-surface-muted border-t border-border-light text-text-primary mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -26,7 +25,8 @@ const Footer = () => {
               />
             </Link>
             <p className="text-sm text-text-secondary leading-relaxed">
-              Your trusted destination for quality products and exceptional service. Shop with confidence.
+              Your trusted destination for quality products and exceptional
+              service. Shop with confidence.
             </p>
             {/* Social Media */}
             <div className="flex space-x-3 pt-2">
@@ -76,22 +76,34 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/store" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/store"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   Stores
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/about"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/contact"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   Contact
                 </Link>
               </li>
@@ -105,23 +117,35 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/profile" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/profile"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   My Account
                 </Link>
               </li>
               <li>
-                <Link to="/my-orders" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/my-orders"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   Order Tracking
                 </Link>
               </li>
               <li>
-                <Link to="/privacy-policy" className="text-sm text-text-secondary hover:text-accent transition-colors">
+                <Link
+                  to="/privacy-policy"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-sm text-text-secondary hover:text-accent transition-colors">
-                  Terms & Conditions
+                <Link
+                  to="/terms-and-conditions"
+                  className="text-sm text-text-secondary hover:text-accent transition-colors"
+                >
+                  Terms of Service
                 </Link>
               </li>
             </ul>
@@ -134,18 +158,27 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3.5">
               <li className="flex items-start space-x-2.5 text-sm text-text-secondary">
-                <LocationIcon className="text-accent mt-0.5 shrink-0" fontSize="small" />
+                <LocationIcon
+                  className="text-accent mt-0.5 shrink-0"
+                  fontSize="small"
+                />
                 <span>VIPL IT Park, Nagpur, Maharashtra 440022</span>
               </li>
               <li className="flex items-center space-x-2.5 text-sm text-text-secondary">
                 <PhoneIcon className="text-accent shrink-0" fontSize="small" />
-                <a href="tel:+1234567890" className="hover:text-accent transition-colors">
+                <a
+                  href="tel:+1234567890"
+                  className="hover:text-accent transition-colors"
+                >
                   +91-7775831890
                 </a>
               </li>
               <li className="flex items-center space-x-2.5 text-sm text-text-secondary">
                 <EmailIcon className="text-accent shrink-0" fontSize="small" />
-                <a href="mailto:ngtech2026@gmail.com" className="hover:text-accent transition-colors">
+                <a
+                  href="mailto:ngtech2026@gmail.com"
+                  className="hover:text-accent transition-colors"
+                >
                   ngtech2026@gmail.com
                 </a>
               </li>
@@ -160,10 +193,16 @@ const Footer = () => {
               © 2025-26 NGStore. All rights reserved.
             </p>
             <div className="flex space-x-6">
-              <Link to="/privacy-policy" className="text-xs text-text-secondary hover:text-accent transition-colors">
+              <Link
+                to="/privacy-policy"
+                className="text-xs text-text-secondary hover:text-accent transition-colors"
+              >
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="text-xs text-text-secondary hover:text-accent transition-colors">
+              <Link
+                to="/terms-and-conditions"
+                className="text-xs text-text-secondary hover:text-accent transition-colors"
+              >
                 Terms of Service
               </Link>
             </div>
@@ -171,7 +210,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;
