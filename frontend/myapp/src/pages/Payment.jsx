@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearCart } from "../Redux/action/action";
@@ -16,18 +16,34 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Chip,
 } from "@mui/material";
 import {
   CreditCardOutlined as CreditCardOutlinedIcon,
   PaymentsOutlined as PaymentsOutlinedIcon,
   Lock,
   Payment as PaymentIcon,
+  LocalOffer as CouponIcon,
+  Close as CloseIcon,
+  CheckCircleOutline as CheckCircleIcon,
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 
 export default function Payment({ onBack, selectedAddress }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
+
+  // Coupon States
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
 
   const cartItems = useSelector(
     (state) => state.productReducer?.cartItems || [],
@@ -53,8 +69,89 @@ export default function Payment({ onBack, selectedAddress }) {
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0,
   );
+  const discount = appliedCoupon ? appliedCoupon.discountPrice || 0 : 0;
   const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
-  const total = Number((subtotal + shipping).toFixed(2));
+  const total = Number(Math.max(0, subtotal - discount + shipping).toFixed(2));
+
+  // Fetch available coupons
+  useEffect(() => {
+    if (userInfo?.token) {
+      fetchAvailableCoupons();
+    }
+  }, [userInfo]);
+
+  const fetchAvailableCoupons = async () => {
+    try {
+      setLoadingCoupons(true);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/coupons/available`,
+        {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setAvailableCoupons(data.coupons || []);
+      }
+    } catch (err) {
+      console.error("Failed to load available coupons:", err);
+    } finally {
+      setLoadingCoupons(false);
+    }
+  };
+
+  const handleApplyCoupon = async (codeToApply) => {
+    const code = (codeToApply || couponInput || "").trim();
+    if (!code) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      setIsApplyingCoupon(true);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/coupons/validate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+          body: JSON.stringify({
+            code,
+            cartItems,
+            subtotal,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAppliedCoupon({
+          ...data.coupon,
+          discountPrice: data.discountPrice,
+        });
+        setCouponInput("");
+        setShowCouponModal(false);
+        toast.success(
+          `Coupon '${code.toUpperCase()}' applied! You saved ₹${data.discountPrice}`
+        );
+      } else {
+        toast.error(data.message || "Invalid coupon code");
+      }
+    } catch (err) {
+      toast.error("Failed to validate coupon");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    toast.success("Coupon removed");
+  };
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
@@ -86,6 +183,9 @@ export default function Payment({ onBack, selectedAddress }) {
         shippingAddress: selectedAddress,
         paymentMethod: paymentMethod === "card" ? "Card" : "CashOnDelivery",
         itemsPrice: subtotal,
+        subtotalPrice: subtotal,
+        discountPrice: discount,
+        couponCode: appliedCoupon?.code,
         taxPrice: 0,
         shippingPrice: shipping,
         totalPrice: total,
@@ -114,6 +214,8 @@ export default function Payment({ onBack, selectedAddress }) {
                 quantity: item.quantity,
               })),
               email: userInfo.email,
+              couponCode: appliedCoupon?.code,
+              discountPrice: discount,
             }),
           },
         );
@@ -364,6 +466,114 @@ export default function Payment({ onBack, selectedAddress }) {
               Summary
             </Typography>
 
+            {/* Coupon Code Section */}
+            <Box
+              sx={{
+                p: 2,
+                mb: 3,
+                borderRadius: "14px",
+                bgcolor: appliedCoupon ? "rgba(62, 122, 85, 0.08)" : "#FAF9F6",
+                border: "1px dashed",
+                borderColor: appliedCoupon ? "#3E7A55" : "#E7E4DD",
+              }}
+            >
+              {appliedCoupon ? (
+                <Box>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CouponIcon sx={{ color: "#3E7A55", fontSize: 18 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#3E7A55" }}>
+                        {appliedCoupon.code}
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      onClick={handleRemoveCoupon}
+                      sx={{
+                        textTransform: "none",
+                        color: "#B3413B",
+                        fontSize: "0.75rem",
+                        p: 0,
+                        minWidth: "auto",
+                        fontWeight: 600,
+                        "&:hover": { bgcolor: "transparent", textDecoration: "underline" },
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: "#3E7A55", display: "block", mt: 0.5 }}>
+                    Coupon applied! You saved ₹{fmt(discount)}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <input
+                      type="text"
+                      placeholder="ENTER COUPON CODE"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        fontSize: "0.8rem",
+                        fontFamily: "monospace",
+                        fontWeight: "bold",
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid #E7E4DD",
+                        borderRadius: "10px",
+                        outline: "none",
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={isApplyingCoupon || !couponInput.trim()}
+                      sx={{
+                        bgcolor: "#B8925A",
+                        "&:hover": { bgcolor: "#9E7B47" },
+                        textTransform: "none",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        borderRadius: "10px",
+                        px: 2,
+                        boxShadow: "none",
+                      }}
+                    >
+                      {isApplyingCoupon ? "..." : "Apply"}
+                    </Button>
+                  </Box>
+
+                  {availableCoupons.length > 0 && (
+                    <Button
+                      onClick={() => setShowCouponModal(true)}
+                      startIcon={<CouponIcon sx={{ fontSize: 14 }} />}
+                      sx={{
+                        mt: 1.5,
+                        p: 0,
+                        textTransform: "none",
+                        color: "#B8925A",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        "&:hover": { bgcolor: "transparent", textDecoration: "underline" },
+                      }}
+                    >
+                      View Available Offers ({availableCoupons.length})
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
+
             <Box sx={{ mb: 3 }}>
               <Box
                 sx={{
@@ -379,6 +589,23 @@ export default function Payment({ onBack, selectedAddress }) {
                   ₹{fmt(subtotal)}
                 </Typography>
               </Box>
+
+              {appliedCoupon && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1.5,
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: "#3E7A55", fontWeight: 500 }}>
+                    Coupon Discount ({appliedCoupon.code})
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#3E7A55", fontWeight: 700 }}>
+                    -₹{fmt(discount)}
+                  </Typography>
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -465,6 +692,182 @@ export default function Payment({ onBack, selectedAddress }) {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Available Coupons Modal */}
+      <Dialog
+        open={showCouponModal}
+        onClose={() => setShowCouponModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            p: 1,
+            bgcolor: "#FFFFFF",
+            border: "1px solid #E7E4DD",
+            boxShadow: "0 12px 32px -4px rgba(28, 27, 25, 0.12)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pb: 1,
+            borderBottom: "1px solid #E7E4DD",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: "10px",
+                bgcolor: "#F7F3EC",
+                color: "#B8925A",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CouponIcon fontSize="small" />
+            </Box>
+            <Box>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontFamily: '"Playfair Display", Georgia, serif',
+                  fontWeight: 700,
+                  color: "#1C1B19",
+                }}
+              >
+                Available Offers & Discounts
+              </Typography>
+              <Typography variant="caption" sx={{ color: "#6B6862" }}>
+                Select an offer to apply instant savings
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton size="small" onClick={() => setShowCouponModal(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+          {availableCoupons.length === 0 ? (
+            <Typography variant="body2" sx={{ textAlign: "center", py: 4, color: "#6B6862" }}>
+              No active public coupons found at the moment.
+            </Typography>
+          ) : (
+            availableCoupons.map((coupon) => {
+              const isEligible = subtotal >= (coupon.minPurchaseAmount || 0);
+
+              return (
+                <Box
+                  key={coupon._id}
+                  sx={{
+                    p: 2,
+                    borderRadius: "14px",
+                    border: "1px solid #E7E4DD",
+                    bgcolor: isEligible ? "#FAF9F6" : "#F3F1EC",
+                    opacity: isEligible ? 1 : 0.7,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    transition: "all 0.2s ease",
+                    "&:hover": isEligible ? { borderColor: "#B8925A", bgcolor: "#FFFFFF" } : {},
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                    <Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            letterSpacing: "0.05em",
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: "6px",
+                            bgcolor: "#F7F3EC",
+                            color: "#B8925A",
+                            border: "1px solid rgba(184, 146, 90, 0.3)",
+                          }}
+                        >
+                          {coupon.code}
+                        </Typography>
+                        <Chip
+                          label={
+                            coupon.discountType === "percentage"
+                              ? `${coupon.discountAmount}% OFF`
+                              : `₹${coupon.discountAmount} FLAT`
+                          }
+                          size="small"
+                          sx={{
+                            height: 22,
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            bgcolor: "rgba(62, 122, 85, 0.1)",
+                            color: "#3E7A55",
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: "#1C1B19", mt: 1 }}>
+                        {coupon.description}
+                      </Typography>
+                    </Box>
+
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={!isEligible || isApplyingCoupon}
+                      onClick={() => handleApplyCoupon(coupon.code)}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
+                        borderRadius: "8px",
+                        bgcolor: "#B8925A",
+                        "&:hover": { bgcolor: "#9E7B47" },
+                        boxShadow: "none",
+                        shrink: 0,
+                      }}
+                    >
+                      {appliedCoupon?.code === coupon.code ? "Applied" : "Apply"}
+                    </Button>
+                  </Box>
+
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: "#6B6862" }}>
+                      Min spend: ₹{coupon.minPurchaseAmount || 0}
+                    </Typography>
+                    {coupon.discountType === "percentage" && coupon.maxDiscountAmount && (
+                      <Typography variant="caption" sx={{ color: "#6B6862" }}>
+                        Max discount: ₹{coupon.maxDiscountAmount}
+                      </Typography>
+                    )}
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: isEligible ? "#3E7A55" : "#B3413B",
+                        fontWeight: 500,
+                        ml: "auto",
+                      }}
+                    >
+                      {isEligible
+                        ? "Eligible for this order"
+                        : `Add ₹${fmt(coupon.minPurchaseAmount - subtotal)} more`}
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            })
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
+

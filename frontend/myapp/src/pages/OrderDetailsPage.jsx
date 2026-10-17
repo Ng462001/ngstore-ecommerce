@@ -285,11 +285,11 @@ const OrderDetailsPage = () => {
                                 : ""
                             }
                             ${
-                              order.discount && order.discount > 0
+                              (order.discountPrice && order.discountPrice > 0) || (order.discount && order.discount > 0)
                                 ? `
                                 <tr class="total-row" style="color: #28a745;">
-                                    <td colspan="3" style="text-align: right;">Discount:</td>
-                                    <td>-₹${formatMoney(order.discount)}</td>
+                                    <td colspan="3" style="text-align: right;">Coupon Discount ${order.couponCode ? `(${order.couponCode})` : ""}:</td>
+                                    <td>-₹${formatMoney(order.discountPrice || order.discount)}</td>
                                 </tr>
                             `
                                 : ""
@@ -668,7 +668,7 @@ const OrderDetailsPage = () => {
                       </Typography>
                     </Box>
                   )}
-                  {order.discount && order.discount > 0 && (
+                  {((order.discountPrice && order.discountPrice > 0) || (order.discount && order.discount > 0)) && (
                     <Box
                       sx={{
                         display: "flex",
@@ -677,14 +677,14 @@ const OrderDetailsPage = () => {
                       }}
                     >
                       <Typography variant="body2" color="success.main">
-                        Discount:
+                        Coupon Discount {order.couponCode ? `(${order.couponCode})` : ""}:
                       </Typography>
                       <Typography
                         variant="body2"
                         fontWeight={500}
                         color="success.main"
                       >
-                        -₹{formatMoney(order.discount)}
+                        -₹{formatMoney(order.discountPrice || order.discount)}
                       </Typography>
                     </Box>
                   )}

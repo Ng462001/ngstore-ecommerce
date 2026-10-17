@@ -29,6 +29,7 @@ app.use("/api/support", require("./routes/supportRoutes"));
 app.use("/api/return-exchange", require("./routes/returnExchangeRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
+app.use("/api/coupons", require("./routes/couponRoutes"));
 
 // Health Check
 app.get("/api/health", (req, res) => {

@@ -10,6 +10,7 @@ import {
   Logout,
   Settings,
   Email,
+  LocalOffer,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logoutUser } from "../../Redux/action/action";
@@ -40,6 +41,12 @@ const Sidebar = ({ onMobileClose }) => {
       label: "Orders",
       icon: <ShoppingCart />,
       path: "/admin/orders",
+    },
+    {
+      id: "coupons",
+      label: "Coupons & Offers",
+      icon: <LocalOffer />,
+      path: "/admin/coupons",
     },
     {
       id: "reviews",

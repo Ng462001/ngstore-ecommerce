@@ -7,7 +7,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 router.post('/create-checkout-session', protect, async (req, res) => {
     try {
-        const { items, email } = req.body;
+        const { items, email, couponCode, discountPrice } = req.body;
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Items are required' });
@@ -31,7 +31,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
             };
         });
 
-        const session = await stripe.checkout.sessions.create({
+        const sessionPayload = {
             payment_method_types: ['card'],
             customer_email: email,
             billing_address_collection: 'required',
@@ -39,7 +39,23 @@ router.post('/create-checkout-session', protect, async (req, res) => {
             mode: 'payment',
             success_url: `${process.env.FRONTEND_URL}/my-orders?success=true`,
             cancel_url: `${process.env.FRONTEND_URL}/checkout?canceled=true`,
-        });
+        };
+
+        if (discountPrice && parseFloat(discountPrice) > 0) {
+            try {
+                const stripeCoupon = await stripe.coupons.create({
+                    amount_off: Math.round(parseFloat(discountPrice) * 100),
+                    currency: 'inr',
+                    duration: 'once',
+                    name: couponCode ? `Coupon (${couponCode})` : 'Promotional Discount',
+                });
+                sessionPayload.discounts = [{ coupon: stripeCoupon.id }];
+            } catch (couponError) {
+                console.warn('Stripe coupon creation note:', couponError.message);
+            }
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionPayload);
 
         res.json({ url: session.url });
 

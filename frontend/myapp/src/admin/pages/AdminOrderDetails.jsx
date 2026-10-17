@@ -1235,7 +1235,7 @@ const AdminOrderDetails = () => {
                                   {formatCurrency(order.totalPrice || 0)}
                                 </Typography>
                               </Box>
-                              {order.discount && (
+                              {((order.discountPrice && order.discountPrice > 0) || (order.discount && order.discount > 0)) && (
                                 <Box
                                   sx={{
                                     display: "flex",
@@ -1244,13 +1244,13 @@ const AdminOrderDetails = () => {
                                   }}
                                 >
                                   <Typography color="success.main">
-                                    Discount Applied:
+                                    Coupon Applied {order.couponCode ? `(${order.couponCode})` : ""}:
                                   </Typography>
                                   <Typography
                                     color="success.main"
                                     fontWeight="bold"
                                   >
-                                    -{formatCurrency(order.discount || 0)}
+                                    -{formatCurrency(order.discountPrice || order.discount || 0)}
                                   </Typography>
                                 </Box>
                               )}

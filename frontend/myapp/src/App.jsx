@@ -37,6 +37,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Wishlist from "./pages/Wishlist";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import AdminCoupons from "./admin/pages/AdminCoupons";
 
 // Private Route Wrapper
 const PrivateAdminRoute = ({ children }) => {
@@ -207,6 +208,10 @@ const App = () => {
         {
           path: "orders",
           element: <Orders />,
+        },
+        {
+          path: "coupons",
+          element: <AdminCoupons />,
         },
         {
           path: "order/:id",
